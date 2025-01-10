@@ -1,0 +1,70 @@
+spring:
+  config:
+    import: optional:file:.env[.properties]
+    activate:
+      on-profile: prod
+  web:
+    resources:
+      add-mappings: false
+  datasource:
+    url: jdbc:postgresql://postgres:5432/KBUDDY-TEST
+    driver-class-name: org.postgresql.Driver
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
+  h2:
+    console:
+      enabled: true
+  security:
+    jwt:
+      secret-key: ${JWT_SECRET_KEY}
+      access-token-expiration: 3600      # 1 hour
+      refresh-token-expiration: 604800   # 1 week
+  jpa:
+    show-sql: false  # Do not show SQL log in prod mode
+    hibernate:
+      ddl-auto: none  # Do not create DB instance in prod mode
+    properties:
+      hibernate:
+        format_sql: true
+  sql.init.mode: never  # Do not initialize DB in prod mode
+  data:
+    redis:
+      host: redis
+      port: 6379
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${EMAIL_USERNAME}
+    password: ${EMAIL_PASSWORD}
+    properties:
+      mail:
+        transport:
+          protocol: smtp
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+          ssl:
+            trust: smtp.gmail.com
+            protocols: TLSv1.2
+        debug: true
+
+springdoc:
+  api-docs:
+    path: /api-docs # API 문서 생성 경로
+    groups:
+      enabled: true
+  swagger-ui:
+    path: /index.html # Swagger-ui 경로
+    enabled: true
+    groups-order: asc
+    tags-sorter: alpha
+    operations-sorter: alpha
+    display-request-duration: true
+    doc-expansion: none
+  cache:
+    disabled: true
+  override-with-generic-response: false
+  model-and-view-allowed: true
+  default-consumes-media-type: application/json
+  default-produces-media-type: application/json
