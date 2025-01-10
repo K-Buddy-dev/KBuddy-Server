@@ -1,1 +1,1 @@
-# KBuddy-API-Server
+# K-Buddy-API-Server
