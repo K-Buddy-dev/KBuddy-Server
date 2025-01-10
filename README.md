@@ -1,1 +1,1 @@
-# KBuddy-Server
+# KBuddy-API-Server
