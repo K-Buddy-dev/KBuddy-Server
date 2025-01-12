@@ -13,14 +13,14 @@ public class BlogService {
     private final PostRepository postRepository;
 
     public BlogService(
-        PostRepository postRepository
+            PostRepository postRepository
     ) {
         this.postRepository = postRepository;
     }
 
     public PostCreateResponse createPost(
-        PostCreateRequest request,
-        User user
+            PostCreateRequest request,
+            User user
     ) {
         Post post = new Post();
         post.setTitle(request.getTitle());

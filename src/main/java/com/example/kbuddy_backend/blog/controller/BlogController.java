@@ -25,10 +25,10 @@ public class BlogController {
 
     @PostMapping("/post")
     public ResponseEntity<PostCreateResponse> createPost(
-        @Valid
-        @RequestBody
-        PostCreateRequest request,
-        @CurrentUser User user
+            @Valid
+            @RequestBody
+            PostCreateRequest request,
+            @CurrentUser User user
     ) {
         PostCreateResponse response = blogService.createPost(request, user);
         return ResponseEntity.ok(response);

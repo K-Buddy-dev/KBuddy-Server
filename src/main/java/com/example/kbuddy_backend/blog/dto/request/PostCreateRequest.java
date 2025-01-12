@@ -5,7 +5,10 @@ import lombok.Getter;
 
 @Getter
 public class PostCreateRequest {
-    @NotNull private String title;
-    @NotNull private String description;
-    @NotNull private Integer categoryId;
+    @NotNull
+    private String title;
+    @NotNull
+    private String description;
+    @NotNull
+    private Integer categoryId;
 }
