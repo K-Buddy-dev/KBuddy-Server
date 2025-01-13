@@ -19,6 +19,7 @@ public class BlogController {
 
     private final BlogService blogService;
 
+
     @PostMapping
     public ResponseEntity<BlogCreateRes> createBlog(@RequestBody BlogCreateReq request, @CurrentUser User user) {
         BlogCreateRes blogCreateRes = blogService.createBlog(request,user);
