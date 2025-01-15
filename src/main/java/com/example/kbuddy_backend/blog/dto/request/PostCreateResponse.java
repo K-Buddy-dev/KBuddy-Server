@@ -5,23 +5,14 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.time.LocalDateTime;
 
-public class PostCreateResponse {
-    @JsonProperty
-    private final Long id;
-    @JsonProperty
-    private final String title;
-    @JsonProperty
-    private final String description;
-    @JsonProperty
-    private final Integer categoryId;
-    @JsonProperty
-    private final LocalDateTime createdAt;
-
+public record PostCreateResponse(
+        @JsonProperty Long id,
+        @JsonProperty String title,
+        @JsonProperty String description,
+        @JsonProperty Integer categoryId,
+        @JsonProperty LocalDateTime createdAt
+) {
     public PostCreateResponse(Post post) {
-        this.id = post.getId();
-        this.title = post.getTitle();
-        this.description = post.getDescription();
-        this.categoryId = post.getCategoryId();
-        this.createdAt = post.getCreatedDate();
+        this(post.getId(), post.getTitle(), post.getDescription(), post.getCategoryId(), post.getCreatedDate());
     }
 }
