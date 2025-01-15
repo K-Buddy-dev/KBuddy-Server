@@ -18,11 +18,13 @@ public class BlogService {
             PostCreateRequest request,
             User user
     ) {
-        Post post = new Post();
-        post.setTitle(request.getTitle());
-        post.setDescription(request.getDescription());
-        post.setCategoryId(request.getCategoryId());
-        post.setUser(user);
+        Post post = Post.builder()
+                .title(request.title())
+                .description(request.description())
+                .categoryId(request.categoryId())
+                .user(user)
+                .build();
+
         postRepository.save(post);
 
         return new PostCreateResponse(post);
