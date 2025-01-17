@@ -4,22 +4,16 @@ import static lombok.AccessLevel.PROTECTED;
 
 import com.example.kbuddy_backend.common.entity.BaseTimeEntity;
 import com.example.kbuddy_backend.user.entity.User;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
 @Getter
+@Table(name="blog_post")
 @NoArgsConstructor(access = PROTECTED)
-public class Blog extends BaseTimeEntity {
+public class BlogPost extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -27,7 +21,8 @@ public class Blog extends BaseTimeEntity {
 
     @Column(nullable = false)
     private String title;
-    @Column(nullable = false)
+
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -35,9 +30,9 @@ public class Blog extends BaseTimeEntity {
     private User writer;
 
     @Builder
-    public Blog(String title, String content, User user) {
+    public BlogPost(String title, String content, User writer) {
         this.title = title;
         this.content = content;
-        this.writer = user;
+        this.writer = writer;
     }
 }
