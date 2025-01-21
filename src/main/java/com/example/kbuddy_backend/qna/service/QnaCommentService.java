@@ -37,10 +37,12 @@ public class QnaCommentService {
 
     @Transactional
     public void plusHeart(Long commentId, User user) {
+
         qnaHeartRepository.findByQnaCommentIdAndUserId(commentId, user.getId())
                 .ifPresent(qnaHeart -> {
                     throw new DuplicatedQnaCommentHeartException();
                 });
+
         QnaComment qnaComment = findQnaCommentById(commentId);
         QnaHeart qnaHeart = new QnaHeart(user, qnaComment);
         qnaComment.plusHeart(qnaHeart);

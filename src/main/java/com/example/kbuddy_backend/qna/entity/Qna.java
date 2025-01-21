@@ -2,6 +2,8 @@ package com.example.kbuddy_backend.qna.entity;
 
 import com.example.kbuddy_backend.common.entity.BaseTimeEntity;
 import com.example.kbuddy_backend.user.entity.User;
+
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -13,6 +15,9 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import java.util.ArrayList;
 import java.util.List;
+
+import org.springframework.stereotype.Component;
+
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -32,10 +37,10 @@ public class Qna extends BaseTimeEntity {
     @JoinColumn(name = "user_id")
     private User writer;
 
-    @OneToMany(mappedBy = "qna")
+    @OneToMany(mappedBy = "qna",cascade = CascadeType.ALL,orphanRemoval = true)
     private List<QnaHeart> qnaHearts = new ArrayList<>();
 
-    @OneToMany(mappedBy = "qna")
+    @OneToMany(mappedBy = "qna", cascade = CascadeType.ALL)
     private List<QnaComment> comments = new ArrayList<>();
 
     @OneToMany(mappedBy = "qna")
@@ -43,11 +48,13 @@ public class Qna extends BaseTimeEntity {
 
     private String hashtag;
 
+    @Column(nullable = false)
     private String title;
+
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String description;
 
     private int heartCount;
-
     private int viewCount;
 
     @Builder
@@ -56,16 +63,20 @@ public class Qna extends BaseTimeEntity {
         this.title = title;
         this.hashtag = hashtag;
         this.description = description;
-
     }
 
     public void addComment(QnaComment qnaComment) {
-        comments.add(qnaComment);
+        qnaComment.setQna(this);
+        this.comments.add(qnaComment);
     }
 
     public void plusHeart(QnaHeart qnaHeart) {
-        this.heartCount += 1;
-        this.qnaHearts.add(qnaHeart);
+        if (!qnaHearts.contains(qnaHeart)) {
+            this.heartCount++;
+            qnaHeart.setQna(this);
+            this.qnaHearts.add(qnaHeart);
+        }
+
     }
 
     public void minusHeart(QnaHeart qnaHeart) {
@@ -73,6 +84,7 @@ public class Qna extends BaseTimeEntity {
             this.heartCount -= 1;
         }
         this.qnaHearts.remove(qnaHeart);
+        qnaHeart.setQna(null);
     }
 
     public void plusViewCount() {

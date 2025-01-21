@@ -2,6 +2,8 @@ package com.example.kbuddy_backend.qna.entity;
 
 import com.example.kbuddy_backend.common.entity.BaseTimeEntity;
 import com.example.kbuddy_backend.user.entity.User;
+
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -38,7 +40,7 @@ public class QnaComment extends BaseTimeEntity {
     @JoinColumn(name = "qna_id")
     private Qna qna;
 
-    @OneToMany(mappedBy = "qnaComment")
+    @OneToMany(mappedBy = "qnaComment",cascade = CascadeType.ALL,orphanRemoval = true)
     private List<QnaHeart> qnaHearts = new ArrayList<>();
 
     //대댓글
@@ -46,7 +48,7 @@ public class QnaComment extends BaseTimeEntity {
     @JoinColumn(name = "parent_id")
     private QnaComment parent;
 
-    @OneToMany(mappedBy = "parent")
+    @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<QnaComment> children = new ArrayList<>();
 
     private int heartCount;
@@ -63,14 +65,20 @@ public class QnaComment extends BaseTimeEntity {
     }
 
     public void plusHeart(QnaHeart qnaHeart) {
-        this.heartCount += 1;
-        this.qnaHearts.add(qnaHeart);
+        //중복으로 좋아요 누르는 행위 방지
+        if(!qnaHearts.contains(qnaHeart)){
+            this.heartCount += 1;
+            qnaHeart.setQnaComment(this);
+            this.qnaHearts.add(qnaHeart);
+        }
+
     }
 
     public void minusHeart(QnaHeart qnaHeart) {
         if (this.heartCount > 0) {
             this.heartCount -= 1;
         }
+        qnaHeart.setQnaComment(null);
         this.qnaHearts.remove(qnaHeart);
     }
 
