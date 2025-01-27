@@ -22,7 +22,7 @@ spring:
   jpa:
     show-sql: false  # Do not show SQL log in prod mode
     hibernate:
-      ddl-auto: none  # Do not create DB instance in prod mode
+      ddl-auto: update  # Do not create DB instance in prod mode
     properties:
       hibernate:
         format_sql: true
