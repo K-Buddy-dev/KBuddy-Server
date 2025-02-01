@@ -83,7 +83,6 @@ public class UserAuthController {
     public ResponseEntity<AccessTokenAndRefreshTokenResponse> oAuthLogin(
             @RequestBody final OAuthLoginRequest loginRequest) {
         AccessTokenAndRefreshTokenResponse token = userAuthService.oAuthLogin(loginRequest);
-
         return ResponseEntity.ok().body(token);
     }
 
