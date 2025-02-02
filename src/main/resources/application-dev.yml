@@ -68,3 +68,9 @@ springdoc:
   model-and-view-allowed: true
   default-consumes-media-type: application/json
   default-produces-media-type: application/json
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*" # 모든 엔드포인트 노출 -> 추후 변경
