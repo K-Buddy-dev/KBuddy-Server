@@ -56,7 +56,6 @@ public class SecurityConfig {
                                 .requestMatchers("/kbuddy/v1/user/auth/password","/kbuddy/v1/user/auth/authentication").authenticated()
                                 .requestMatchers("/kbuddy/v1/user/auth/**").permitAll()
                                 .requestMatchers("/kbuddy/v1/user/**").authenticated()
-                                .requestMatchers("/h2-console/**").permitAll()
                                 .anyRequest().permitAll());
 
         return http.build();
