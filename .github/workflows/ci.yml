@@ -74,20 +74,34 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
-  post-slack:
+#  post-slack:
+#    if: github.event.pull_request.merged == true
+#    name: Post CI result to a Slack channel
+#    runs-on: ubuntu-latest
+#    needs: build-server-image
+#    steps:
+#      - name: Post to a Slack channel
+#        id: slack
+#        uses: slackapi/slack-github-action@v1.26.0
+#        with:
+#          channel-id: 'notification'
+#          slack-message: "GitHub build result: ${{ job.status }}\n${{ github.event.pull_request.html_url || github.event.head_commit.url }}"
+#        env:
+#          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+
+  post-discord:
     if: github.event.pull_request.merged == true
-    name: Post CI result to a Slack channel
+    name: Post CI result to a Discord channel
     runs-on: ubuntu-latest
     needs: build-server-image
     steps:
-      - name: Post to a Slack channel
-        id: slack
-        uses: slackapi/slack-github-action@v1.26.0
+      - name: Post to Discord
+        uses: Ilshidur/action-discord@master
         with:
-          channel-id: 'notification'
-          slack-message: "GitHub build result: ${{ job.status }}\n${{ github.event.pull_request.html_url || github.event.head_commit.url }}"
-        env:
-          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+          webhook: ${{ secrets.DISCORD_WEBHOOK }}
+          message: |
+            **GitHub Build Result:** ${{ job.status }}
+            🔗 [View Commit/PR](${{ github.event.pull_request.html_url || github.event.head_commit.url }})
 
 
   trigger-jenkins:
