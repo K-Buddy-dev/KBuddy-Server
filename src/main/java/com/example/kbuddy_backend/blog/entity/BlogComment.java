@@ -1,38 +1,38 @@
 package com.example.kbuddy_backend.blog.entity;
 
-import static lombok.AccessLevel.PROTECTED;
-
 import com.example.kbuddy_backend.common.entity.BaseTimeEntity;
 import com.example.kbuddy_backend.user.entity.User;
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
 @Getter
-@Table(name="blog_post")
-@NoArgsConstructor(access = PROTECTED)
-public class BlogPost extends BaseTimeEntity {
+@Table(name = "blog_comment")
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+public class BlogComment extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "comment_id")
     private Long id;
 
-    @Column(nullable = false)
-    private String title;
-
-    @Column(nullable = false, columnDefinition = "TEXT")
-    private String content;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "blog_id")
+    private Blog blog;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "user_id")
     private User writer;
 
+    private String content;
+
     @Builder
-    public BlogPost(String title, String content, User writer) {
-        this.title = title;
-        this.content = content;
+    public BlogComment(Blog blog, User writer, String content) {
+        this.blog = blog;
         this.writer = writer;
+        this.content = content;
     }
-}
+} 
