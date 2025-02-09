@@ -88,7 +88,7 @@ public class UserAuthController {
         return ResponseEntity.ok().body(token);
     }
 
-    @Operation(summary = "OAuth 회원가입 체크", description = "OAuth로 회원가입한 내역이 있는지 검사합니다.")
+    @Operation(summary = "OAuth 로그인", description = "OAuth를 통해 로그인합니다.ㅣ")
     @PostMapping("/oauth/login")
     public ResponseEntity<AccessTokenAndRefreshTokenResponse> oAuthLogin(
             @RequestBody final OAuthLoginRequest loginRequest) {

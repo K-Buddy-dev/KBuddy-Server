@@ -1,9 +1,13 @@
 package com.example.kbuddy_backend.qna.dto.response;
 
-public record QnaResponse(Long id, String title, String content, String writer, int heartCount, int commentCount,int viewCount) {
-    public static QnaResponse of(Long id, String title, String content, String writer, int heartCount,
-                                 int commentCount,int viewCount
-    ) {
-        return new QnaResponse(id, title, content, writer, heartCount, commentCount,viewCount);
+import com.example.kbuddy_backend.common.dto.ImageFileDto;
+import java.time.LocalDateTime;
+import java.util.List;
+
+public record QnaResponse(Long id, Long writerId, Long categoryId, String title, String description, int viewCount, LocalDateTime createdAt, LocalDateTime modifiedAt,
+                          List<ImageFileDto> images, List<QnaCommentResponse> comments, int heartCount, int commentCount) {
+    public static QnaResponse of(Long id, Long writerId, Long categoryId, String title, String description, int viewCount, LocalDateTime createdAt, LocalDateTime modifiedAt,
+                                 List<ImageFileDto> images, List<QnaCommentResponse> comments, int heartCount, int commentCount) {
+        return new QnaResponse(id, writerId, categoryId, title, description, viewCount, createdAt, modifiedAt, images, comments, heartCount, commentCount);
     }
 }
