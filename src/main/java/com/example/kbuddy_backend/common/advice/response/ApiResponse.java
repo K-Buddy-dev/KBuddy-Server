@@ -1,8 +1,10 @@
 package com.example.kbuddy_backend.common.advice.response;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -10,18 +12,27 @@ import lombok.NoArgsConstructor;
 
 
 @Getter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@NoArgsConstructor(access = AccessLevel.PUBLIC)
 public class ApiResponse<T> {
 
-    private static final ObjectMapper objectMapper = new ObjectMapper()
+    public static final ObjectMapper objectMapper = new ObjectMapper()
             .registerModule(new JavaTimeModule())
             .disable(com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
-    private final LocalDateTime timestamp = LocalDateTime.now();
-    private int status;
-    private String code;
-    private String path;
-    private T message;
+    @Schema(description = "응답 시간")
+    public LocalDateTime timestamp = LocalDateTime.now();
+
+    @Schema(description = "HTTP 상태 코드", example = "200")
+    public int status;
+
+    @Schema(description = "응답 코드", example = "KB-HTTP-201")
+    public String code;
+
+    @Schema(description = "요청 경로", example = "/kbuddy/v1/user/auth/register")
+    public String path;
+
+    @Schema(description = "실제 응답 데이터")
+    public T data;
 
 
     public static <T> ApiResponse<T> ok(T data,String path){
@@ -42,14 +53,14 @@ public class ApiResponse<T> {
     public ApiResponse(int status, String path, T message, CustomCode code) {
         this.status = status;
         this.path = path;
-        this.message = message;
+        this.data = message;
         this.code = code.getCode();
     }
 
     public ApiResponse(int status, String path, T message, String code) {
         this.status = status;
         this.path = path;
-        this.message = message;
+        this.data = message;
         this.code = code;
     }
 

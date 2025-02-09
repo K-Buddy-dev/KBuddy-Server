@@ -16,6 +16,9 @@ import com.example.kbuddy_backend.user.entity.User;
 import com.example.kbuddy_backend.user.repository.UserRepository;
 import com.example.kbuddy_backend.user.service.UserAuthService;
 import com.example.kbuddy_backend.user.service.UserService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.Objects;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +35,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/kbuddy/v1/user/auth")
+@Tag(name = "Auth API", description = "인증 API 목록")
 public class UserAuthController {
 
     private final UserAuthService userAuthService;
@@ -39,6 +43,7 @@ public class UserAuthController {
     private final MailSendService mailService;
     private final UserRepository userRepository;
 
+    @Operation(summary = "아이디/패스워드 회원 가입", description = "아이디/패스워드 기반 회원가입을 합니다.")
     @PostMapping("/register")
     public ResponseEntity<AccessTokenAndRefreshTokenResponse> register(
             @Valid @RequestBody final RegisterRequest registerRequest, BindingResult bindingResult) {
@@ -46,10 +51,12 @@ public class UserAuthController {
         if (bindingResult.hasErrors()) {
             throw new BadRequestException(Objects.requireNonNull(bindingResult.getFieldError()).getDefaultMessage());
         }
+
         AccessTokenAndRefreshTokenResponse token = userAuthService.register(registerRequest);
         return ResponseEntity.status(HttpStatus.CREATED).body(token);
     }
 
+    @Operation(summary = "OAuth 회원가입", description = "OAuth(KAKAO, GOOGLE, APPLE) 기반 회원가입을 합니다.")
     @PostMapping("/oauth/register")
     public ResponseEntity<AccessTokenAndRefreshTokenResponse> oAuthRegister(
             @RequestBody final OAuthRegisterRequest registerRequest, BindingResult bindingResult) {
@@ -63,6 +70,7 @@ public class UserAuthController {
         return ResponseEntity.status(HttpStatus.CREATED).body(token);
     }
 
+    @Operation(summary = "OAuth 회원가입 체크", description = "OAuth로 회원가입한 내역이 있는지 검사합니다.")
     @PostMapping("/oauth/check")
     public ResponseEntity<DefaultResponse> checkOAuthUser(
             @RequestBody final OAuthLoginRequest request) {
@@ -73,12 +81,14 @@ public class UserAuthController {
     }
 
 
+    @Operation(summary = "아이디/패스워드 로그인", description = "아이디/패스워드 기반 로그인을 합니다.")
     @PostMapping("/login")
     public ResponseEntity<AccessTokenAndRefreshTokenResponse> login(@RequestBody final LoginRequest loginRequest) {
         AccessTokenAndRefreshTokenResponse token = userAuthService.login(loginRequest);
         return ResponseEntity.ok().body(token);
     }
 
+    @Operation(summary = "OAuth 회원가입 체크", description = "OAuth로 회원가입한 내역이 있는지 검사합니다.")
     @PostMapping("/oauth/login")
     public ResponseEntity<AccessTokenAndRefreshTokenResponse> oAuthLogin(
             @RequestBody final OAuthLoginRequest loginRequest) {
@@ -86,9 +96,10 @@ public class UserAuthController {
         return ResponseEntity.ok().body(token);
     }
 
+    @Operation(summary = "비밀번호 변경", description = "아이디/패스워드 기반 회원가입한 사용자의 비밀번호를 변경합니다.")
     @PostMapping("/password")
     public ResponseEntity<String> resetPassword(@RequestBody final PasswordRequest passwordRequest,
-                                                @CurrentUser
+                                                @Parameter(hidden = true) @CurrentUser
                                                 User user) {
         userAuthService.resetPassword(passwordRequest, user);
         return ResponseEntity.ok().body("비밀번호 변경 성공");
@@ -96,6 +107,7 @@ public class UserAuthController {
     }
 
     //토큰 불필요
+    @Operation(summary = "이메일 검사", description = "사용가능한 이메일인지 검사합니다.")
     @PostMapping("/email/check")
     public ResponseEntity<DefaultResponse> checkEmail(@Valid @RequestBody final EmailRequest request) {
 
@@ -108,6 +120,7 @@ public class UserAuthController {
 
 
     //이메일 코드 전송
+    @Operation(summary = "이메일 코드 전송", description = "이메일에 인증 코드를 전송합니다.")
     @PostMapping("/email/send")
     public ResponseEntity<String> mailSend(@RequestBody @Valid EmailRequest emailRequest) {
         String code = mailService.joinEmail(emailRequest.email());
@@ -115,6 +128,7 @@ public class UserAuthController {
     }
 
     //이메일 코드 인증
+    @Operation(summary = "이메일 코드 검사", description = "이메일로 전송된 코드를 검사합니다.")
     @PostMapping("/email/code")
     public ResponseEntity<DefaultResponse> authCheck(@RequestBody @Valid EmailCheckRequest emailCheckRequest) {
         boolean checked = mailService.CheckAuthNum(emailCheckRequest.email(), emailCheckRequest.code());
