@@ -17,6 +17,7 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -34,6 +35,7 @@ public class User extends BaseTimeEntity {
     @Column(name = "user_id")
     private Long id;
 
+    private UUID uuid;
     private String firstName;
     private String lastName;
     private String username;

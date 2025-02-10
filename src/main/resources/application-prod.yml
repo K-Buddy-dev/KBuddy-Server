@@ -7,7 +7,7 @@ spring:
     resources:
       add-mappings: false
   datasource:
-    url: jdbc:postgresql://postgres:5432/KBUDDY-TEST
+    url: jdbc:postgresql://${DB_SERVER_URL}:5432/kbuddy
     driver-class-name: org.postgresql.Driver
     username: ${DB_USER}
     password: ${DB_PASSWORD}
@@ -22,10 +22,11 @@ spring:
   jpa:
     show-sql: false  # Do not show SQL log in prod mode
     hibernate:
-      ddl-auto: none  # Do not create DB instance in prod mode
+      ddl-auto: update  # Do not create DB instance in prod mode
     properties:
       hibernate:
         format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
   sql.init.mode: never  # Do not initialize DB in prod mode
   data:
     redis:
@@ -68,3 +69,9 @@ springdoc:
   model-and-view-allowed: true
   default-consumes-media-type: application/json
   default-produces-media-type: application/json
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*" # 모든 엔드포인트 노출 -> 추후 변경
