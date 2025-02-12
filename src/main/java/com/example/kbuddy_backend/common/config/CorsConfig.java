@@ -17,7 +17,7 @@ public class CorsConfig {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/**") // 모든 엔드포인트에 적용
-                        .allowedOrigins("*") // 모든 도메인 허용 (보안적으로 적절하지 않을 수 있음)
+                        .allowedOriginPatterns("*") // 모든 도메인 허용 (보안적으로 적절하지 않을 수 있음)
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                         .allowedHeaders("*")
                         .allowCredentials(true);
