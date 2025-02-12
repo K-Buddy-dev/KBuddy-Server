@@ -32,22 +32,42 @@ public class Blog extends BaseTimeEntity {
     @OneToMany(mappedBy = "blog", cascade = CascadeType.ALL)
     private List<BlogHeart> hearts = new ArrayList<>();
 
+    @Enumerated(EnumType.STRING)
+    private Category category;
+
     private String title;
     private String content;
     private int heartCount;
     private int viewCount;
     private int reportCount;
 
+    @ElementCollection
+    @CollectionTable(
+        name = "blog_images",
+        joinColumns = @JoinColumn(name = "blog_id")
+    )
+    @Column(name = "image_url")
+    private List<String> imageUrls = new ArrayList<>();
+
     @Builder
-    public Blog(User writer, String title, String content) {
+    public Blog(User writer, String title, String content, Category category, List<String> imageUrls) {
         this.writer = writer;
         this.title = title;
         this.content = content;
+        this.category = category;
+        if (imageUrls != null) {
+            this.imageUrls = imageUrls;
+        }
     }
 
-    public void update(String title, String content) {
+    public void update(String title, String content, Category category, List<String> imageUrls) {
         this.title = title;
         this.content = content;
+        this.category = category;
+        if (imageUrls != null) {
+            this.imageUrls.clear();
+            this.imageUrls.addAll(imageUrls);
+        }
     }
 
     public void plusHeart(BlogHeart blogHeart) {
