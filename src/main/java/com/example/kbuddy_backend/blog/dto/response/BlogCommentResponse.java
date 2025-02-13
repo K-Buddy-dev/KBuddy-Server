@@ -11,11 +11,14 @@ public record BlogCommentResponse(
     boolean isReply,
     Long parentId,
     List<BlogCommentResponse> replies,
-    LocalDateTime createdDate
+    LocalDateTime createdDate,
+    boolean deleted
 ) {
     public static BlogCommentResponse of(Long id, String content, String writer,
                                        int heartCount, boolean isReply, Long parentId,
-                                       List<BlogCommentResponse> replies, LocalDateTime createdDate) {
-        return new BlogCommentResponse(id, content, writer, heartCount, isReply, parentId, replies, createdDate);
+                                       List<BlogCommentResponse> replies, LocalDateTime createdDate,
+                                       boolean deleted) {
+        return new BlogCommentResponse(id, content, writer, heartCount, isReply, 
+                                     parentId, replies, createdDate, deleted);
     }
 } 

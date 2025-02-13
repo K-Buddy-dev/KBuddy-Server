@@ -43,6 +43,8 @@ public class BlogComment extends BaseTimeEntity {
     private String content;
     private int heartCount;
     private boolean isReply;
+    private boolean deleted = false;
+    private static final String DELETED_COMMENT_CONTENT = "삭제된 댓글입니다.";
 
     @Builder
     public BlogComment(Blog blog, User writer, BlogComment parent, String content) {
@@ -52,6 +54,7 @@ public class BlogComment extends BaseTimeEntity {
         this.content = content;
         this.isReply = parent != null;
         this.heartCount = 0;
+        this.deleted = false;
     }
 
     public void plusHeart(BlogCommentHeart heart) {
@@ -68,5 +71,23 @@ public class BlogComment extends BaseTimeEntity {
 
     public void addReply(BlogComment reply) {
         this.replies.add(reply);
+    }
+
+    public void delete() {
+        if (replies.isEmpty()) {
+            // 대댓글이 없는 경우 실제 삭제를 위해 연관관계 제거
+            if (parent != null) {
+                parent.getReplies().remove(this);
+            }
+            blog.getComments().remove(this);
+        } else {
+            // 대댓글이 있는 경우 논리적 삭제
+            this.deleted = true;
+            this.content = DELETED_COMMENT_CONTENT;
+        }
+    }
+
+    public boolean isDeleted() {
+        return deleted;
     }
 } 

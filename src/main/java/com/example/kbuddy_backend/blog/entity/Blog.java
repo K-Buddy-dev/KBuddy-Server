@@ -29,7 +29,7 @@ public class Blog extends BaseTimeEntity {
     @OneToMany(mappedBy = "blog", cascade = CascadeType.ALL)
     private List<BlogComment> comments = new ArrayList<>();
 
-    @OneToMany(mappedBy = "blog", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "blog", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<BlogHeart> hearts = new ArrayList<>();
 
     @Enumerated(EnumType.STRING)

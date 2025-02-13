@@ -122,7 +122,13 @@ public class BlogService {
         BlogComment comment = blogCommentRepository.findById(commentId)
                 .orElseThrow(() -> new BlogNotFoundException());
         validateWriter(comment, user);
-        blogCommentRepository.delete(comment);
+        
+        comment.delete();
+        
+        // 대댓글이 없는 경우에만 실제로 삭제
+        if (comment.getReplies().isEmpty()) {
+            blogCommentRepository.delete(comment);
+        }
     }
 
     // 블로그에 좋아요를 추가합니다.
@@ -300,7 +306,8 @@ public class BlogService {
                 comment.getReplies().stream()
                         .map(this::makeCommentResponse)
                         .toList(),
-                comment.getCreatedDate()
+                comment.getCreatedDate(),
+                comment.isDeleted()
         );
     }
 
