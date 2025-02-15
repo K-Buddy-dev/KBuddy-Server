@@ -18,6 +18,7 @@ import com.example.kbuddy_backend.qna.entity.QnaHeart;
 import com.example.kbuddy_backend.qna.entity.QnaImage;
 import com.example.kbuddy_backend.qna.exception.DuplicatedQnaHeartException;
 import com.example.kbuddy_backend.qna.exception.NotWriterException;
+import com.example.kbuddy_backend.qna.exception.QnaHeartNotFoundException;
 import com.example.kbuddy_backend.qna.exception.QnaNotFoundException;
 import com.example.kbuddy_backend.qna.repository.QnaBookmarkRepository;
 import com.example.kbuddy_backend.qna.repository.QnaCategoryRepository;
@@ -194,7 +195,7 @@ public class QnaService {
 
         Qna qnaById = findQnaById(qnaId);
         QnaHeart byQnaIdAndUserId = qnaHeartRepository.findByQnaIdAndUserId(qnaId, user.getId())
-                .orElseThrow(QnaNotFoundException::new);
+                .orElseThrow(QnaHeartNotFoundException::new);
         qnaById.minusHeart(byQnaIdAndUserId);
         qnaHeartRepository.deleteByQnaIdAndUserId(qnaId, user.getId());
     }

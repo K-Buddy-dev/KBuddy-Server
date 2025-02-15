@@ -1,110 +1,121 @@
-// QnaServiceTest.java
 package com.example.kbuddy_backend.qna.service;
 
-import com.example.kbuddy_backend.qna.dto.request.QnaSaveRequest;
-import com.example.kbuddy_backend.qna.dto.request.QnaUpdateRequest;
-import com.example.kbuddy_backend.qna.dto.response.QnaResponse;
+import com.example.kbuddy_backend.common.IntegrationTest;
+import com.example.kbuddy_backend.common.config.DataInitializer;
+import com.example.kbuddy_backend.fixtures.UserFixtures;
 import com.example.kbuddy_backend.qna.entity.Qna;
-import com.example.kbuddy_backend.qna.entity.QnaCategory;
-import com.example.kbuddy_backend.qna.repository.QnaBookmarkRepository;
-import com.example.kbuddy_backend.qna.repository.QnaCategoryRepository;
-import com.example.kbuddy_backend.qna.repository.QnaCollectionRepository;
+import com.example.kbuddy_backend.qna.entity.QnaHeart;
+import com.example.kbuddy_backend.qna.exception.DuplicatedQnaHeartException;
+import com.example.kbuddy_backend.qna.exception.QnaHeartNotFoundException;
 import com.example.kbuddy_backend.qna.repository.QnaHeartRepository;
 import com.example.kbuddy_backend.qna.repository.QnaRepository;
 import com.example.kbuddy_backend.user.entity.User;
+import com.example.kbuddy_backend.user.repository.UserRepository;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
 import java.util.Optional;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.mock.mockito.MockBean;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
 
-@ExtendWith(MockitoExtension.class)
-public class QnaServiceTest {
+public class QnaServiceTest extends IntegrationTest {
 
-    @Mock
-    private QnaRepository qnaRepository;
-
-    @Mock
-    private QnaHeartRepository qnaHeartRepository;
-
-    @Mock
-    private QnaCategoryRepository qnaCategoryRepository;
-
-    @Mock
-    private QnaCollectionRepository qnaCollectionRepository;
-
-    @Mock
-    private QnaBookmarkRepository qnaBookmarkRepository;
-
-    @InjectMocks
+    @Autowired
     private QnaService qnaService;
 
-    @Test
-    public void testSaveQna() {
-        // Arrange
-        QnaSaveRequest request = mock(QnaSaveRequest.class);
-        User user = mock(User.class);
-        QnaCategory category = mock(QnaCategory.class);
-        when(qnaCategoryRepository.findById(any())).thenReturn(Optional.of(category));
-        when(qnaRepository.save(any(Qna.class))).thenReturn(mock(Qna.class));
+    @MockBean
+    private QnaRepository qnaRepository;
 
-        // Act
-        QnaResponse response = qnaService.saveQna(request, user);
+    @MockBean
+    private UserRepository userRepository;
 
-        // Assert
-        assertNotNull(response);
-        verify(qnaRepository, times(1)).save(any(Qna.class));
+    @MockBean
+    private DataInitializer dataInitializer;
+
+    @MockBean
+    private QnaHeartRepository qnaHeartRepository;
+
+    private static final long userId = 1L;
+
+    private User user;
+    private Long qnaId;
+    private Qna qna;
+
+    @BeforeEach
+    void setUp() {
+        user = UserFixtures.createUser();
+        qnaId = 1L;
+        qna = Qna.builder().build();
     }
 
+    @DisplayName("좋아요 추가 테스트 - 이미 좋아요를 눌렀으면 예외 발생")
     @Test
-    public void testGetQna() {
-        // Arrange
-        Qna qna = mock(Qna.class);
-        when(qnaRepository.findById(anyLong())).thenReturn(Optional.of(qna));
+    public void testPlusHeart_AlreadyLiked() {
+        // given
+        QnaHeart existingQnaHeart = new QnaHeart(user,qna); // 이미 존재하는 좋아요
 
-        // Act
-        QnaResponse response = qnaService.getQna(1L);
+        given(qnaHeartRepository.findByQnaIdAndUserId(any(), any()))
+                .willReturn(Optional.of(existingQnaHeart));
 
-        // Assert
-        assertNotNull(response);
-        verify(qnaRepository, times(1)).findById(anyLong());
+        // when & then
+        assertThrows(DuplicatedQnaHeartException.class, () -> {
+            qnaService.plusHeart(qnaId, user);  // 이미 좋아요를 눌렀으면 예외 발생
+        });
+
+        verify(qnaHeartRepository, times(0)).save(any(QnaHeart.class));  // save는 호출되지 않아야 함
     }
 
+    @DisplayName("좋아요 추가 테스트 - 좋아요를 처음 누를 때 정상적으로 저장")
     @Test
-    public void testUpdateQna() {
-        // Arrange
-        Qna qna = mock(Qna.class);
-        User user = mock(User.class);
-        QnaUpdateRequest request = mock(QnaUpdateRequest.class);
-        QnaCategory category = mock(QnaCategory.class);
-        when(qnaRepository.findById(anyLong())).thenReturn(Optional.of(qna));
-        when(qnaCategoryRepository.findById(anyLong())).thenReturn(Optional.of(category));
+    public void testPlusHeart_FirstTimeLike() {
+        // given
+        given(qnaHeartRepository.findByQnaIdAndUserId(any(), any()))
+                .willReturn(Optional.empty());  // 이미 좋아요를 누르지 않았음
+        given(qnaRepository.findById(qnaId)).willReturn(Optional.of(qna));
 
-        // Act
-        QnaResponse response = qnaService.updateQna(1L, request, user);
+        // when
+        qnaService.plusHeart(qnaId, user);
 
-        // Assert
-        assertNotNull(response);
-        verify(qnaRepository, times(1)).findById(anyLong());
+        // then
+        verify(qnaHeartRepository, times(1)).save(any(QnaHeart.class));  // 좋아요 저장이 호출되었는지 검증
     }
 
+    @DisplayName("좋아요 취소 테스트 - 좋아요를 하지 않은 상태에서 취소 시 예외 발생")
     @Test
-    public void testDeleteQna() {
-        // Arrange
-        Qna qna = mock(Qna.class);
-        User user = mock(User.class);
-        when(qnaRepository.findById(anyLong())).thenReturn(Optional.of(qna));
+    public void testMinusHeart_NoLike() {
+        // given
+        given(qnaRepository.findById(qnaId))
+                .willReturn(Optional.of(qna));
+        given(qnaHeartRepository.findByQnaIdAndUserId(any(), any()))
+                .willReturn(Optional.empty());  // 좋아요를 누르지 않음
 
-        // Act
-        qnaService.deleteQna(1L, user);
+        // when & then
+        assertThrows(QnaHeartNotFoundException.class, () -> {
+            qnaService.minusHeart(qnaId, user);  // 좋아요가 없으면 예외 발생
+        });
 
-        // Assert
-        verify(qnaRepository, times(1)).delete(any(Qna.class));
+        verify(qnaHeartRepository, times(0)).deleteByQnaIdAndUserId(qnaId, userId);  // 삭제는 호출되지 않아야 함
+    }
+
+    @DisplayName("좋아요 취소 테스트 - 좋아요를 눌렀을 때 정상적으로 취소")
+    @Test
+    public void testMinusHeart_LikeExists() {
+        // given
+        QnaHeart qnaHeart = new QnaHeart(user, qna);
+
+        given(qnaHeartRepository.findByQnaIdAndUserId(any(), any()))
+                .willReturn(Optional.of(qnaHeart));  // 이미 좋아요를 눌렀음
+        given(qnaRepository.findById(any())).willReturn(Optional.of(qna));
+
+        // when
+        qnaService.minusHeart(qnaId, user);
+
+        // then
+        verify(qnaHeartRepository, times(1)).deleteByQnaIdAndUserId(any(), any());  // 삭제가 호출되었는지 검증
     }
 }
