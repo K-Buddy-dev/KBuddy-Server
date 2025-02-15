@@ -54,8 +54,8 @@ public class SecurityConfig {
                 })
                 .authorizeHttpRequests(authorizeRequests ->
                         authorizeRequests
-                                .requestMatchers("/kbuddy/v1/user/auth/password","/kbuddy/v1/user/auth/authentication").authenticated()
-                                .requestMatchers("/kbuddy/v1/user/auth/**").permitAll()
+                                .requestMatchers("/kbuddy/v1/auth/password","/kbuddy/v1/auth/authentication").authenticated()
+                                .requestMatchers("/kbuddy/v1/auth/**").permitAll()
                                 .requestMatchers("/kbuddy/v1/user/**").authenticated()
                                 .anyRequest().permitAll());
 

@@ -1,5 +1,7 @@
 package com.example.kbuddy_backend.user.controller;
 
+import static org.springframework.http.HttpStatus.*;
+
 import com.example.kbuddy_backend.auth.dto.response.AccessTokenAndRefreshTokenResponse;
 import com.example.kbuddy_backend.auth.service.MailSendService;
 import com.example.kbuddy_backend.common.config.CurrentUser;
@@ -12,7 +14,9 @@ import com.example.kbuddy_backend.user.dto.request.OAuthRegisterRequest;
 import com.example.kbuddy_backend.user.dto.request.PasswordRequest;
 import com.example.kbuddy_backend.user.dto.request.RegisterRequest;
 import com.example.kbuddy_backend.user.dto.response.DefaultResponse;
+import com.example.kbuddy_backend.user.dto.response.EmailCodeResponse;
 import com.example.kbuddy_backend.user.entity.User;
+import com.example.kbuddy_backend.user.exception.DuplicateEmailException;
 import com.example.kbuddy_backend.user.repository.UserRepository;
 import com.example.kbuddy_backend.user.service.UserAuthService;
 import com.example.kbuddy_backend.user.service.UserService;
@@ -34,7 +38,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/kbuddy/v1/user/auth")
+@RequestMapping("/kbuddy/v1/auth")
 @Tag(name = "Auth API", description = "인증 API 목록")
 public class UserAuthController {
 
@@ -53,7 +57,7 @@ public class UserAuthController {
         }
 
         AccessTokenAndRefreshTokenResponse token = userAuthService.register(registerRequest);
-        return ResponseEntity.status(HttpStatus.CREATED).body(token);
+        return ResponseEntity.status(CREATED).body(token);
     }
 
     @Operation(summary = "OAuth 회원가입", description = "OAuth(KAKAO, GOOGLE, APPLE) 기반 회원가입을 합니다.")
@@ -67,7 +71,7 @@ public class UserAuthController {
         }
 
         AccessTokenAndRefreshTokenResponse token = userAuthService.oAuthRegister(registerRequest);
-        return ResponseEntity.status(HttpStatus.CREATED).body(token);
+        return ResponseEntity.status(CREATED).body(token);
     }
 
     @Operation(summary = "OAuth 회원가입 체크", description = "OAuth로 회원가입한 내역이 있는지 검사합니다.")
@@ -106,25 +110,20 @@ public class UserAuthController {
 
     }
 
-    //토큰 불필요
-    @Operation(summary = "이메일 검사", description = "사용가능한 이메일인지 검사합니다.")
-    @PostMapping("/email/check")
-    public ResponseEntity<DefaultResponse> checkEmail(@Valid @RequestBody final EmailRequest request) {
 
-        if (userRepository.findByEmail(request.email()).isPresent()) {
-
-            return ResponseEntity.ok().body(DefaultResponse.of(false, "이메일이 존재합니다."));
-        }
-        return ResponseEntity.ok().body(DefaultResponse.of(true, "사용가능한 이메일입니다."));
-    }
-
-
-    //이메일 코드 전송
+    /**
+     * 사용 가능한 이메일인지 검사 -> 이메일 코드 전송
+     * */
     @Operation(summary = "이메일 코드 전송", description = "이메일에 인증 코드를 전송합니다.")
     @PostMapping("/email/send")
-    public ResponseEntity<String> mailSend(@RequestBody @Valid EmailRequest emailRequest) {
-        String code = mailService.joinEmail(emailRequest.email());
-        return ResponseEntity.ok().body(code);
+    public ResponseEntity<EmailCodeResponse> mailSend(@RequestBody @Valid EmailRequest emailRequest) {
+
+        if (userRepository.existsByEmail(emailRequest.email())) {
+            throw new DuplicateEmailException();
+        }
+
+        int code = mailService.joinEmail(emailRequest.email());
+        return ResponseEntity.ok().body(new EmailCodeResponse(emailRequest.email(),code));
     }
 
     //이메일 코드 인증
@@ -135,7 +134,7 @@ public class UserAuthController {
         if (checked) {
             return ResponseEntity.ok().body(DefaultResponse.of(true, "인증 성공"));
         } else {
-            return ResponseEntity.ok().body(DefaultResponse.of(false, "인증 실패"));
+            return ResponseEntity.status(UNAUTHORIZED).body(DefaultResponse.of(false, "인증 실패"));
         }
     }
 
