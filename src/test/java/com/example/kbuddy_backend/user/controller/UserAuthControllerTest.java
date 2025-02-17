@@ -26,7 +26,7 @@ class UserAuthControllerTest extends WebMVCTest {
         //when
         
         //then
-        mockMvc.perform(post("/kbuddy/v1/user/auth/login").content(objectMapper.writeValueAsString(registerRequest))
+        mockMvc.perform(post("/kbuddy/v1/auth/login").content(objectMapper.writeValueAsString(registerRequest))
                 .contentType(APPLICATION_JSON)).andDo(print())
                 .andExpect(status().isOk());
      }

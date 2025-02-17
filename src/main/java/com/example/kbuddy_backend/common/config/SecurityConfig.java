@@ -37,6 +37,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+                .cors(cors->cors.configure(http))
                 .formLogin(AbstractAuthenticationFilterConfigurer::permitAll)
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .formLogin(AbstractHttpConfigurer::disable)
@@ -53,8 +54,8 @@ public class SecurityConfig {
                 })
                 .authorizeHttpRequests(authorizeRequests ->
                         authorizeRequests
-                                .requestMatchers("/kbuddy/v1/user/auth/password","/kbuddy/v1/user/auth/authentication").authenticated()
-                                .requestMatchers("/kbuddy/v1/user/auth/**").permitAll()
+                                .requestMatchers("/kbuddy/v1/auth/password","/kbuddy/v1/auth/authentication").authenticated()
+                                .requestMatchers("/kbuddy/v1/auth/**").permitAll()
                                 .requestMatchers("/kbuddy/v1/user/**").authenticated()
                                 .anyRequest().permitAll());
 

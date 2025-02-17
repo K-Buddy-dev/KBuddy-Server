@@ -42,7 +42,7 @@ public class MailSendService {
 	}
 
 	//mail을 어디서 보내는지, 어디로 보내는지 , 인증 번호를 html 형식으로 어떻게 보내는지 작성.
-	public String joinEmail(String email) {
+	public int joinEmail(String email) {
 		makeRandomNumber();
 		String setFrom = "officialkbuddy@gmail.com";
 		String title = "AUTH CODE for K-Buddy Registration"; // 이메일 제목
@@ -53,7 +53,7 @@ public class MailSendService {
 				"<br>" +
 				"Please write a correct auth code."; //이메일 내용 삽입
 		mailSend(setFrom, email, title, content);
-		return Integer.toString(authNumber);
+		return authNumber;
 	}
 
 	//이메일을 전송합니다.

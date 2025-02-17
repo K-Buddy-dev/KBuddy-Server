@@ -30,7 +30,7 @@ spring:
   sql.init.mode: never  # Do not initialize DB in prod mode
   data:
     redis:
-      host: redis
+      host: localhost
       port: 6379
   mail:
     host: smtp.gmail.com
@@ -70,6 +70,14 @@ springdoc:
   default-consumes-media-type: application/json
   default-produces-media-type: application/json
 
+cloud:
+  naver:
+    s3:
+      bucket: ${S3_BUCKET}
+      region: ${S3_REGION}
+      endPoint: ${S3_ENDPOINT}
+      accessKey: ${S3_ACCESS_KEY}
+      secretKey: ${S3_SECRET_KEY}
 management:
   endpoints:
     web:

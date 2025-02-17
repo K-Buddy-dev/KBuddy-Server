@@ -29,7 +29,7 @@ spring:
   sql.init.mode: always
   data:
     redis:
-      host: redis
+      host: localhost
       port: 6379
   mail:
     host: smtp.gmail.com

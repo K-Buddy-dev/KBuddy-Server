@@ -13,11 +13,12 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.ComponentScan.Filter;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.context.annotation.Import;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.bind.annotation.RestController;
 
 @WebMvcTest(includeFilters = @Filter(type = FilterType.ANNOTATION, classes = RestController.class),
-        excludeAutoConfiguration = SecurityAutoConfiguration.class,
+        excludeAutoConfiguration = {SecurityAutoConfiguration.class, WebSecurityConfiguration.class},
         excludeFilters = {
                 @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = SecurityConfig.class)})
 @Import({JwtTokenProvider.class, MockedServiceClassBeanRegister.class})
