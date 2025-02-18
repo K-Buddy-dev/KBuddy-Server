@@ -73,6 +73,7 @@ public class Blog extends BaseTimeEntity {
     public void plusHeart(BlogHeart blogHeart) {
         this.heartCount += 1;
         this.hearts.add(blogHeart);
+        blogHeart.setBlog(this);
     }
 
     public void minusHeart(BlogHeart blogHeart) {
@@ -92,5 +93,6 @@ public class Blog extends BaseTimeEntity {
 
     public void addComment(BlogComment comment) {
         this.comments.add(comment);
+        comment.setBlog(this);
     }
 } 

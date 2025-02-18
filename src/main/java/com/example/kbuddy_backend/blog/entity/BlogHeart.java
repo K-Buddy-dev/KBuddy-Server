@@ -29,4 +29,8 @@ public class BlogHeart {
         this.user = user;
         this.blog = blog;
     }
-} 
+
+    public void setBlog(Blog blog) {
+        this.blog = blog;
+    }
+}

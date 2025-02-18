@@ -90,4 +90,8 @@ public class BlogComment extends BaseTimeEntity {
     public boolean isDeleted() {
         return deleted;
     }
-} 
+
+    public void setBlog(Blog blog) {
+        this.blog = blog;
+    }
+}
