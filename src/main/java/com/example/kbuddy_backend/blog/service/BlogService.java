@@ -357,4 +357,14 @@ public class BlogService {
                 .reduce((first, second) -> second)
                 .orElse(null);
     }
+
+    @Transactional
+    public void updateComment(Long blogId, Long commentId, BlogCommentRequest request, User user) {
+        Blog blog = findBlogById(blogId);
+        BlogComment comment = blogCommentRepository.findById(commentId)
+                .orElseThrow(() -> new BlogCommentNotFoundException());
+                
+        validateWriter(comment, user);
+        comment.updateContent(request.content());
+    }
 } 

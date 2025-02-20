@@ -94,4 +94,11 @@ public class BlogComment extends BaseTimeEntity {
     public void setBlog(Blog blog) {
         this.blog = blog;
     }
+
+    public void updateContent(String content) {
+        if (this.deleted) {
+            throw new IllegalStateException("삭제된 댓글은 수정할 수 없습니다.");
+        }
+        this.content = content;
+    }
 }

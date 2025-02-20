@@ -16,6 +16,7 @@ import java.util.List;
 @Table(name = "blog")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Blog extends BaseTimeEntity {
+    //todo: hibernate validation 어노테이션으로 유효성 검사하기
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

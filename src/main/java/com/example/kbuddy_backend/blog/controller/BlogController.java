@@ -41,6 +41,7 @@ public class BlogController {
     public ResponseEntity<DefaultResponse> saveBlog(
             @RequestBody BlogSaveRequest request,
             @Parameter(hidden = true) @CurrentUser User user) {
+        // todo: try catch 로 예외처리하기(post 안됐을 경우 대비)
         blogService.saveBlog(request, user);
         return ResponseEntity.ok(DefaultResponse.of(true, "블로그 작성 성공"));
     }
@@ -49,6 +50,13 @@ public class BlogController {
     @GetMapping("/{blogId}")
     @Operation(summary = "블로그 조회", description = "특정 블로그 게시글을 조회합니다.")
     public ResponseEntity<BlogResponse> getBlog(@PathVariable Long blogId) {
+        // Todo: 조회했을때 검색 되지 않았을 경우 400번대 에러 ResponseEntitiy 반환
+        /*
+        * if(blog != null)
+        *   return new ResponseEntity<>(product, HttpStatus.OK);
+        * else
+        *   return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        * */
         return ResponseEntity.ok(blogService.getBlog(blogId));
     }
 
@@ -90,6 +98,7 @@ public class BlogController {
             @PathVariable Long blogId,
             @Parameter(hidden = true) @CurrentUser User user) {
         blogService.minusHeart(blogId, user);
+        // todo: 좋아요가 없을때 NotFound ResponseEntity 반환
         return ResponseEntity.ok(DefaultResponse.of(true, "좋아요 취소 성공"));
     }
 
@@ -112,6 +121,7 @@ public class BlogController {
             @PathVariable Long commentId,
             @Parameter(hidden = true) @CurrentUser User user) {
         blogService.deleteComment(blogId, commentId, user);
+        // todo: 특정 ID 블로그가 없을때 NOT_FOUND
         return ResponseEntity.ok(DefaultResponse.of(true, "댓글 삭제 성공"));
     }
 
@@ -203,5 +213,18 @@ public class BlogController {
             @RequestParam(required = false, value = "sort") @Parameter(description = "정렬 기준 (VIEW_COUNT, HEART_COUNT, COMMENT_COUNT, LATEST)") SortBy sortBy) {
         BlogListResponse response = blogService.getBlogsNoOffset(pageSize, lastBlogId, keyword, sortBy);
         return ResponseEntity.ok().body(response);
+    }
+
+    // ToDo: 검색 기능 - Repo에서 직접 구현 QUERY DSL
+
+    @PatchMapping("/{blogId}/comment/{commentId}")
+    @Operation(summary = "댓글 수정", description = "블로그 게시글의 댓글을 수정합니다.")
+    public ResponseEntity<DefaultResponse> updateComment(
+            @PathVariable Long blogId,
+            @PathVariable Long commentId,
+            @RequestBody BlogCommentRequest request,
+            @Parameter(hidden = true) @CurrentUser User user) {
+        blogService.updateComment(blogId, commentId, request, user);
+        return ResponseEntity.ok(DefaultResponse.of(true, "댓글 수정 성공"));
     }
 } 
