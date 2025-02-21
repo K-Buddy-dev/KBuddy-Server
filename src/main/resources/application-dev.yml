@@ -8,7 +8,8 @@ spring:
     resources:
       add-mappings: false
   datasource:
-    url: jdbc:h2:mem:test;
+#    url: jdbc:h2:mem:test;
+    url: jdbc:h2:~/data/testdb
     driver-class-name: org.h2.Driver
     username: root
   h2:
