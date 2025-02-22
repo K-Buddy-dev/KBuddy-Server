@@ -95,7 +95,8 @@ public class UserAuthController {
         userAuthService.resetPassword(passwordRequest, user);
         return ResponseEntity.ok().body("비밀번호 변경 성공");
     }
-    
+
+    @Operation(summary = "사용자 아이디 중복 체크", description = "아이디/패스워드 기반 회원가입하는 사용자의 사용자 아이디의 중복여부를 체크합니다.")
     @PostMapping("/userId/check")
     public ResponseEntity<DefaultResponse> checkUserId(@RequestBody @Valid UserNameCheckRequest userNameCheckRequest) {
         if (userRepository.existsByUsername(userNameCheckRequest.userId())) {
