@@ -35,8 +35,9 @@ public class CurrentUserArgumentResolver implements HandlerMethodArgumentResolve
             throws Exception {
         String userId = SecurityContextHolder.getContextHolderStrategy().getContext()
                 .getAuthentication().getName();
+        System.out.println("Current User userId: " + userId);
 
-        return userRepository.findById(userId)
+        return userRepository.findById(Long.valueOf(userId))
                 .orElseThrow(UserNotFoundException::new);
     }
 }

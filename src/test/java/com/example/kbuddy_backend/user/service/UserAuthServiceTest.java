@@ -106,7 +106,7 @@ class UserAuthServiceTest extends IntegrationTest {
     void checkOAuthRegisterUser() {
         //given
         OAuthLoginRequest oAuthLoginRequest = OAuthLoginRequest.of("k-buddy@gmail.com", OAuthCategory.KAKAO);
-        given(userRepository.findByEmailAndOauthCategory(anyString(), any())).willReturn(
+        given(userRepository.findByOauthUidAndOauthCategory(anyString(), any())).willReturn(
             Optional.of(UserFixtures.createOAuthUser()));
 
         //then
