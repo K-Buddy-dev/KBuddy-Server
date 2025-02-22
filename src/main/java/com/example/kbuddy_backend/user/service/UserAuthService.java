@@ -41,11 +41,9 @@ public class UserAuthService {
         //todo: final default 설정하기
         //todo: 유효성 검사 및 테스트 코드
         final String email = registerRequest.email();
-        Optional<User> user = userRepository.findByEmail(email);
-
-        if (user.isPresent()) {
+        userRepository.findByEmail(email).ifPresent(user -> {
             throw new DuplicateUserException();
-        }
+        });
 
         final String password = passwordEncoder.encode(registerRequest.password());
         final User newUser = createUser(registerRequest, password);
@@ -81,12 +79,10 @@ public class UserAuthService {
 
     @Transactional
     public AccessTokenAndRefreshTokenResponse oAuthRegister(final OAuthRegisterRequest registerRequest) {
-        Optional<User> user = userRepository.findByOauthUidAndOauthCategory(registerRequest.oAuthUid(),
-                registerRequest.oAuthCategory());
-
-        if (user.isPresent()) {
+        userRepository.findByOauthUidAndOauthCategory(registerRequest.oAuthUid(),
+                registerRequest.oAuthCategory()).ifPresent(user -> {
             throw new DuplicateUserException();
-        }
+        });
 
         final User newUser = createOAuthUser(registerRequest);
 
