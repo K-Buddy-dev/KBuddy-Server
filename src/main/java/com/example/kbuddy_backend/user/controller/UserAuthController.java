@@ -98,7 +98,7 @@ public class UserAuthController {
     
     @PostMapping("/userId/check")
     public ResponseEntity<DefaultResponse> checkUserId(@RequestBody @Valid UserNameCheckRequest userNameCheckRequest) {
-        if (userRepository.existsByUsername(userNameCheckRequest.userName())) {
+        if (userRepository.existsByUsername(userNameCheckRequest.userId())) {
             throw new DuplicateUserIdException();
         }
         return ResponseEntity.ok().body(DefaultResponse.of(true, "사용 가능한 사용자 아이디입니다."));
