@@ -118,37 +118,24 @@ public class UserAuthService {
 
     public AccessTokenAndRefreshTokenResponse login(final LoginRequest loginRequest) {
 
-        final String email = loginRequest.email();
+        final String emailOrUserId = loginRequest.emailOrUserId();
         final String password = loginRequest.password();
 
-        final Optional<User> user = userRepository.findByEmail(email);
-
-        if (user.isEmpty()) {
-            throw new UserNotFoundException();
-        }
-
-        final User findUser = user.get();
-
-        if (!passwordEncoder.matches(password, findUser.getPassword())) {
+        //사용자 아이디 or 이메일을 통해 로그인
+        User user = userRepository.findByUsernameOrEmail(emailOrUserId, emailOrUserId).orElseThrow(UserNotFoundException::new);
+        if (!passwordEncoder.matches(password, user.getPassword())) {
             throw new InvalidPasswordException();
         }
         UsernamePasswordAuthenticationToken authenticationToken = getUsernamePasswordAuthenticationToken(
-                findUser, password);
+                user, password);
 
         return authService.createToken(authenticationToken);
     }
 
     public AccessTokenAndRefreshTokenResponse oAuthLogin(final OAuthLoginRequest loginRequest) {
-        final Optional<User> user = userRepository.findByOauthUidAndOauthCategory(loginRequest.oAuthUid(), loginRequest.oAuthCategory());
-
-        if (user.isEmpty()) {
-            throw new UserNotFoundException();
-        }
-
-        final User findUser = user.get();
-
+        final User user = userRepository.findByOauthUidAndOauthCategory(loginRequest.oAuthUid(), loginRequest.oAuthCategory()).orElseThrow(UserNotFoundException::new);
         UsernamePasswordAuthenticationToken authenticationToken = getUsernamePasswordAuthenticationToken(
-                findUser, "oAuth");
+                user, "oAuth");
 
         return authService.createToken(authenticationToken);
     }
