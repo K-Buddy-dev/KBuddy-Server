@@ -28,7 +28,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 
-@WithMockUser
+@WithMockUser(username = "123", roles = "USER")
 public class QnaControllerTest extends WebMVCTest {
 
     @MockBean
@@ -43,8 +43,8 @@ public class QnaControllerTest extends WebMVCTest {
         QnaResponse qnaResponse = QnaFixtures.createQnaResponse();
         User user = UserFixtures.createUser();
 
-        given(qnaService.saveQna(any(QnaSaveRequest.class), eq(user))).willReturn(qnaResponse);
-        given(userRepository.findByEmail(any())).willReturn(Optional.of(user));
+        given(qnaService.saveQna(any(QnaSaveRequest.class),eq(user))).willReturn(qnaResponse);
+        given(userRepository.findById(any())).willReturn(Optional.of(user));
 
         //when
         mockMvc.perform(post("/kbuddy/v1/qna")

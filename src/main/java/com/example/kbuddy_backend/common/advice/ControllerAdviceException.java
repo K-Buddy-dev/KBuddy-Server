@@ -1,6 +1,7 @@
 package com.example.kbuddy_backend.common.advice;
 
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
+import static org.springframework.http.HttpStatus.CONFLICT;
 import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
 import static org.springframework.http.HttpStatus.METHOD_NOT_ALLOWED;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
@@ -10,8 +11,11 @@ import static org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY;
 import com.example.kbuddy_backend.common.advice.response.CustomCode;
 import com.example.kbuddy_backend.common.advice.response.ErrorResponse;
 import com.example.kbuddy_backend.common.exception.BadRequestException;
+import com.example.kbuddy_backend.common.exception.DuplicateException;
 import com.example.kbuddy_backend.common.exception.NotFoundException;
 import com.example.kbuddy_backend.common.exception.UnauthorizedException;
+import java.util.List;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -29,10 +33,22 @@ public class ControllerAdviceException {
     //@Valid 예외
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> processValidationError(MethodArgumentNotValidException ex) {
+        // 모든 필드 오류 메시지를 리스트로 수집
+        List<String> errorMessages = ex.getBindingResult().getFieldErrors().stream()
+                .map(fieldError -> fieldError.getField() + ": " + fieldError.getDefaultMessage()) // 필드명 + 오류 메시지
+                .toList();
         return ResponseEntity.status(BAD_REQUEST)
-                .body(new ErrorResponse(ex.getBindingResult().getAllErrors().get(0).getDefaultMessage(),
-                        CustomCode.HTTP_400));
+                .body(new ErrorResponse("Validation failed for one or more fields.",
+                        CustomCode.HTTP_400, errorMessages));
     }
+
+    //409에러 처리
+    @ExceptionHandler(DuplicateException.class)
+    public ResponseEntity<ErrorResponse> handleDuplicate(final Exception e) {
+        log.error(e.getMessage());
+        return ResponseEntity.status(CONFLICT).body(new ErrorResponse(e.getMessage(), CustomCode.HTTP_409));
+    }
+
     @ExceptionHandler(NotFoundException.class)
     public ResponseEntity<ErrorResponse> handleNotFound(final Exception e) {
         log.error(e.getMessage());

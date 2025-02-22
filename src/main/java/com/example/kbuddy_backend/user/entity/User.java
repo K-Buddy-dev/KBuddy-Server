@@ -22,7 +22,6 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.springframework.lang.Nullable;
 
 @Getter
 @Entity
@@ -35,7 +34,7 @@ public class User extends BaseTimeEntity {
     @Column(name = "user_id")
     private Long id;
 
-    private UUID uuid;
+    private final UUID uuid = UUID.randomUUID();
     private String firstName;
     private String lastName;
     private String username;
@@ -48,6 +47,8 @@ public class User extends BaseTimeEntity {
     @Enumerated(EnumType.STRING)
     private Country country;
 
+    private String birthDate;
+
     private String bio;
     private String profileImageUrl;
     private boolean isActive = true;
@@ -56,8 +57,9 @@ public class User extends BaseTimeEntity {
     private List<Authority> authorities = new ArrayList<>();
 
     @Enumerated(EnumType.STRING)
-    @Nullable
     private OAuthCategory oauthCategory;
+
+    private String oauthUid;
 
     @OneToMany(mappedBy = "user")
     private List<QnaHeart> qnaHeart = new ArrayList<>();
@@ -77,16 +79,18 @@ public class User extends BaseTimeEntity {
 
     @Builder
     public User(String username, String password, String email, String firstName, String lastName, Gender gender,
-                Country country,String bio,
-                @Nullable OAuthCategory oAuthCategory) {
+                Country country, String bio,
+                OAuthCategory oAuthCategory, String oAuthUid, String birthDate) {
         this.gender = gender;
         this.country = country;
         this.firstName = firstName;
         this.lastName = lastName;
+        this.birthDate = birthDate;
         this.email = email;
         this.username = username;
         this.password = password;
         this.bio = bio;
+        this.oauthUid = oAuthUid;
         this.oauthCategory = oAuthCategory;
     }
 }

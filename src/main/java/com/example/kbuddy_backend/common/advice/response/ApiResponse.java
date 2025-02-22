@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDateTime;
+import java.util.List;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -34,6 +35,9 @@ public class ApiResponse<T> {
     @Schema(description = "실제 응답 데이터")
     public T data;
 
+    @Schema(description = "상세 정보")
+    public List<String> details = List.of();
+
 
     public static <T> ApiResponse<T> ok(T data,String path){
         return new ApiResponse<>(200,path,data, CustomCode.HTTP_200);
@@ -47,9 +51,14 @@ public class ApiResponse<T> {
         return new ApiResponse<>(204,path,data, CustomCode.HTTP_204);
     }
 
-    public static ApiResponse<?> error(String message,String path,int status, String code){
+    public static ApiResponse<?> error(String message, String path, int status, String code){
         return new ApiResponse<>(status,path,message,code);
     }
+
+    public static ApiResponse<?> errorDetail(String message, String path, int status, String code, List<String> details){
+        return new ApiResponse<>(status,path,message,code,details);
+    }
+
     public ApiResponse(int status, String path, T message, CustomCode code) {
         this.status = status;
         this.path = path;
@@ -57,6 +66,13 @@ public class ApiResponse<T> {
         this.code = code.getCode();
     }
 
+    public ApiResponse(int status, String path, T message, String code, List<String> details) {
+        this.status = status;
+        this.path = path;
+        this.data = message;
+        this.code = code;
+        this.details = details;
+    }
     public ApiResponse(int status, String path, T message, String code) {
         this.status = status;
         this.path = path;
