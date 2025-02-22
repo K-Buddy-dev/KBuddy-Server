@@ -65,7 +65,7 @@ class UserAuthServiceTest extends IntegrationTest {
         User user = UserFixtures.createUser();
         LoginRequest loginRequest = LoginRequest.of("test", "test");
         given(mockRegisterRequest.password()).willReturn("invalidPassword");
-        given(userRepository.findByEmail(anyString())).willReturn(Optional.of(user));
+        given(userRepository.findByUsernameOrEmailAndOauthCategoryIsNullAndOauthUidIsNull(anyString(),anyString())).willReturn(Optional.of(user));
 
         //then
         assertThatThrownBy(() -> userAuthService.login(loginRequest))
@@ -93,7 +93,7 @@ class UserAuthServiceTest extends IntegrationTest {
         User user = UserFixtures.createUser();
         RegisterRequest registerRequest = RegisterRequest.of("test", "test", "test", "test", "test", Country.KR,
             Gender.M,"000724");
-        given(userRepository.findByEmail(anyString())).willReturn(Optional.of(user));
+        given(userRepository.findByUsernameOrEmailAndOauthCategoryIsNullAndOauthUidIsNull(anyString(),anyString())).willReturn(Optional.of(user));
 
         //then
         assertThatThrownBy(() -> userAuthService.register(registerRequest))
@@ -118,7 +118,7 @@ class UserAuthServiceTest extends IntegrationTest {
     void checkChangePassword() {
         //given
         User user = UserFixtures.createUser();
-        given(userRepository.findByEmail(anyString())).willReturn(Optional.of(user));
+        given(userRepository.findByUsernameOrEmailAndOauthCategoryIsNullAndOauthUidIsNull(anyString(),anyString())).willReturn(Optional.of(user));
 
         //when
         userAuthService.resetPassword(PasswordRequest.of("changePassword"), user);
