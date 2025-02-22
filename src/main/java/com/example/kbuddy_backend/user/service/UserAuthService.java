@@ -41,8 +41,6 @@ public class UserAuthService {
         //todo: final default 설정하기
         //todo: 유효성 검사 및 테스트 코드
         final String email = registerRequest.email();
-        final String username = registerRequest.userId();
-
         Optional<User> user = userRepository.findByEmail(email);
 
         if (user.isPresent()) {
@@ -50,7 +48,7 @@ public class UserAuthService {
         }
 
         final String password = passwordEncoder.encode(registerRequest.password());
-        final User newUser = createUser(registerRequest, username, email, password);
+        final User newUser = createUser(registerRequest, password);
 
         newUser.addAuthority(new Authority(NORMAL_USER));
         User saveUser = userRepository.save(newUser);
@@ -69,14 +67,15 @@ public class UserAuthService {
         return new UsernamePasswordAuthenticationToken(saveUser.getId(), password, grantedAuthorities);
     }
 
-    private static User createUser(RegisterRequest registerRequest, String username, String email, String password) {
+    private static User createUser(RegisterRequest registerRequest,String password) {
         return User.builder()
-                .username(username)
+                .username(registerRequest.userId())
                 .firstName(registerRequest.firstName())
                 .lastName(registerRequest.lastName())
                 .country(registerRequest.country())
                 .gender(registerRequest.gender())
-                .email(email)
+                .birthDate(registerRequest.birthDate())
+                .email(registerRequest.email())
                 .password(password).build();
     }
 
@@ -109,6 +108,7 @@ public class UserAuthService {
                 .lastName(registerRequest.lastName())
                 .country(registerRequest.country())
                 .gender(registerRequest.gender())
+                .birthDate(registerRequest.birthDate())
                 .email(registerRequest.email()).build();
     }
 

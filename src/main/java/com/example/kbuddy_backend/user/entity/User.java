@@ -48,6 +48,8 @@ public class User extends BaseTimeEntity {
     @Enumerated(EnumType.STRING)
     private Country country;
 
+    private String birthDate;
+
     private String bio;
     private String profileImageUrl;
     private boolean isActive = true;
@@ -79,11 +81,12 @@ public class User extends BaseTimeEntity {
     @Builder
     public User(String username, String password, String email, String firstName, String lastName, Gender gender,
                 Country country, String bio,
-                @Nullable OAuthCategory oAuthCategory, @Nullable String oAuthUid) {
+                OAuthCategory oAuthCategory, String oAuthUid, String birthDate) {
         this.gender = gender;
         this.country = country;
         this.firstName = firstName;
         this.lastName = lastName;
+        this.birthDate = birthDate;
         this.email = email;
         this.username = username;
         this.password = password;
