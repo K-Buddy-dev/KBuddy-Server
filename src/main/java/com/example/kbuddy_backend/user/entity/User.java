@@ -22,7 +22,6 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.springframework.lang.Nullable;
 
 @Getter
 @Entity
@@ -35,7 +34,7 @@ public class User extends BaseTimeEntity {
     @Column(name = "user_id")
     private Long id;
 
-    private UUID uuid;
+    private final UUID uuid = UUID.randomUUID();
     private String firstName;
     private String lastName;
     private String username;

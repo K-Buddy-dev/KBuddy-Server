@@ -111,7 +111,7 @@ public class UserAuthController {
     @PostMapping("/email/send")
     public ResponseEntity<EmailCodeResponse> mailSend(@RequestBody @Valid EmailRequest emailRequest) {
 
-        if (userRepository.existsByEmail(emailRequest.email())) {
+        if (userRepository.existsByEmailAndOauthCategoryIsNullAndOauthUidIsNull(emailRequest.email())) {
             throw new DuplicateEmailException();
         }
 
