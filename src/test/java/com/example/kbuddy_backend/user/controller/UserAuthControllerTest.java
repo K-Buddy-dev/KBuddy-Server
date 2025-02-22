@@ -20,8 +20,8 @@ class UserAuthControllerTest extends WebMVCTest {
     @Test
     void loginSuccess() throws Exception {
         //given
-        RegisterRequest registerRequest = RegisterRequest.of("test", "test", "test","test","test", Country.KOREA,
-                Gender.M);
+        RegisterRequest registerRequest = RegisterRequest.of("test", "test", "test","test","test", Country.KR,
+                Gender.M, "000724");
 
         //when
         

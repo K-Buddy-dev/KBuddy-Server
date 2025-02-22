@@ -46,8 +46,8 @@ class UserAuthServiceTest extends IntegrationTest {
     @Test
     void loginSuccess() {
         //given
-        RegisterRequest registerRequest = RegisterRequest.of("test", "test", "test", "test", "test", Country.KOREA,
-            Gender.M);
+        RegisterRequest registerRequest = RegisterRequest.of("test", "test", "test", "test", "test", Country.KR,
+            Gender.M,"000724");
         given(userRepository.save(any(User.class))).willReturn(UserFixtures.createUser());
 
         //when
@@ -91,8 +91,8 @@ class UserAuthServiceTest extends IntegrationTest {
     void checkDuplicatedEmail() {
         //given
         User user = UserFixtures.createUser();
-        RegisterRequest registerRequest = RegisterRequest.of("test", "test", "test", "test", "test", Country.KOREA,
-            Gender.M);
+        RegisterRequest registerRequest = RegisterRequest.of("test", "test", "test", "test", "test", Country.KR,
+            Gender.M,"000724");
         given(userRepository.findByEmail(anyString())).willReturn(Optional.of(user));
 
         //then

@@ -46,6 +46,7 @@ public class DataInitializer {
                 .gender(Gender.M)
                 .bio("hello, i'm tony stark.")
                 .country(Country.KR)
+                .birthDate("000724")
                 .build();
         user.addAuthority(new Authority(NORMAL_USER));
         User saveUser = userRepository.save(user);

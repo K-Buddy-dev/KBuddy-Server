@@ -12,10 +12,12 @@ import com.example.kbuddy_backend.user.dto.request.OAuthLoginRequest;
 import com.example.kbuddy_backend.user.dto.request.OAuthRegisterRequest;
 import com.example.kbuddy_backend.user.dto.request.PasswordRequest;
 import com.example.kbuddy_backend.user.dto.request.RegisterRequest;
+import com.example.kbuddy_backend.user.dto.request.UserNameCheckRequest;
 import com.example.kbuddy_backend.user.dto.response.DefaultResponse;
 import com.example.kbuddy_backend.user.dto.response.EmailCodeResponse;
 import com.example.kbuddy_backend.user.entity.User;
 import com.example.kbuddy_backend.user.exception.DuplicateEmailException;
+import com.example.kbuddy_backend.user.exception.DuplicateUserIdException;
 import com.example.kbuddy_backend.user.repository.UserRepository;
 import com.example.kbuddy_backend.user.service.UserAuthService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -23,6 +25,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -91,9 +94,15 @@ public class UserAuthController {
                                                 User user) {
         userAuthService.resetPassword(passwordRequest, user);
         return ResponseEntity.ok().body("비밀번호 변경 성공");
-
     }
-
+    
+    @PostMapping("/userId/check")
+    public ResponseEntity<DefaultResponse> checkUserId(@RequestBody @Valid UserNameCheckRequest userNameCheckRequest) {
+        if (userRepository.existsByUsername(userNameCheckRequest.userName())) {
+            throw new DuplicateUserIdException();
+        }
+        return ResponseEntity.ok().body(DefaultResponse.of(true, "사용 가능한 사용자 아이디입니다."));
+    }
 
     /**
      * 사용 가능한 이메일인지 검사 -> 이메일 코드 전송
@@ -107,7 +116,7 @@ public class UserAuthController {
         }
 
         int code = mailService.joinEmail(emailRequest.email());
-        return ResponseEntity.ok().body(new EmailCodeResponse(emailRequest.email(),code));
+        return ResponseEntity.ok().body(new EmailCodeResponse(emailRequest.email(), code));
     }
 
     //이메일 코드 인증

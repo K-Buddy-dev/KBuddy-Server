@@ -1,6 +1,7 @@
 package com.example.kbuddy_backend.common.advice;
 
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
+import static org.springframework.http.HttpStatus.CONFLICT;
 import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
 import static org.springframework.http.HttpStatus.METHOD_NOT_ALLOWED;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
@@ -10,6 +11,7 @@ import static org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY;
 import com.example.kbuddy_backend.common.advice.response.CustomCode;
 import com.example.kbuddy_backend.common.advice.response.ErrorResponse;
 import com.example.kbuddy_backend.common.exception.BadRequestException;
+import com.example.kbuddy_backend.common.exception.DuplicateException;
 import com.example.kbuddy_backend.common.exception.NotFoundException;
 import com.example.kbuddy_backend.common.exception.UnauthorizedException;
 import java.util.List;
@@ -38,6 +40,13 @@ public class ControllerAdviceException {
         return ResponseEntity.status(BAD_REQUEST)
                 .body(new ErrorResponse("Validation failed for one or more fields.",
                         CustomCode.HTTP_400, errorMessages));
+    }
+
+    //409에러 처리
+    @ExceptionHandler(DuplicateException.class)
+    public ResponseEntity<ErrorResponse> handleDuplicate(final Exception e) {
+        log.error(e.getMessage());
+        return ResponseEntity.status(CONFLICT).body(new ErrorResponse(e.getMessage(), CustomCode.HTTP_409));
     }
 
     @ExceptionHandler(NotFoundException.class)
