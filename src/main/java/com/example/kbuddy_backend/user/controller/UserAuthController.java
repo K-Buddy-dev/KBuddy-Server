@@ -30,6 +30,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.validation.BindingResult;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -63,12 +64,7 @@ public class UserAuthController {
     @Operation(summary = "OAuth 회원가입", description = "OAuth(KAKAO, GOOGLE, APPLE) 기반 회원가입을 합니다.")
     @PostMapping("/oauth/register")
     public ResponseEntity<AccessTokenAndRefreshTokenResponse> oAuthRegister(
-            @RequestBody final OAuthRegisterRequest registerRequest, BindingResult bindingResult) {
-
-        if (bindingResult.hasErrors()) {
-            throw new IllegalArgumentException(
-                    Objects.requireNonNull(bindingResult.getFieldError()).getDefaultMessage());
-        }
+            @RequestBody @Valid final OAuthRegisterRequest registerRequest) {
 
         AccessTokenAndRefreshTokenResponse token = userAuthService.oAuthRegister(registerRequest);
         return ResponseEntity.status(CREATED).body(token);
@@ -77,7 +73,7 @@ public class UserAuthController {
     @Operation(summary = "OAuth 회원가입 체크", description = "OAuth로 회원가입한 내역이 있는지 검사합니다.")
     @PostMapping("/oauth/check")
     public ResponseEntity<DefaultResponse> checkOAuthUser(
-            @RequestBody final OAuthLoginRequest request) {
+            @RequestBody @Valid final OAuthLoginRequest request) {
         if (userAuthService.checkOAuthUser(request)) {
             return ResponseEntity.ok().body(DefaultResponse.of(true, "가입된 내역이 있습니다."));
         }
@@ -87,7 +83,7 @@ public class UserAuthController {
 
     @Operation(summary = "아이디/패스워드 로그인", description = "아이디/패스워드 기반 로그인을 합니다.")
     @PostMapping("/login")
-    public ResponseEntity<AccessTokenAndRefreshTokenResponse> login(@RequestBody final LoginRequest loginRequest) {
+    public ResponseEntity<AccessTokenAndRefreshTokenResponse> login(@RequestBody @Valid final LoginRequest loginRequest) {
         AccessTokenAndRefreshTokenResponse token = userAuthService.login(loginRequest);
         return ResponseEntity.ok().body(token);
     }
@@ -95,14 +91,14 @@ public class UserAuthController {
     @Operation(summary = "OAuth 로그인", description = "OAuth를 통해 로그인합니다.ㅣ")
     @PostMapping("/oauth/login")
     public ResponseEntity<AccessTokenAndRefreshTokenResponse> oAuthLogin(
-            @RequestBody final OAuthLoginRequest loginRequest) {
+            @RequestBody @Valid final OAuthLoginRequest loginRequest) {
         AccessTokenAndRefreshTokenResponse token = userAuthService.oAuthLogin(loginRequest);
         return ResponseEntity.ok().body(token);
     }
 
     @Operation(summary = "비밀번호 변경", description = "아이디/패스워드 기반 회원가입한 사용자의 비밀번호를 변경합니다.")
     @PostMapping("/password")
-    public ResponseEntity<String> resetPassword(@RequestBody final PasswordRequest passwordRequest,
+    public ResponseEntity<String> resetPassword(@RequestBody @Valid final PasswordRequest passwordRequest,
                                                 @Parameter(hidden = true) @CurrentUser
                                                 User user) {
         userAuthService.resetPassword(passwordRequest, user);

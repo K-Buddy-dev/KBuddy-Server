@@ -82,18 +82,14 @@ public class UserAuthService {
 
     @Transactional
     public AccessTokenAndRefreshTokenResponse oAuthRegister(final OAuthRegisterRequest registerRequest) {
-
-        final String email = registerRequest.email();
-        final String username = registerRequest.userId();
-
-        Optional<User> user = userRepository.findByOauthUidAndOauthCategory(registerRequest.oauthUid(),
+        Optional<User> user = userRepository.findByOauthUidAndOauthCategory(registerRequest.oAuthUid(),
                 registerRequest.oAuthCategory());
 
         if (user.isPresent()) {
             throw new DuplicateUserException();
         }
 
-        final User newUser = createOAuthUser(registerRequest, username, email);
+        final User newUser = createOAuthUser(registerRequest);
 
         newUser.addAuthority(new Authority(NORMAL_USER));
         User saveUser = userRepository.save(newUser);
@@ -104,20 +100,20 @@ public class UserAuthService {
         return authService.createToken(authenticationToken);
     }
 
-    private User createOAuthUser(OAuthRegisterRequest registerRequest, String username, String email) {
+    private User createOAuthUser(OAuthRegisterRequest registerRequest) {
         return User.builder()
-                .username(username)
+                .username(registerRequest.userId())
                 .oAuthCategory(registerRequest.oAuthCategory())
-                .oauthUid(registerRequest.userId())
+                .oAuthUid(registerRequest.oAuthUid())
                 .firstName(registerRequest.firstName())
                 .lastName(registerRequest.lastName())
                 .country(registerRequest.country())
                 .gender(registerRequest.gender())
-                .email(email).build();
+                .email(registerRequest.email()).build();
     }
 
     public boolean checkOAuthUser(final OAuthLoginRequest request) {
-        return userRepository.findByOauthUidAndOauthCategory(request.oauthUid(), request.oauth()).isPresent();
+        return userRepository.findByOauthUidAndOauthCategory(request.oAuthUid(), request.oAuthCategory()).isPresent();
     }
 
     public AccessTokenAndRefreshTokenResponse login(final LoginRequest loginRequest) {
@@ -143,10 +139,7 @@ public class UserAuthService {
     }
 
     public AccessTokenAndRefreshTokenResponse oAuthLogin(final OAuthLoginRequest loginRequest) {
-
-        final String oauthUid = loginRequest.oauthUid();
-
-        final Optional<User> user = userRepository.findByOauthUidAndOauthCategory(oauthUid, loginRequest.oauth());
+        final Optional<User> user = userRepository.findByOauthUidAndOauthCategory(loginRequest.oAuthUid(), loginRequest.oAuthCategory());
 
         if (user.isEmpty()) {
             throw new UserNotFoundException();

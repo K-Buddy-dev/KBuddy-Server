@@ -3,10 +3,10 @@ package com.example.kbuddy_backend.common.advice;
 import com.example.kbuddy_backend.common.advice.response.ApiResponse;
 import com.example.kbuddy_backend.common.advice.response.ErrorResponse;
 import jakarta.servlet.http.HttpServletResponse;
+import java.util.List;
 import org.springframework.core.MethodParameter;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.HttpMessageConverter;
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;
 import org.springframework.http.server.ServletServerHttpResponse;
@@ -35,6 +35,10 @@ public class ResponseWrapper implements ResponseBodyAdvice<Object> {
         if (body instanceof ErrorResponse errorResponse) {
             String code = errorResponse.getCode();
             String message = errorResponse.getMessage();
+            List<String> details = errorResponse.getDetails();
+            if(details != null) {
+                return ApiResponse.errorDetail(message, path, status, code, details);
+            }
             return ApiResponse.error(message, path, status, code);
 
         }

@@ -9,7 +9,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByUsername(String username);
     Optional<User> findByEmail(String email);
 
-    Optional<User> findByOauthUidAndOauthCategory(String oauthUid, OAuthCategory oAuthCategory);
+    Optional<User> findByOauthUidAndOauthCategory(String oauthUid, OAuthCategory oauthCategory);
 
     boolean existsByEmail(String email);
 }

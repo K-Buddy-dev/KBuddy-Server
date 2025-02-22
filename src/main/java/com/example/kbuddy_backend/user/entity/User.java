@@ -56,7 +56,6 @@ public class User extends BaseTimeEntity {
     private List<Authority> authorities = new ArrayList<>();
 
     @Enumerated(EnumType.STRING)
-    @Nullable
     private OAuthCategory oauthCategory;
 
     private String oauthUid;
@@ -79,8 +78,8 @@ public class User extends BaseTimeEntity {
 
     @Builder
     public User(String username, String password, String email, String firstName, String lastName, Gender gender,
-                Country country,String bio,
-                @Nullable OAuthCategory oAuthCategory, @Nullable String oauthUid) {
+                Country country, String bio,
+                @Nullable OAuthCategory oAuthCategory, @Nullable String oAuthUid) {
         this.gender = gender;
         this.country = country;
         this.firstName = firstName;
@@ -89,7 +88,7 @@ public class User extends BaseTimeEntity {
         this.username = username;
         this.password = password;
         this.bio = bio;
-        this.oauthUid = oauthUid;
+        this.oauthUid = oAuthUid;
         this.oauthCategory = oAuthCategory;
     }
 }

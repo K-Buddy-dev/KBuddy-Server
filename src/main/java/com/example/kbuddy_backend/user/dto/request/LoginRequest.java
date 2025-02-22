@@ -1,6 +1,8 @@
 package com.example.kbuddy_backend.user.dto.request;
 
-public record LoginRequest(String email,String password) {
+import jakarta.validation.constraints.NotNull;
+
+public record LoginRequest(@NotNull String email, @NotNull String password) {
     public static LoginRequest of(String email, String password) {
         return new LoginRequest(email, password);
     }
