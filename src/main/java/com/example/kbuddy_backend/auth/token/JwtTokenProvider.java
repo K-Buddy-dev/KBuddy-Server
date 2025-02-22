@@ -53,7 +53,6 @@ public class JwtTokenProvider implements TokenProvider {
 
 
         //상담원 사용자인지 일반 사용자인지 구분하기 위한 role 추가
-
         String token = Jwts.builder()
                 .setSubject(authentication.getName())
                 .claim("role",authorities)

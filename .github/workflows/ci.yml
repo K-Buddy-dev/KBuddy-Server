@@ -3,8 +3,8 @@ name: KBuddy-server Jenkins
 
 on:
   push:
-    branches:
-      - main
+    branches
+      - main:
     tags:
       - "v*.*.*"  # 버전 태그를 달아 배포할 때 사용할 태그 필드
 #  pull_request:
@@ -60,7 +60,7 @@ jobs:
         with:
           images: |
             ${{ steps.get-ocir-repository.outputs.repo_path }}
-          flavor: |
+          flavor: | 
             latest=true
           tags: |
             type=sha

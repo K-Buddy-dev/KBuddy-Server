@@ -50,8 +50,27 @@ public class UserAuthService {
         }
 
         final String password = passwordEncoder.encode(registerRequest.password());
+        final User newUser = createUser(registerRequest, username, email, password);
 
-        final User newUser = User.builder()
+        newUser.addAuthority(new Authority(NORMAL_USER));
+        User saveUser = userRepository.save(newUser);
+
+        UsernamePasswordAuthenticationToken authenticationToken = getUsernamePasswordAuthenticationToken(
+                saveUser, password);
+
+        return authService.createToken(authenticationToken);
+    }
+
+    private static UsernamePasswordAuthenticationToken getUsernamePasswordAuthenticationToken(User saveUser,
+                                                                                              String password) {
+        List<GrantedAuthority> grantedAuthorities = saveUser.getAuthorities().stream()
+                .map(authority -> new SimpleGrantedAuthority(authority.getAuthorityName().name()))
+                .collect(Collectors.toList());
+        return new UsernamePasswordAuthenticationToken(saveUser.getId(), password, grantedAuthorities);
+    }
+
+    private static User createUser(RegisterRequest registerRequest, String username, String email, String password) {
+        return User.builder()
                 .username(username)
                 .firstName(registerRequest.firstName())
                 .lastName(registerRequest.lastName())
@@ -59,18 +78,6 @@ public class UserAuthService {
                 .gender(registerRequest.gender())
                 .email(email)
                 .password(password).build();
-
-        newUser.addAuthority(new Authority(NORMAL_USER));
-        User saveUser = userRepository.save(newUser);
-
-        List<GrantedAuthority> grantedAuthorities = saveUser.getAuthorities().stream()
-                .map(authority -> new SimpleGrantedAuthority(authority.getAuthorityName().name()))
-                .collect(Collectors.toList());
-
-        UsernamePasswordAuthenticationToken authenticationToken =
-                new UsernamePasswordAuthenticationToken(email, password, grantedAuthorities);
-
-        return authService.createToken(authenticationToken);
     }
 
     @Transactional
@@ -79,36 +86,38 @@ public class UserAuthService {
         final String email = registerRequest.email();
         final String username = registerRequest.userId();
 
-        Optional<User> user = userRepository.findByEmail(email);
+        Optional<User> user = userRepository.findByOauthUidAndOauthCategory(registerRequest.oauthUid(),
+                registerRequest.oAuthCategory());
 
         if (user.isPresent()) {
             throw new DuplicateUserException();
         }
 
-        final User newUser = User.builder()
+        final User newUser = createOAuthUser(registerRequest, username, email);
+
+        newUser.addAuthority(new Authority(NORMAL_USER));
+        User saveUser = userRepository.save(newUser);
+
+        UsernamePasswordAuthenticationToken authenticationToken = getUsernamePasswordAuthenticationToken(
+                saveUser, "oAuth");
+
+        return authService.createToken(authenticationToken);
+    }
+
+    private User createOAuthUser(OAuthRegisterRequest registerRequest, String username, String email) {
+        return User.builder()
                 .username(username)
-                .oAuthCategory(registerRequest.oauth())
+                .oAuthCategory(registerRequest.oAuthCategory())
+                .oauthUid(registerRequest.userId())
                 .firstName(registerRequest.firstName())
                 .lastName(registerRequest.lastName())
                 .country(registerRequest.country())
                 .gender(registerRequest.gender())
                 .email(email).build();
-
-        newUser.addAuthority(new Authority(NORMAL_USER));
-        User saveUser = userRepository.save(newUser);
-
-        List<GrantedAuthority> grantedAuthorities = saveUser.getAuthorities().stream()
-                .map(authority -> new SimpleGrantedAuthority(authority.getAuthorityName().name()))
-                .collect(Collectors.toList());
-
-        UsernamePasswordAuthenticationToken authenticationToken =
-                new UsernamePasswordAuthenticationToken(email, "oAuth", grantedAuthorities);
-
-        return authService.createToken(authenticationToken);
     }
 
     public boolean checkOAuthUser(final OAuthLoginRequest request) {
-        return userRepository.findByEmailAndOauthCategory(request.email(), request.oauth()).isPresent();
+        return userRepository.findByOauthUidAndOauthCategory(request.oauthUid(), request.oauth()).isPresent();
     }
 
     public AccessTokenAndRefreshTokenResponse login(final LoginRequest loginRequest) {
@@ -127,20 +136,17 @@ public class UserAuthService {
         if (!passwordEncoder.matches(password, findUser.getPassword())) {
             throw new InvalidPasswordException();
         }
-        List<GrantedAuthority> grantedAuthorities = findUser.getAuthorities().stream()
-                .map(authority -> new SimpleGrantedAuthority(authority.getAuthorityName().name()))
-                .collect(Collectors.toList());
-        UsernamePasswordAuthenticationToken authenticationToken =
-                new UsernamePasswordAuthenticationToken(email, password, grantedAuthorities);
+        UsernamePasswordAuthenticationToken authenticationToken = getUsernamePasswordAuthenticationToken(
+                findUser, password);
 
         return authService.createToken(authenticationToken);
     }
 
     public AccessTokenAndRefreshTokenResponse oAuthLogin(final OAuthLoginRequest loginRequest) {
 
-        final String email = loginRequest.email();
+        final String oauthUid = loginRequest.oauthUid();
 
-        final Optional<User> user = userRepository.findByEmailAndOauthCategory(email, loginRequest.oauth());
+        final Optional<User> user = userRepository.findByOauthUidAndOauthCategory(oauthUid, loginRequest.oauth());
 
         if (user.isEmpty()) {
             throw new UserNotFoundException();
@@ -148,11 +154,8 @@ public class UserAuthService {
 
         final User findUser = user.get();
 
-        List<GrantedAuthority> grantedAuthorities = findUser.getAuthorities().stream()
-                .map(authority -> new SimpleGrantedAuthority(authority.getAuthorityName().name()))
-                .collect(Collectors.toList());
-        UsernamePasswordAuthenticationToken authenticationToken =
-                new UsernamePasswordAuthenticationToken(email, "oAuth", grantedAuthorities);
+        UsernamePasswordAuthenticationToken authenticationToken = getUsernamePasswordAuthenticationToken(
+                findUser, "oAuth");
 
         return authService.createToken(authenticationToken);
     }

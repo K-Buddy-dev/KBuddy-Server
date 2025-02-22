@@ -59,6 +59,8 @@ public class User extends BaseTimeEntity {
     @Nullable
     private OAuthCategory oauthCategory;
 
+    private String oauthUid;
+
     @OneToMany(mappedBy = "user")
     private List<QnaHeart> qnaHeart = new ArrayList<>();
 
@@ -78,7 +80,7 @@ public class User extends BaseTimeEntity {
     @Builder
     public User(String username, String password, String email, String firstName, String lastName, Gender gender,
                 Country country,String bio,
-                @Nullable OAuthCategory oAuthCategory) {
+                @Nullable OAuthCategory oAuthCategory, @Nullable String oauthUid) {
         this.gender = gender;
         this.country = country;
         this.firstName = firstName;
@@ -87,6 +89,7 @@ public class User extends BaseTimeEntity {
         this.username = username;
         this.password = password;
         this.bio = bio;
+        this.oauthUid = oauthUid;
         this.oauthCategory = oAuthCategory;
     }
 }

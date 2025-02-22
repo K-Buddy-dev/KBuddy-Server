@@ -33,10 +33,10 @@ public class CurrentUserArgumentResolver implements HandlerMethodArgumentResolve
     public User resolveArgument(MethodParameter parameter, @Nullable ModelAndViewContainer mavContainer,
                                   NativeWebRequest webRequest, @Nullable WebDataBinderFactory binderFactory)
             throws Exception {
-        String email = SecurityContextHolder.getContextHolderStrategy().getContext()
+        String userId = SecurityContextHolder.getContextHolderStrategy().getContext()
                 .getAuthentication().getName();
 
-        return userRepository.findByEmail(email)
+        return userRepository.findById(userId)
                 .orElseThrow(UserNotFoundException::new);
     }
 }
