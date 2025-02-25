@@ -5,6 +5,7 @@ import static org.springframework.http.HttpStatus.*;
 import com.example.kbuddy_backend.auth.dto.response.AccessTokenAndRefreshTokenResponse;
 import com.example.kbuddy_backend.auth.service.MailSendService;
 import com.example.kbuddy_backend.common.config.CurrentUser;
+import com.example.kbuddy_backend.common.validate.DateValidator;
 import com.example.kbuddy_backend.user.dto.request.EmailCheckRequest;
 import com.example.kbuddy_backend.user.dto.request.EmailRequest;
 import com.example.kbuddy_backend.user.dto.request.LoginRequest;
@@ -47,7 +48,7 @@ public class UserAuthController {
     @PostMapping("/register")
     public ResponseEntity<AccessTokenAndRefreshTokenResponse> register(
             @Valid @RequestBody final RegisterRequest registerRequest) {
-
+        DateValidator.isValidDate(registerRequest.birthDate());
         AccessTokenAndRefreshTokenResponse token = userAuthService.register(registerRequest);
         return ResponseEntity.status(CREATED).body(token);
     }
@@ -56,7 +57,7 @@ public class UserAuthController {
     @PostMapping("/oauth/register")
     public ResponseEntity<AccessTokenAndRefreshTokenResponse> oAuthRegister(
             @RequestBody @Valid final OAuthRegisterRequest registerRequest) {
-
+        DateValidator.isValidDate(registerRequest.birthDate());
         AccessTokenAndRefreshTokenResponse token = userAuthService.oAuthRegister(registerRequest);
         return ResponseEntity.status(CREATED).body(token);
     }
