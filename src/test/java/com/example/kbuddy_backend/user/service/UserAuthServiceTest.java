@@ -46,8 +46,8 @@ class UserAuthServiceTest extends IntegrationTest {
     @Test
     void loginSuccess() {
         //given
-        RegisterRequest registerRequest = RegisterRequest.of("test", "test", "test", "test", "test", Country.KOREA,
-            Gender.M);
+        RegisterRequest registerRequest = RegisterRequest.of("test", "test", "test", "test", "test", Country.KR,
+            Gender.M,"000724");
         given(userRepository.save(any(User.class))).willReturn(UserFixtures.createUser());
 
         //when
@@ -65,7 +65,7 @@ class UserAuthServiceTest extends IntegrationTest {
         User user = UserFixtures.createUser();
         LoginRequest loginRequest = LoginRequest.of("test", "test");
         given(mockRegisterRequest.password()).willReturn("invalidPassword");
-        given(userRepository.findByEmail(anyString())).willReturn(Optional.of(user));
+        given(userRepository.findByUsernameOrEmailAndOauthCategoryIsNullAndOauthUidIsNull(anyString(),anyString())).willReturn(Optional.of(user));
 
         //then
         assertThatThrownBy(() -> userAuthService.login(loginRequest))
@@ -91,9 +91,9 @@ class UserAuthServiceTest extends IntegrationTest {
     void checkDuplicatedEmail() {
         //given
         User user = UserFixtures.createUser();
-        RegisterRequest registerRequest = RegisterRequest.of("test", "test", "test", "test", "test", Country.KOREA,
-            Gender.M);
-        given(userRepository.findByEmail(anyString())).willReturn(Optional.of(user));
+        RegisterRequest registerRequest = RegisterRequest.of("test", "test", "test", "test", "test", Country.KR,
+            Gender.M,"000724");
+        given(userRepository.findByUsernameOrEmailAndOauthCategoryIsNullAndOauthUidIsNull(anyString(),anyString())).willReturn(Optional.of(user));
 
         //then
         assertThatThrownBy(() -> userAuthService.register(registerRequest))
@@ -106,7 +106,7 @@ class UserAuthServiceTest extends IntegrationTest {
     void checkOAuthRegisterUser() {
         //given
         OAuthLoginRequest oAuthLoginRequest = OAuthLoginRequest.of("k-buddy@gmail.com", OAuthCategory.KAKAO);
-        given(userRepository.findByEmailAndOauthCategory(anyString(), any())).willReturn(
+        given(userRepository.findByOauthUidAndOauthCategory(anyString(), any())).willReturn(
             Optional.of(UserFixtures.createOAuthUser()));
 
         //then
@@ -118,7 +118,7 @@ class UserAuthServiceTest extends IntegrationTest {
     void checkChangePassword() {
         //given
         User user = UserFixtures.createUser();
-        given(userRepository.findByEmail(anyString())).willReturn(Optional.of(user));
+        given(userRepository.findByUsernameOrEmailAndOauthCategoryIsNullAndOauthUidIsNull(anyString(),anyString())).willReturn(Optional.of(user));
 
         //when
         userAuthService.resetPassword(PasswordRequest.of("changePassword"), user);
