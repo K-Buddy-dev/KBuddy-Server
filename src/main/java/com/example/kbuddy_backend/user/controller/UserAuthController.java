@@ -107,7 +107,19 @@ public class UserAuthController {
 
     /**
      * 사용 가능한 이메일인지 검사 -> 이메일 코드 전송
+     * 250301 이메일 검사 api 분리
      * */
+    @Operation(summary = "이메일 코드 전송", description = "이메일에 인증 코드를 전송합니다.")
+    @PostMapping("/email/check")
+    public ResponseEntity<DefaultResponse> mailCheck(@RequestBody @Valid EmailRequest emailRequest) {
+
+        if (userRepository.existsByEmailAndOauthCategoryIsNullAndOauthUidIsNull(emailRequest.email())) {
+            throw new DuplicateEmailException();
+        }
+
+        return ResponseEntity.ok().body(DefaultResponse.of(true, "사용 가능한 이메일입니다."));
+    }
+
     @Operation(summary = "이메일 코드 전송", description = "이메일에 인증 코드를 전송합니다.")
     @PostMapping("/email/send")
     public ResponseEntity<EmailCodeResponse> mailSend(@RequestBody @Valid EmailRequest emailRequest) {
