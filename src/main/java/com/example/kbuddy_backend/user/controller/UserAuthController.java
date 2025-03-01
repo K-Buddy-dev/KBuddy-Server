@@ -109,7 +109,7 @@ public class UserAuthController {
      * 사용 가능한 이메일인지 검사 -> 이메일 코드 전송
      * 250301 이메일 검사 api 분리
      * */
-    @Operation(summary = "이메일 코드 전송", description = "이메일에 인증 코드를 전송합니다.")
+    @Operation(summary = "이메일 증벅 체크", description = "이메일의 중복을 검사합니다.")
     @PostMapping("/email/check")
     public ResponseEntity<DefaultResponse> mailCheck(@RequestBody @Valid EmailRequest emailRequest) {
 
