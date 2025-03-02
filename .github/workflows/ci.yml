@@ -1,6 +1,5 @@
 name: KBuddy-server Jenkins
 
-
 on:
   push:
     branches:
