@@ -3,7 +3,7 @@ name: PR Test
 on:
   pull_request:
     branches:
-      - main
+      - dev
 
 jobs:
   test:
@@ -24,12 +24,24 @@ jobs:
           echo "JWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY }}" >> .env
           echo "EMAIL_USERNAME=${{ secrets.EMAIL_USERNAME }}" >> .env
           echo "EMAIL_PASSWORD=${{ secrets.EMAIL_PASSWORD }}" >> .env
+          echo "S3_BUCKET=${{ secrets.S3_BUCKET }}" >> .env
+          echo "S3_REGION=${{ secrets.S3_REGION }}" >> .env
+          echo "S3_ENDPOINT=${{ secrets.S3_ENDPOINT }}" >> .env
+          echo "S3_ACCESS_KEY=${{ secrets.S3_ACCESS_KEY }}" >> .env
+          echo "S3_SECRET_KEY=${{ secrets.S3_SECRET_KEY }}" >> .env
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
       - name: Test with Gradle
-        run: ./gradlew --info test
+        run: SPRING_PROFILES_ACTIVE=prod ./gradlew --info test
+
+      # 테스트 후 Result 출력
+      - name: Publish Unit Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v1
+        if: ${{ always() }}  # 'always' : 테스트 실패해도 Result 출력
+        with:
+          files: build/test-results/**/*.xml
 
       - name: Cleanup Gradle Cache
         # Remove some files from the Gradle cache, so they aren't cached by GitHub Actions.

@@ -3,8 +3,8 @@ name: KBuddy-server Jenkins
 
 on:
   push:
-    branches
-      - main:
+    branches:
+      - dev:
     tags:
       - "v*.*.*"  # 버전 태그를 달아 배포할 때 사용할 태그 필드
 #  pull_request:
@@ -22,6 +22,7 @@ jobs:
       OCI_CLI_FINGERPRINT: ${{ secrets.OCI_CLI_FINGERPRINT }}
       OCI_CLI_KEY_CONTENT: ${{ secrets.OCI_CLI_KEY_CONTENT }}
       OCI_CLI_REGION: ${{ secrets.OCI_CLI_REGION }}
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -37,6 +38,11 @@ jobs:
           echo "JWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY }}" >> .env
           echo "EMAIL_USERNAME=${{ secrets.EMAIL_USERNAME }}" >> .env
           echo "EMAIL_PASSWORD=${{ secrets.EMAIL_PASSWORD }}" >> .env
+          echo "S3_BUCKET=${{ secrets.S3_BUCKET }}" >> .env
+          echo "S3_REGION=${{ secrets.S3_REGION }}" >> .env
+          echo "S3_ENDPOINT=${{ secrets.S3_ENDPOINT }}" >> .env
+          echo "S3_ACCESS_KEY=${{ secrets.S3_ACCESS_KEY }}" >> .env
+          echo "S3_SECRET_KEY=${{ secrets.S3_SECRET_KEY }}" >> .env
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -74,21 +80,20 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
-  post-slack:
-    # if: github.event.pull_request.merged == true
-    name: Post CI result to a Slack channel
+  post-discord:
+    name: Post CI result to Discord
     runs-on: ubuntu-latest
     needs: build-server-image
     steps:
-      - name: Post to a Slack channel
-        id: slack
-        uses: slackapi/slack-github-action@v1.26.0
+      - name: Post to Discord channel
+        uses: Ilshidur/action-discord@v2
         with:
-          channel-id: 'notification'
-          slack-message: "GitHub build result: ${{ job.status }}\n${{ github.event.pull_request.html_url || github.event.head_commit.url }}"
-        env:
-          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
-
+          webhook_url: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          content: |
+            **KBuddy Server Jenkins Build Result**
+            - **Build Status**: ${{ job.status }}
+            - **Build URL**: ${{ github.event.pull_request.html_url || github.event.head_commit.url }}
+            - **Build Duration**: ${{ job.status == 'success' && job.steps[0].outputs.duration || 'N/A' }} seconds
 
   trigger-jenkins:
     # if: github.event.pull_request.merged == true
@@ -103,3 +108,4 @@ jobs:
           user: ${{ secrets.JENKINS_USER }}
           token: ${{ secrets.JENKINS_TOKEN }}
           job: "K-Buddy Server"
+
