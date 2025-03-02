@@ -28,7 +28,7 @@ public class MailSendService {
 		Random r = new Random();
 		StringBuilder randomNumber = new StringBuilder();
 		for (int i = 0; i < 6; i++) {
-			randomNumber.append(Integer.toString(r.nextInt(10)));
+			randomNumber.append(r.nextInt(10));
 		}
 
 		authNumber = Integer.parseInt(randomNumber.toString());
