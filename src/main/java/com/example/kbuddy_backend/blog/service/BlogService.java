@@ -1,6 +1,7 @@
 package com.example.kbuddy_backend.blog.service;
 
 import com.example.kbuddy_backend.blog.dto.request.BlogCommentRequest;
+import com.example.kbuddy_backend.blog.dto.request.BlogReportRequest;
 import com.example.kbuddy_backend.blog.dto.request.BlogSaveRequest;
 import com.example.kbuddy_backend.blog.dto.request.BlogUpdateRequest;
 import com.example.kbuddy_backend.blog.dto.request.BlogReplyRequest;
@@ -11,6 +12,7 @@ import com.example.kbuddy_backend.blog.entity.BlogComment;
 import com.example.kbuddy_backend.blog.entity.BlogHeart;
 import com.example.kbuddy_backend.blog.entity.BlogCommentHeart;
 import com.example.kbuddy_backend.blog.entity.BlogBookmark;
+import com.example.kbuddy_backend.blog.entity.BlogReport;
 import com.example.kbuddy_backend.blog.exception.BlogCommentNotFoundException;
 import com.example.kbuddy_backend.blog.exception.BlogNotFoundException;
 import com.example.kbuddy_backend.blog.exception.DuplicatedBlogHeartException;
@@ -18,6 +20,7 @@ import com.example.kbuddy_backend.blog.exception.DuplicatedBlogBookmarkException
 import com.example.kbuddy_backend.blog.exception.BlogBookmarkNotFoundException;
 import com.example.kbuddy_backend.blog.repository.BlogCommentRepository;
 import com.example.kbuddy_backend.blog.repository.BlogHeartRepository;
+import com.example.kbuddy_backend.blog.repository.BlogReportRepository;
 import com.example.kbuddy_backend.blog.repository.BlogRepository;
 import com.example.kbuddy_backend.blog.repository.BlogCommentHeartRepository;
 import com.example.kbuddy_backend.blog.repository.BlogBookmarkRepository;
@@ -42,6 +45,7 @@ public class BlogService {
     private final BlogHeartRepository blogHeartRepository;
     private final BlogCommentHeartRepository blogCommentHeartRepository;
     private final BlogBookmarkRepository blogBookmarkRepository;
+    private final BlogReportRepository blogReportRepository;
 
     // 새로운 블로그를 저장
     @Transactional
@@ -61,16 +65,6 @@ public class BlogService {
         Blog blog = findBlogById(blogId);
         blog.plusViewCount();
         return makeBlogResponse(blog);
-    }
-
-    /**
-     * 블로그 목록을 페이징하여 조회
-     * @param pageable 페이지 정보
-     * @return 페이징된 블로그 목록
-     */
-    public Page<BlogResponse> getBlogs(Pageable pageable) {
-        return blogRepository.findAllByOrderByIdDesc(pageable)
-                .map(this::makeBlogResponse);
     }
 
     /**
@@ -154,19 +148,34 @@ public class BlogService {
         blogHeartRepository.deleteByBlogIdAndUserId(blogId, user.getId());
     }
 
-    /**
-     * 블로그를 신고
-     * @param blogId 신고할 블로그 ID
-     */
+    // 블로그를 신고합니다.
     @Transactional
-    public void reportBlog(Long blogId) {
-        Blog blog = findBlogById(blogId);
+    public void reportBlog(Long blogId, BlogReportRequest request, User user) {
+        // 신고하려는 블로그가 존재하는지 확인
+        Blog blog = blogRepository.findById(blogId)
+                .orElseThrow(BlogNotFoundException::new);
+
+        // 이미 신고한 블로그인지 확인
+        if (blogReportRepository.existsByBlogIdAndReporterId(blogId, user.getId())) {
+            throw new IllegalStateException("이미 신고한 블로그 입니다.");
+        }
+
+        // 자신이 쓴 블로그 신고하는지 확인
+        if (blog.getWriter().getId().equals(user.getId())) {
+            throw new IllegalStateException(("자신의 블로그 글을 신고할 수 없습니다."));
+        }
+
+        BlogReport report = BlogReport.builder()
+                .blog(blog)
+                .reporter(user)
+                .content(request.content())
+                .build();
+
+        blogReportRepository.save(report);
         blog.plusReportCount();
     }
 
-    /**
-     * 댓글에 대댓글을 추가합니다.
-     */
+    // 댓글에 대댓글을 추가합니다.
     @Transactional
     public void saveReply(Long blogId, Long commentId, BlogReplyRequest request, User user) {
         Blog blog = findBlogById(blogId);
@@ -187,9 +196,7 @@ public class BlogService {
         blogCommentRepository.save(reply);
     }
 
-    /**
-     * 댓글에 좋아요를 추가합니다.
-     */
+    // 댓글에 좋아요를 추가합니다.
     @Transactional
     public void plusCommentHeart(Long blogId, Long commentId, User user) {
         blogCommentHeartRepository.findByCommentIdAndUserId(commentId, user.getId())
@@ -349,13 +356,6 @@ public class BlogService {
         Long nextCursor = hasNext && !blogs.isEmpty() ? blogs.get(blogs.size() - 1).getId() : null;
         
         return BlogListResponse.of(blogResponses, hasNext, nextCursor);
-    }
-
-    private Long getNextId(List<BlogResponse> responses) {
-        return responses.stream()
-                .map(BlogResponse::id)
-                .reduce((first, second) -> second)
-                .orElse(null);
     }
 
     @Transactional
