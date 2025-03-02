@@ -3,7 +3,7 @@ name: KBuddy-server Jenkins
 on:
   push:
     branches:
-      - dev:
+      - dev
     tags:
       - "v*.*.*"  # 버전 태그를 달아 배포할 때 사용할 태그 필드
 #  pull_request:
