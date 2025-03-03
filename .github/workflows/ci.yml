@@ -29,6 +29,10 @@ jobs:
         uses: docker/setup-qemu-action@v3
         with:
           platforms: arm64
+      - name: Debug OCI_COMPARTMENT_OCID
+        run: |
+          echo "Compartment ID: ${{ secrets.OCI_COMPARTMENT_OCID }}"
+      
 
       - name: Create .env file
         run: |
@@ -54,7 +58,7 @@ jobs:
         with:
           name: kbuddy-server
           compartment: ${{ secrets.OCI_COMPARTMENT_OCID }}
-        continue-on-error: true
+        continue-on-error: false
 
       - name: Debug OCIR Repository Path
         run: |
