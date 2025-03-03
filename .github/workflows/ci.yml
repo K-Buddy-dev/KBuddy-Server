@@ -89,7 +89,7 @@ jobs:
     steps:
       - name: Post to Discord channel
         if: always()
-        -env:
+        env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
         uses: Ilshidur/action-discord@0.3.2
         with:
