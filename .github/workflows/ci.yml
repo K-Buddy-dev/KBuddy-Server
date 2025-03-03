@@ -29,10 +29,6 @@ jobs:
         uses: docker/setup-qemu-action@v3
         with:
           platforms: arm64
-      - name: Debug OCI_COMPARTMENT_OCID
-        run: |
-          echo "Compartment ID: ${{ secrets.OCI_COMPARTMENT_OCID }}"
-      
 
       - name: Create .env file
         run: |
@@ -60,11 +56,6 @@ jobs:
           compartment: ${{ secrets.OCI_COMPARTMENT_OCID }}
         continue-on-error: false
 
-      - name: Debug OCIR Repository Path
-        run: |
-          echo "OCIR Repository Path: ${{ steps.get-ocir-repository.outputs.repo_path }}"
-
-
       - name: Log into OCIR
         uses: oracle-actions/login-ocir@v1.3.0
         id: login-ocir
@@ -82,12 +73,6 @@ jobs:
           tags: |
             type=sha
 
-      - name: Debug Docker meta inputs
-        run: |
-          echo "Using image path: ${{ steps.get-ocir-repository.outputs.repo_path }}"
-          
-
-
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
@@ -104,14 +89,17 @@ jobs:
     steps:
       - name: Post to Discord channel
         if: always()
-        uses: Ilshidur/action-discord@v2
+        -env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        uses: Ilshidur/action-discord@0.3.2
         with:
-          webhook_url: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          title: 'KBuddy Server Github Action Build Result'
           content: |
             **KBuddy Server Jenkins Build Result**
             - **Build Status**: ${{ needs.build-server-image.result }}
             - **Build URL**: ${{ github.event.pull_request.html_url || github.event.head_commit.url }}
             - **Build Duration**: ${{ job.status == 'success' && job.steps[0].outputs.duration || 'N/A' }} seconds
+          args: 'The project {{ EVENT_PAYLOAD.repository.full_name }} has been deployed.'
 
   trigger-jenkins:
     # if: github.event.pull_request.merged == true
