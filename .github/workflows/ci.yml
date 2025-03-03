@@ -9,7 +9,6 @@ on:
 #  pull_request:
 #    types:
 #      - closed
-
 jobs:
   build-server-image:
     # if: github.event.pull_request.merged == true
