@@ -54,7 +54,7 @@ jobs:
         with:
           name: kbuddy-server
           compartment: ${{ secrets.OCI_COMPARTMENT_OCID }}
-        continue-on-error: false
+        continue-on-error: true
 
       - name: Debug OCIR Repository Path
         run: |
