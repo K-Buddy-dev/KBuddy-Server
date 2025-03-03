@@ -90,7 +90,7 @@ jobs:
       - name: Post to Discord channel
         if: always()
         env:
-          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK }}
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
         uses: Ilshidur/action-discord@0.3.2
         with:
           title: 'KBuddy Server Github Action Build Result'
