@@ -128,7 +128,7 @@ public class UserAuthController {
             throw new DuplicateEmailException();
         }
 
-        int code = mailService.joinEmail(emailRequest.email());
+        String code = mailService.joinEmail(emailRequest.email());
         return ResponseEntity.ok().body(new EmailCodeResponse(emailRequest.email(), code));
     }
 

@@ -21,7 +21,7 @@ public class MailSendService {
 
 	private final JavaMailSender mailSender;
 	private final RedisUtil redisUtil;
-	private int authNumber;
+	private String authNumber;
 
 	//임의의 6자리 양수를 반환
 	public void makeRandomNumber() {
@@ -31,7 +31,7 @@ public class MailSendService {
 			randomNumber.append(r.nextInt(10));
 		}
 
-		authNumber = Integer.parseInt(randomNumber.toString());
+		authNumber = randomNumber.toString();
 	}
 
 	public boolean CheckAuthNum(String email, String authNum) {
@@ -42,7 +42,7 @@ public class MailSendService {
 	}
 
 	//mail을 어디서 보내는지, 어디로 보내는지 , 인증 번호를 html 형식으로 어떻게 보내는지 작성.
-	public int joinEmail(String email) {
+	public String joinEmail(String email) {
 		makeRandomNumber();
 		String setFrom = "officialkbuddy@gmail.com";
 		String title = "AUTH CODE for K-Buddy Registration"; // 이메일 제목
@@ -72,7 +72,7 @@ public class MailSendService {
 			log.error("이메일 전송 에러 발생", e);
 		}
 		//인증 코드는 5분간 유효
-		redisUtil.setDataExpire(Integer.toString(authNumber), toMail, 60 * 5L);
+		redisUtil.setDataExpire(authNumber, toMail, 60 * 5L);
 
 	}
 
