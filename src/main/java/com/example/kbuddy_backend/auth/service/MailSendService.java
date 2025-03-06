@@ -6,14 +6,12 @@ import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 
 import java.util.Random;
-import java.util.concurrent.CompletableFuture;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -23,17 +21,17 @@ public class MailSendService {
 
 	private final JavaMailSender mailSender;
 	private final RedisUtil redisUtil;
-	private int authNumber;
+	private String authNumber;
 
 	//임의의 6자리 양수를 반환
 	public void makeRandomNumber() {
 		Random r = new Random();
 		StringBuilder randomNumber = new StringBuilder();
 		for (int i = 0; i < 6; i++) {
-			randomNumber.append(Integer.toString(r.nextInt(10)));
+			randomNumber.append(r.nextInt(10));
 		}
 
-		authNumber = Integer.parseInt(randomNumber.toString());
+		authNumber = randomNumber.toString();
 	}
 
 	public boolean CheckAuthNum(String email, String authNum) {
@@ -44,7 +42,7 @@ public class MailSendService {
 	}
 
 	//mail을 어디서 보내는지, 어디로 보내는지 , 인증 번호를 html 형식으로 어떻게 보내는지 작성.
-	public int joinEmail(String email) {
+	public String joinEmail(String email) {
 		makeRandomNumber();
 		String setFrom = "officialkbuddy@gmail.com";
 		String title = "AUTH CODE for K-Buddy Registration"; // 이메일 제목
@@ -59,8 +57,7 @@ public class MailSendService {
 	}
 
 	//이메일을 전송합니다.
-	@Async("mailAsync")
-	public CompletableFuture<Void> mailSend(String setFrom, String toMail, String title, String content) {
+	public void mailSend(String setFrom, String toMail, String title, String content) {
 		MimeMessage message = mailSender.createMimeMessage();//JavaMailSender 객체를 사용하여 MimeMessage 객체를 생성
 		try {
 			MimeMessageHelper helper = new MimeMessageHelper(message, true, "utf-8");//이메일 메시지와 관련된 설정을 수행합니다.
@@ -75,8 +72,8 @@ public class MailSendService {
 			log.error("이메일 전송 에러 발생", e);
 		}
 		//인증 코드는 5분간 유효
-		redisUtil.setDataExpire(Integer.toString(authNumber), toMail, 60 * 5L);
-		return CompletableFuture.completedFuture(null);
+		redisUtil.setDataExpire(authNumber, toMail, 60 * 5L);
+
 	}
 
 }
