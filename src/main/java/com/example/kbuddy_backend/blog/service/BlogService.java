@@ -24,6 +24,8 @@ import com.example.kbuddy_backend.blog.repository.BlogReportRepository;
 import com.example.kbuddy_backend.blog.repository.BlogRepository;
 import com.example.kbuddy_backend.blog.repository.BlogCommentHeartRepository;
 import com.example.kbuddy_backend.blog.repository.BlogBookmarkRepository;
+import com.example.kbuddy_backend.common.exception.BadRequestException;
+import com.example.kbuddy_backend.common.exception.DuplicateException;
 import com.example.kbuddy_backend.user.entity.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -157,12 +159,12 @@ public class BlogService {
 
         // 이미 신고한 블로그인지 확인
         if (blogReportRepository.existsByBlogIdAndReporterId(blogId, user.getId())) {
-            throw new IllegalStateException("이미 신고한 블로그 입니다.");
+            throw new DuplicateException("이미 신고한 블로그 입니다.");
         }
 
         // 자신이 쓴 블로그 신고하는지 확인
         if (blog.getWriter().getId().equals(user.getId())) {
-            throw new IllegalStateException(("자신의 블로그 글을 신고할 수 없습니다."));
+            throw new BadRequestException(("자신의 블로그 글을 신고할 수 없습니다."));
         }
 
         BlogReport report = BlogReport.builder()
