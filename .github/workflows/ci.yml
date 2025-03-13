@@ -1,10 +1,9 @@
 name: KBuddy-server Jenkins
 
-
 on:
   push:
-    branches
-      - main:
+    branches:
+      - dev
     tags:
       - "v*.*.*"  # 버전 태그를 달아 배포할 때 사용할 태그 필드
 #  pull_request:
@@ -22,21 +21,31 @@ jobs:
       OCI_CLI_FINGERPRINT: ${{ secrets.OCI_CLI_FINGERPRINT }}
       OCI_CLI_KEY_CONTENT: ${{ secrets.OCI_CLI_KEY_CONTENT }}
       OCI_CLI_REGION: ${{ secrets.OCI_CLI_REGION }}
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
         with:
-          platforms: arm64
+          platforms: amd64
 
       - name: Create .env file
         run: |
-          echo "DB_USER=${{ secrets.DB_USER }}" > .env
-          echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
-          echo "JWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY }}" >> .env
-          echo "EMAIL_USERNAME=${{ secrets.EMAIL_USERNAME }}" >> .env
-          echo "EMAIL_PASSWORD=${{ secrets.EMAIL_PASSWORD }}" >> .env
+          cat <<EOF > .env
+          DB_SERVER_URL=${{ secrets.DB_SERVER_URL }}
+          DB_USER=${{ secrets.DB_USER }}
+          DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+          JWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY }}
+          EMAIL_USERNAME=${{ secrets.EMAIL_USERNAME }}
+          EMAIL_PASSWORD=${{ secrets.EMAIL_PASSWORD }}
+          S3_BUCKET=${{ secrets.S3_BUCKET }}
+          S3_REGION=${{ secrets.S3_REGION }}
+          S3_ENDPOINT=${{ secrets.S3_ENDPOINT }}
+          S3_ACCESS_KEY=${{ secrets.S3_ACCESS_KEY }}
+          S3_SECRET_KEY=${{ secrets.S3_SECRET_KEY }}
+          EOF
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -47,6 +56,7 @@ jobs:
         with:
           name: kbuddy-server
           compartment: ${{ secrets.OCI_COMPARTMENT_OCID }}
+        continue-on-error: false
 
       - name: Log into OCIR
         uses: oracle-actions/login-ocir@v1.3.0
@@ -60,7 +70,7 @@ jobs:
         with:
           images: |
             ${{ steps.get-ocir-repository.outputs.repo_path }}
-          flavor: | 
+          flavor: |
             latest=true
           tags: |
             type=sha
@@ -70,25 +80,9 @@ jobs:
         with:
           context: .
           push: true
-          platforms: linux/arm64
+          platforms: linux/amd64
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-
-  post-slack:
-    # if: github.event.pull_request.merged == true
-    name: Post CI result to a Slack channel
-    runs-on: ubuntu-latest
-    needs: build-server-image
-    steps:
-      - name: Post to a Slack channel
-        id: slack
-        uses: slackapi/slack-github-action@v1.26.0
-        with:
-          channel-id: 'notification'
-          slack-message: "GitHub build result: ${{ job.status }}\n${{ github.event.pull_request.html_url || github.event.head_commit.url }}"
-        env:
-          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
-
 
   trigger-jenkins:
     # if: github.event.pull_request.merged == true
@@ -102,4 +96,5 @@ jobs:
           url: ${{ secrets.JENKINS_URL }}
           user: ${{ secrets.JENKINS_USER }}
           token: ${{ secrets.JENKINS_TOKEN }}
-          job: "K-Buddy Server"
+          job: "k-buddy"
+
