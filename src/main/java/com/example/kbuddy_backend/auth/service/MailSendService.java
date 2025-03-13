@@ -23,17 +23,17 @@ public class MailSendService {
 
 	private final JavaMailSender mailSender;
 	private final RedisUtil redisUtil;
-	private int authNumber;
+	private String authNumber;
 
 	//임의의 6자리 양수를 반환
 	public void makeRandomNumber() {
 		Random r = new Random();
 		StringBuilder randomNumber = new StringBuilder();
 		for (int i = 0; i < 6; i++) {
-			randomNumber.append(Integer.toString(r.nextInt(10)));
+			randomNumber.append(r.nextInt(10));
 		}
 
-		authNumber = Integer.parseInt(randomNumber.toString());
+		authNumber = randomNumber.toString();
 	}
 
 	public boolean CheckAuthNum(String email, String authNum) {
@@ -44,7 +44,7 @@ public class MailSendService {
 	}
 
 	//mail을 어디서 보내는지, 어디로 보내는지 , 인증 번호를 html 형식으로 어떻게 보내는지 작성.
-	public int joinEmail(String email) {
+	public String joinEmail(String email) {
 		makeRandomNumber();
 		String setFrom = "officialkbuddy@gmail.com";
 		String title = "AUTH CODE for K-Buddy Registration"; // 이메일 제목
