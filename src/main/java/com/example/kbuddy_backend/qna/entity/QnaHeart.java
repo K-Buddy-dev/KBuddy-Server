@@ -47,4 +47,5 @@ public class QnaHeart extends BaseTimeEntity {
         this.user = user;
         this.qnaComment = qnaComment;
     }
+
 }

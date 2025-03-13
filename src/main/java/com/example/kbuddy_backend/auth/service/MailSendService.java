@@ -21,17 +21,17 @@ public class MailSendService {
 
 	private final JavaMailSender mailSender;
 	private final RedisUtil redisUtil;
-	private int authNumber;
+	private String authNumber;
 
 	//임의의 6자리 양수를 반환
 	public void makeRandomNumber() {
 		Random r = new Random();
 		StringBuilder randomNumber = new StringBuilder();
 		for (int i = 0; i < 6; i++) {
-			randomNumber.append(Integer.toString(r.nextInt(10)));
+			randomNumber.append(r.nextInt(10));
 		}
 
-		authNumber = Integer.parseInt(randomNumber.toString());
+		authNumber = randomNumber.toString();
 	}
 
 	public boolean CheckAuthNum(String email, String authNum) {
@@ -53,7 +53,7 @@ public class MailSendService {
 				"<br>" +
 				"Please write a correct auth code."; //이메일 내용 삽입
 		mailSend(setFrom, email, title, content);
-		return Integer.toString(authNumber);
+		return authNumber;
 	}
 
 	//이메일을 전송합니다.
@@ -72,7 +72,7 @@ public class MailSendService {
 			log.error("이메일 전송 에러 발생", e);
 		}
 		//인증 코드는 5분간 유효
-		redisUtil.setDataExpire(Integer.toString(authNumber), toMail, 60 * 5L);
+		redisUtil.setDataExpire(authNumber, toMail, 60 * 5L);
 
 	}
 

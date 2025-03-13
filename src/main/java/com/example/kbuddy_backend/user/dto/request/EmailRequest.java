@@ -1,7 +1,7 @@
 package com.example.kbuddy_backend.user.dto.request;
 
 import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotEmpty;
 
-public record EmailRequest(@NotNull @Email String email) {
+public record EmailRequest(@NotEmpty @Email String email) {
 }

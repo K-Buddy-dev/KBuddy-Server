@@ -34,7 +34,7 @@ class JwtFilterTest extends WebMVCTest {
         given(tokenProvider.getAuthentication(anyString())).willReturn(authentication);
 
         //then
-        mockMvc.perform(get("/kbuddy/v1/user/auth/authentication")
+        mockMvc.perform(get("/kbuddy/v1/auth/authentication")
                         .header("Authorization", "Bearer validToken"))
                 .andExpect(status().isOk());
     }
