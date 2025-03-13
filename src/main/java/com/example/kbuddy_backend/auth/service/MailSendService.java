@@ -7,11 +7,13 @@ import jakarta.mail.internet.MimeMessage;
 
 import java.util.Random;
 
+import java.util.concurrent.CompletableFuture;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -57,7 +59,8 @@ public class MailSendService {
 	}
 
 	//이메일을 전송합니다.
-	public void mailSend(String setFrom, String toMail, String title, String content) {
+	@Async("mailAsync")
+	public CompletableFuture<Void> mailSend(String setFrom, String toMail, String title, String content) {
 		MimeMessage message = mailSender.createMimeMessage();//JavaMailSender 객체를 사용하여 MimeMessage 객체를 생성
 		try {
 			MimeMessageHelper helper = new MimeMessageHelper(message, true, "utf-8");//이메일 메시지와 관련된 설정을 수행합니다.
@@ -73,7 +76,7 @@ public class MailSendService {
 		}
 		//인증 코드는 5분간 유효
 		redisUtil.setDataExpire(authNumber, toMail, 60 * 5L);
-
+		return CompletableFuture.completedFuture(null);
 	}
 
 }

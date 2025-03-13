@@ -40,6 +40,8 @@ public class BlogRepositoryImpl implements BlogRepositoryCustom {
             return blog.heartCount.desc();
         } else if (sortBy == SortBy.COMMENT_COUNT) {
             return blog.comments.size().desc();
+        } else if (sortBy == SortBy.OLDEST) {
+            return blog.id.asc();
         } else {
             return blog.id.desc();
         }
