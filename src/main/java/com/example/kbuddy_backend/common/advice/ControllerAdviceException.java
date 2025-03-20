@@ -15,7 +15,6 @@ import com.example.kbuddy_backend.common.exception.DuplicateException;
 import com.example.kbuddy_backend.common.exception.NotFoundException;
 import com.example.kbuddy_backend.common.exception.UnauthorizedException;
 import java.util.List;
-import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
