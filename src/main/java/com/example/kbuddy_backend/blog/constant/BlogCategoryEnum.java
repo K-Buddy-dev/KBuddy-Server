@@ -1,6 +1,6 @@
-package com.example.kbuddy_backend.blog.entity;
+package com.example.kbuddy_backend.blog.constant;
 
-public enum Category {
+public enum BlogCategoryEnum {
     RESTAURANT_CAFE("Restaurant cafe/Dessert"),
     SHOPPING("Shopping"),
     ATTRACTION("Attraction"),
@@ -15,7 +15,7 @@ public enum Category {
 
     private final String displayName;
 
-    Category(String displayName) {
+    BlogCategoryEnum(String displayName) {
         this.displayName = displayName;
     }
 

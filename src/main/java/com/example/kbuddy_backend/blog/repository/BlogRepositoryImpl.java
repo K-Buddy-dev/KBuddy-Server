@@ -16,11 +16,9 @@ public class BlogRepositoryImpl implements BlogRepositoryCustom {
     private final JPAQueryFactory jpaQueryFactory;
 
     @Override
-    public List<Blog> paginationNoOffset(Long blogId, String keyword, int pageSize, SortBy sortBy) {
+    public List<Blog> paginationNoOffset(Long blogId, String title, int pageSize, SortBy sortBy) {
         return jpaQueryFactory.selectFrom(blog)
-                .where(ltBlogId(blogId), 
-                       blog.title.like("%" + keyword + "%")
-                           .or(blog.content.like("%" + keyword + "%")))
+                .where(ltBlogId(blogId), blog.title.like("%" + title + "%").or(blog.description.like("%" + title + "%")))
                 .orderBy(getOrderSpecifier(sortBy))
                 .limit(pageSize)
                 .fetch();
@@ -42,7 +40,7 @@ public class BlogRepositoryImpl implements BlogRepositoryCustom {
             return blog.comments.size().desc();
         } else if (sortBy == SortBy.OLDEST) {
             return blog.id.asc();
-        } else {
+        } else { // Latest
             return blog.id.desc();
         }
     }
