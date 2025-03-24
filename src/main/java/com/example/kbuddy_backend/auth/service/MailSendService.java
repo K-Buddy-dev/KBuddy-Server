@@ -77,6 +77,7 @@ public class MailSendService {
 		//인증 코드는 5분간 유효
 		redisUtil.setDataExpire(authNumber, toMail, 60 * 5L);
 		return CompletableFuture.completedFuture(null);
+
 	}
 
 }

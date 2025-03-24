@@ -1,3 +1,4 @@
+
 spring:
   config:
     activate:
@@ -9,7 +10,7 @@ spring:
       add-mappings: false
   datasource:
     url: jdbc:h2:mem:test;
-#    url: jdbc:h2:~/data/testdb
+    #    url: jdbc:h2:~/data/testdb
     driver-class-name: org.h2.Driver
     username: root
   h2:
@@ -30,7 +31,7 @@ spring:
   sql.init.mode: always
   data:
     redis:
-      host: localhost
+      host: redis
       port: 6379
   mail:
     host: smtp.gmail.com
