@@ -1,8 +1,9 @@
 package com.example.kbuddy_backend.user.controller;
 
 import static org.springframework.http.HttpStatus.*;
-
+import org.springframework.beans.factory.annotation.Value;
 import com.example.kbuddy_backend.auth.dto.response.AccessTokenAndRefreshTokenResponse;
+import com.example.kbuddy_backend.auth.dto.response.AccessTokenResponse;
 import com.example.kbuddy_backend.auth.service.MailSendService;
 import com.example.kbuddy_backend.common.config.CurrentUser;
 import com.example.kbuddy_backend.common.validate.DateValidator;
@@ -24,6 +25,8 @@ import com.example.kbuddy_backend.user.service.UserAuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -43,23 +46,30 @@ public class UserAuthController {
     private final UserAuthService userAuthService;
     private final MailSendService mailService;
     private final UserRepository userRepository;
+    @Value("${spring.security.jwt.refresh-token-expiration}")
+    private int refreshTokenExpiration;
 
     @Operation(summary = "아이디/패스워드 회원 가입", description = "아이디/패스워드 기반 회원가입을 합니다.")
     @PostMapping("/register")
-    public ResponseEntity<AccessTokenAndRefreshTokenResponse> register(
-            @Valid @RequestBody final RegisterRequest registerRequest) {
+    public ResponseEntity<AccessTokenResponse> register(
+            @Valid @RequestBody final RegisterRequest registerRequest, HttpServletResponse response) {
         DateValidator.isValidDate(registerRequest.birthDate());
         AccessTokenAndRefreshTokenResponse token = userAuthService.register(registerRequest);
-        return ResponseEntity.status(CREATED).body(token);
+        System.out.println("token = " + token);
+        setRefreshTokenInCookie(response, token);
+        return ResponseEntity.status(CREATED).body(AccessTokenResponse.of(token.accessToken(),token.accessTokenExpireTime()));
     }
+
+
 
     @Operation(summary = "OAuth 회원가입", description = "OAuth(KAKAO, GOOGLE, APPLE) 기반 회원가입을 합니다.")
     @PostMapping("/oauth/register")
-    public ResponseEntity<AccessTokenAndRefreshTokenResponse> oAuthRegister(
-            @RequestBody @Valid final OAuthRegisterRequest registerRequest) {
+    public ResponseEntity<AccessTokenResponse> oAuthRegister(
+            @RequestBody @Valid final OAuthRegisterRequest registerRequest, HttpServletResponse response) {
         DateValidator.isValidDate(registerRequest.birthDate());
         AccessTokenAndRefreshTokenResponse token = userAuthService.oAuthRegister(registerRequest);
-        return ResponseEntity.status(CREATED).body(token);
+        setRefreshTokenInCookie(response, token);
+        return ResponseEntity.status(CREATED).body(AccessTokenResponse.of(token.accessToken(),token.accessTokenExpireTime()));
     }
 
     @Operation(summary = "OAuth 회원가입 체크", description = "OAuth로 회원가입한 내역이 있는지 검사합니다.")
@@ -74,17 +84,19 @@ public class UserAuthController {
 
     @Operation(summary = "아이디/패스워드 로그인", description = "아이디/패스워드 기반 로그인을 합니다.")
     @PostMapping("/login")
-    public ResponseEntity<AccessTokenAndRefreshTokenResponse> login(@RequestBody @Valid final LoginRequest loginRequest) {
+    public ResponseEntity<AccessTokenResponse> login(@RequestBody @Valid final LoginRequest loginRequest, HttpServletResponse response) {
         AccessTokenAndRefreshTokenResponse token = userAuthService.login(loginRequest);
-        return ResponseEntity.ok().body(token);
+        setRefreshTokenInCookie(response, token);
+        return ResponseEntity.status(CREATED).body(AccessTokenResponse.of(token.accessToken(),token.accessTokenExpireTime()));
     }
 
     @Operation(summary = "OAuth 로그인", description = "OAuth를 통해 로그인합니다.ㅣ")
     @PostMapping("/oauth/login")
-    public ResponseEntity<AccessTokenAndRefreshTokenResponse> oAuthLogin(
-            @RequestBody @Valid final OAuthLoginRequest loginRequest) {
+    public ResponseEntity<AccessTokenResponse> oAuthLogin(
+            @RequestBody @Valid final OAuthLoginRequest loginRequest, HttpServletResponse response) {
         AccessTokenAndRefreshTokenResponse token = userAuthService.oAuthLogin(loginRequest);
-        return ResponseEntity.ok().body(token);
+        setRefreshTokenInCookie(response, token);
+        return ResponseEntity.status(CREATED).body(AccessTokenResponse.of(token.accessToken(),token.accessTokenExpireTime()));
     }
 
     @Operation(summary = "비밀번호 변경", description = "아이디/패스워드 기반 회원가입한 사용자의 비밀번호를 변경합니다.")
@@ -149,6 +161,14 @@ public class UserAuthController {
     public ResponseEntity<Authentication>
     getUserAuthentication(Authentication authentication) {
         return ResponseEntity.ok().body(authentication);
+    }
+
+    private void setRefreshTokenInCookie(HttpServletResponse response, AccessTokenAndRefreshTokenResponse token) {
+        Cookie refreshTokenCookie = new Cookie("refreshToken", token.refreshToken());
+        refreshTokenCookie.setPath("/");
+        refreshTokenCookie.setHttpOnly(true);
+        refreshTokenCookie.setMaxAge(refreshTokenExpiration);
+        response.addCookie(refreshTokenCookie);
     }
 
 }

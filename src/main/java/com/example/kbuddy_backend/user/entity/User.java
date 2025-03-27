@@ -33,7 +33,6 @@ public class User extends BaseTimeEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "user_id")
     private Long id;
-
     private final UUID uuid = UUID.randomUUID();
     private String firstName;
     private String lastName;
