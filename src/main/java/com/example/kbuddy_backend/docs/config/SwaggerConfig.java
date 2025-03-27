@@ -6,7 +6,9 @@ import io.swagger.v3.oas.models.media.Content;
 import io.swagger.v3.oas.models.media.MediaType;
 import io.swagger.v3.oas.models.media.Schema;
 import java.lang.reflect.Field;
-import java.time.LocalDateTime;
+import java.util.List;
+
+import io.swagger.v3.oas.models.servers.Server;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springdoc.core.customizers.OperationCustomizer;
@@ -62,7 +64,8 @@ public class SwaggerConfig {
 	public OpenAPI openAPI() {
 		return new OpenAPI()
 			.components(new Components())
-			.info(apiInfo());
+			.info(apiInfo())
+			.servers(List.of(new Server().url("https://api.k-buddy.kr").description("Production Server"), new Server().url("http://localhost:8080").description("Local Server")));
 	}
 
 	private Info apiInfo() {
