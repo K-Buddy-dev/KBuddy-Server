@@ -46,9 +46,7 @@ public class BlogControllerTest extends WebMVCTest {
         mockMvc.perform(post("/kbuddy/v1/blog")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(blogSaveRequest)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.status").value(true))
-                .andExpect(jsonPath("$.data.message").value("게시글 작성 성공"))
+                .andExpect(status().isNoContent())
                 .andDo(print());
 
         //then
