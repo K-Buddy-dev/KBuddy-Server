@@ -6,6 +6,11 @@ import io.swagger.v3.oas.models.media.Content;
 import io.swagger.v3.oas.models.media.MediaType;
 import io.swagger.v3.oas.models.media.Schema;
 import java.lang.reflect.Field;
+import java.util.List;
+
+import io.swagger.v3.oas.models.security.SecurityRequirement;
+import io.swagger.v3.oas.models.security.SecurityScheme;
+import io.swagger.v3.oas.models.servers.Server;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springdoc.core.customizers.OperationCustomizer;
@@ -59,9 +64,20 @@ public class SwaggerConfig {
 
 	@Bean
 	public OpenAPI openAPI() {
+
+		SecurityScheme securityScheme = new SecurityScheme()
+			.type(SecurityScheme.Type.HTTP)
+			.scheme("bearer")
+			.bearerFormat("JWT")
+			.in(SecurityScheme.In.HEADER)
+			.name("Authorization");
+		// Security Requirement 정의
+		SecurityRequirement securityRequirement = new SecurityRequirement().addList("BearerAuth");
 		return new OpenAPI()
-			.components(new Components())
-			.info(apiInfo());
+			.info(apiInfo())
+			.addSecurityItem(securityRequirement)  // Security Requirement 추가
+			.schemaRequirement("BearerAuth", securityScheme)
+			.servers(List.of(new Server().url("https://api.k-buddy.kr").description("Production Server"), new Server().url("http://localhost:8080").description("Local Server")));
 	}
 
 	private Info apiInfo() {
