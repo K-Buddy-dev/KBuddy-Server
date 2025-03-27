@@ -29,13 +29,6 @@ public class JwtFilter extends GenericFilterBean {
         final String token = resolveToken(httpServletRequest);
         final String requestURI = httpServletRequest.getRequestURI();
 
-        //todo: 배포 시 제거
-        String requestURL = httpServletRequest.getRequestURL().toString();
-        if (requestURL.startsWith("https://api.k-buddy.kr/swagger-ui")) {
-            chain.doFilter(request, response);
-            return;
-        }
-
         if (token != null && jwtTokenProvider.validateToken(token)) {
             Authentication authentication = jwtTokenProvider.getAuthentication(token);
             SecurityContextHolder.getContextHolderStrategy().getContext().setAuthentication(authentication);
