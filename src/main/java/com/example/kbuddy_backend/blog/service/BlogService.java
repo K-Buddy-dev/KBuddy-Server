@@ -1,5 +1,6 @@
 package com.example.kbuddy_backend.blog.service;
 
+import com.example.kbuddy_backend.blog.constant.BlogCategoryEnum;
 import com.example.kbuddy_backend.blog.dto.request.BlogBookmarkRequest;
 import com.example.kbuddy_backend.blog.dto.request.BlogReportRequest;
 import com.example.kbuddy_backend.blog.dto.request.BlogSaveRequest;
@@ -75,8 +76,26 @@ public class BlogService {
         return createBlogResponseDto(saveBlog);
     }
 
-    public AllBlogResponse getAllBlog(int pageSize, Long blogId, String title, SortBy sortBy) {
-        List<Blog> allBlog = blogRepository.paginationNoOffset(blogId, title, pageSize, sortBy);
+//    public AllBlogResponse getAllBlog(int pageSize, Long blogId, String title, SortBy sortBy) {
+//        List<Blog> allBlog = blogRepository.paginationNoOffset(blogId, title, pageSize, sortBy);
+//        List<BlogPaginationResponse> blogPaginationResponseList = allBlog.stream()
+//                .map(blog -> BlogPaginationResponse.of(blog.getId(), blog.getWriter().getId(), blog.getCategory().getId(),
+//                        blog.getTitle(), blog.getDescription(), blog.getViewCount(), blog.getHeartCount(),
+//                        blog.getCommentCount(), blog.getCreatedDate(),
+//                        blog.getLastModifiedDate()))
+//                .toList();
+//
+//        Long nextId = getNextId(blogPaginationResponseList);
+//
+//        return AllBlogResponse.of(nextId, blogPaginationResponseList);
+//    }
+
+    public AllBlogResponse getAllBlog(int pageSize, Long blogId, String title, SortBy sortBy, BlogCategoryEnum category) {
+        if (sortBy == null) {
+            sortBy = (category != null) ? SortBy.CATEGORY_LATEST : SortBy.LATEST;
+        }
+
+        List<Blog> allBlog = blogRepository.paginationNoOffset(blogId, title, pageSize, sortBy, category);
         List<BlogPaginationResponse> blogPaginationResponseList = allBlog.stream()
                 .map(blog -> BlogPaginationResponse.of(blog.getId(), blog.getWriter().getId(), blog.getCategory().getId(),
                         blog.getTitle(), blog.getDescription(), blog.getViewCount(), blog.getHeartCount(),
@@ -266,4 +285,4 @@ public class BlogService {
         return blogCollectionRepository.findById(bookmarkId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 컬렉션입니다."));
     }
-} 
+}

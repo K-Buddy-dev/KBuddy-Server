@@ -1,5 +1,6 @@
 package com.example.kbuddy_backend.blog.controller;
 
+import com.example.kbuddy_backend.blog.constant.BlogCategoryEnum;
 import com.example.kbuddy_backend.blog.dto.request.BlogCommentSaveRequest;
 import com.example.kbuddy_backend.blog.dto.request.BlogReportRequest;
 import com.example.kbuddy_backend.blog.dto.request.BlogSaveRequest;
@@ -43,9 +44,9 @@ public class BlogController {
     public ResponseEntity<AllBlogResponse> getAllBlog(@RequestParam(value = "size") int pageSize,
                                                       @RequestParam(value = "id", required = false) Long blogId,
                                                       @RequestParam(value = "keyword", required = false) String title,
-                                                      @RequestParam(required = false, value = "sort")
-                                                          SortBy sortBy) {
-        AllBlogResponse allBlogResponse = blogService.getAllBlog(pageSize, blogId, title, sortBy);
+                                                      @RequestParam(value = "sort", required = false) SortBy sortBy,
+                                                      @RequestParam(value = "category", required = false) BlogCategoryEnum category) {
+        AllBlogResponse allBlogResponse = blogService.getAllBlog(pageSize, blogId, title, sortBy, category);
         return ResponseEntity.ok().body(allBlogResponse);
     }
 
