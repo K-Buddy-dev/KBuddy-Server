@@ -27,73 +27,79 @@ public class Blog extends BaseTimeEntity {
     @JoinColumn(name = "user_id")
     private User writer;
 
-    @OneToMany(mappedBy = "blog", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "blog", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<BlogHeart> blogHearts = new ArrayList<>();
+
+    @OneToMany(mappedBy = "blog", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<BlogComment> comments = new ArrayList<>();
 
     @OneToMany(mappedBy = "blog", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<BlogHeart> hearts = new ArrayList<>();
+    private List<BlogImage> imageUrls = new ArrayList<>();
 
-    @Enumerated(EnumType.STRING)
-    private Category category;
+    private String hashtag;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category_id")
+    private BlogCategory category;
 
     private String title;
-    private String content;
+    private String description;
+
     private int heartCount;
     private int viewCount;
     private int reportCount;
 
-    @ElementCollection
-    @CollectionTable(
-        name = "blog_images",
-        joinColumns = @JoinColumn(name = "blog_id")
-    )
-    @Column(name = "image_url")
-    private List<String> imageUrls = new ArrayList<>();
-
     @Builder
-    public Blog(User writer, String title, String content, Category category, List<String> imageUrls) {
+    public Blog(User writer, String title, String description, String hashtag, BlogCategory category) {
         this.writer = writer;
         this.title = title;
-        this.content = content;
+        this.description = description;
+        this.hashtag = hashtag;
         this.category = category;
-        if (imageUrls != null) {
-            this.imageUrls = imageUrls;
-        }
     }
 
-    public void update(String title, String content, Category category, List<String> imageUrls) {
+    public void update(String title, String description, String hashtag, BlogCategory category) {
         this.title = title;
-        this.content = content;
+        this.description = description;
+        this.hashtag = hashtag;
         this.category = category;
-        if (imageUrls != null) {
-            this.imageUrls.clear();
-            this.imageUrls.addAll(imageUrls);
-        }
     }
+
+    public void addImage(BlogImage blogImage){
+        imageUrls.add(blogImage);
+    }
+
+    public void deleteImage(String filePath){
+        BlogImage blogImage = imageUrls.stream()
+                .filter(image -> image.getFilePath().equals(filePath))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("해당 이미지가 없습니다."));
+        imageUrls.remove(blogImage);
+    }
+
+    public void addComment(BlogComment blogComment){comments.add(blogComment);}
 
     public void plusHeart(BlogHeart blogHeart) {
         this.heartCount += 1;
-        this.hearts.add(blogHeart);
-        blogHeart.setBlog(this);
+        this.blogHearts.add(blogHeart);
     }
 
     public void minusHeart(BlogHeart blogHeart) {
         if (this.heartCount > 0) {
             this.heartCount -= 1;
         }
-        this.hearts.remove(blogHeart);
+        this.blogHearts.remove(blogHeart);
     }
 
     public void plusViewCount() {
         this.viewCount += 1;
     }
 
+    public int getCommentCount() {
+        return comments.size();
+    }
+
     public void plusReportCount() {
         this.reportCount += 1;
     }
-
-    public void addComment(BlogComment comment) {
-        this.comments.add(comment);
-        comment.setBlog(this);
-    }
-} 
+}
