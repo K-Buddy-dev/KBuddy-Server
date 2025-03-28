@@ -56,7 +56,7 @@ public class DataInitializer {
                 .collect(Collectors.toList());
 
         UsernamePasswordAuthenticationToken authenticationToken =
-                new UsernamePasswordAuthenticationToken(saveUser.getEmail(), saveUser.getPassword(), grantedAuthorities);
+                new UsernamePasswordAuthenticationToken(saveUser.getId(), saveUser.getPassword(), grantedAuthorities);
         AccessTokenAndRefreshTokenResponse token = authService.createToken(authenticationToken);
         log.info("테스트용 토큰 입니다.: {}", token.accessToken());
 
