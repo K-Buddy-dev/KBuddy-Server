@@ -42,15 +42,12 @@ public class QnaController {
 
     //todo: 응답 dto 추가
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @Operation(summary = "Q&A 게시글 작성", description = "Q&A 게시글을 작성합니다. 이미지는 multipart form data로 전송합니다.")
+    @Operation(summary = "Q&A 게시글 작성", description = "Q&A 게시글을 작성합니다. qnaSaveRequest는 JSON 형식의 문자열로, 이미지는 선택적으로 multipart form data로 전송합니다.")
     public ResponseEntity<DefaultResponse> saveQna(
-        @RequestPart("title") String title,
-        @RequestPart("description") String description,
-        @RequestPart("categoryId") Long categoryId,
-        @RequestPart("hashtags") String hashtags,
+        @RequestPart(value="qnaSaveRequest") QnaSaveRequest qnaSaveRequest,
         @RequestPart(value = "images", required = false) List<MultipartFile> images,
             @Parameter(hidden = true) @CurrentUser User user) {
-        qnaService.saveQna(QnaSaveRequest.of(title, description, List.of(hashtags.split(",")), categoryId), images, user);
+        qnaService.saveQna(qnaSaveRequest, images, user);
         return ResponseEntity.ok().body(DefaultResponse.of(true,"게시글 작성 성공"));
     }
 
@@ -118,7 +115,7 @@ public class QnaController {
     }
 
     //단일 QnA 컨텐츠 북마크 해제
-    @PostMapping("/{qnaId}/unbookmark")
+    @DeleteMapping("/{qnaId}/unbookmark")
     @Operation(summary = "Q&A 게시글 즐겨찾기 삭제", description = "Q&A 게시글을 사용자 즐겨찾기 목록에 추가된 항목을 삭제 합니다.")
     public ResponseEntity<String> removeBookmark(@RequestBody BookmarkRequest bookmarkRequest,
                                                  @PathVariable final Long qnaId) {

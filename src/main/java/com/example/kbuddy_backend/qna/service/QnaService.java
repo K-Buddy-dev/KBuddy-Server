@@ -54,12 +54,11 @@ public class QnaService {
     @Transactional
     public QnaResponse saveQna(QnaSaveRequest qnaSaveRequest, List<MultipartFile> imageFiles, User user) {
         String hashtag = String.join(",", qnaSaveRequest.hashtags());
-        QnaCategory qnaCategory = findCategoryById(qnaSaveRequest.categoryId());
+
 
         Qna qna = Qna.builder()
                 .title(qnaSaveRequest.title())
                 .description(qnaSaveRequest.description())
-                .category(qnaCategory)
                 .hashtag(hashtag)
                 .writer(user)
                 .build();
@@ -216,7 +215,7 @@ public class QnaService {
                 .sorted(Comparator.comparing(QnaCommentResponse::createdAt))
                 .toList();
 
-        return QnaResponse.of(qna.getId(), qna.getWriter().getId(), qna.getCategory().getId(), qna.getTitle(),
+        return QnaResponse.of(qna.getId(), qna.getWriter().getId(), null, qna.getTitle(),
                 qna.getDescription(), qna.getViewCount(), qna.getCreatedDate(), qna.getLastModifiedDate(),
                 images, comments, qna.getHeartCount(), qna.getCommentCount());
     }
