@@ -14,14 +14,18 @@ import com.example.kbuddy_backend.qna.service.QnaCommentService;
 import com.example.kbuddy_backend.qna.service.QnaService;
 import com.example.kbuddy_backend.user.dto.response.DefaultResponse;
 import com.example.kbuddy_backend.user.entity.User;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 import lombok.Builder.Default;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * todo:DefaultResponse로 통일
@@ -37,10 +41,16 @@ public class QnaController {
     private final QnaCommentService qnaCommentService;
 
     //todo: 응답 dto 추가
-    @PostMapping
-    @Operation(summary = "Q&A 게시글 작성", description = "Q&A 게시글을 작성 합니다.")
-    public ResponseEntity<DefaultResponse> saveQna(@RequestBody QnaSaveRequest qnaSaveRequest, @Parameter(hidden = true) @CurrentUser User user) {
-        qnaService.saveQna(qnaSaveRequest, user);
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "Q&A 게시글 작성", description = "Q&A 게시글을 작성합니다. 이미지는 multipart form data로 전송합니다.")
+    public ResponseEntity<DefaultResponse> saveQna(
+        @RequestPart("title") String title,
+        @RequestPart("description") String description,
+        @RequestPart("categoryId") Long categoryId,
+        @RequestPart("hashtags") String hashtags,
+        @RequestPart(value = "images", required = false) List<MultipartFile> images,
+            @Parameter(hidden = true) @CurrentUser User user) {
+        qnaService.saveQna(QnaSaveRequest.of(title, description, List.of(hashtags.split(",")), categoryId), images, user);
         return ResponseEntity.ok().body(DefaultResponse.of(true,"게시글 작성 성공"));
     }
 
@@ -72,10 +82,12 @@ public class QnaController {
         return ResponseEntity.ok().body(qna);
     }
 
-    @PostMapping("/{qnaId}/images")
-    @Operation(summary = "Q&A 게시글 이미지 추가", description = "Q&A 게시글에 이미지를 추가 합니다.")
-    public ResponseEntity<String> addQnaImages(@PathVariable final Long qnaId, @RequestPart List<ImageFileDto> images,
-                                               @Parameter(hidden = true) @CurrentUser User user) {
+    @PostMapping(value = "/{qnaId}/images", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "Q&A 게시글 이미지 추가", description = "Q&A 게시글에 이미지를 추가합니다. 이미지는 multipart form으로 전송합니다.")
+    public ResponseEntity<String> addQnaImages(
+            @PathVariable final Long qnaId, 
+            @RequestPart(value = "images") List<MultipartFile> images,
+            @Parameter(hidden = true) @CurrentUser User user) {
         qnaService.addImages(qnaId, images, user);
         return ResponseEntity.ok().body("이미지가 성공적으로 추가되었습니다.");
     }
