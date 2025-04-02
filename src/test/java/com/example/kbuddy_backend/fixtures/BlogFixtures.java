@@ -1,45 +1,20 @@
 package com.example.kbuddy_backend.fixtures;
 
-import com.example.kbuddy_backend.blog.entity.*;
-import com.example.kbuddy_backend.user.entity.User;
-
-import java.util.ArrayList;
+import com.example.kbuddy_backend.blog.dto.request.BlogSaveRequest;
+import com.example.kbuddy_backend.blog.dto.response.BlogResponse;
+import com.example.kbuddy_backend.common.constant.ImageFileType;
+import com.example.kbuddy_backend.common.dto.ImageFileDto;
+import java.time.LocalDateTime;
 import java.util.List;
 
 public class BlogFixtures {
-    
-    public static Blog createBlog() {
-        return Blog.builder()
-                .writer(UserFixtures.createUser())
-                .title("Test Blog Title")
-                .content("Test Blog Content")
-                .category(Category.OTHERS)
-                .imageUrls(List.of("image1.jpg", "image2.jpg"))
-                .build();
+
+    public static BlogSaveRequest createBlogSaveRequest() {
+        return BlogSaveRequest.of("title", "description", List.of(
+                ImageFileDto.of(ImageFileType.PNG,"test_pic","test_url")), List.of("cafe","theater"), 1L);
     }
 
-    public static BlogComment createComment(Blog blog, User user) {
-        return BlogComment.builder()
-                .blog(blog)
-                .writer(user)
-                .content("Test Comment")
-                .build();
+    public static BlogResponse createBlogResponse() {
+        return BlogResponse.of(1L, 123L, 1L, "title", "description", 0, LocalDateTime.now(), LocalDateTime.now(), List.of(ImageFileDto.of(ImageFileType.PNG,"test_pic","test_url")), null, 0, 0);
     }
-
-    public static BlogComment createReply(Blog blog, User user, BlogComment parent) {
-        return BlogComment.builder()
-                .blog(blog)
-                .writer(user)
-                .parent(parent)
-                .content("Test Reply")
-                .build();
-    }
-
-    public static BlogHeart createHeart(Blog blog, User user) {
-        return new BlogHeart(user, blog);
-    }
-
-    public static BlogBookmark createBookmark(Blog blog, User user) {
-        return new BlogBookmark(user, blog);
-    }
-} 
+}

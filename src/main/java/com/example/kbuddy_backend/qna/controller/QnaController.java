@@ -90,10 +90,10 @@ public class QnaController {
     }
 
     @DeleteMapping("/{qnaId}")
-    @Operation(summary = "Q&A 게시글 삭제", description = "Q&A 게시글에 포함된 이미지를 삭제 합니다.")
+    @Operation(summary = "Q&A 게시글 삭제", description = "Q&A 게시글을 삭제 합니다.")
     public ResponseEntity<String> deleteQna(@PathVariable final Long qnaId, @Parameter(hidden = true) @CurrentUser User user) {
         qnaService.deleteQna(qnaId, user);
-        return ResponseEntity.ok().body("QnA가 성공적으로 삭제되었습니다.");
+        return ResponseEntity.ok().body("QnA 게시글이 성공적으로 삭제되었습니다.");
     }
 
     //단일 QnA 컨텐츠 북마크
