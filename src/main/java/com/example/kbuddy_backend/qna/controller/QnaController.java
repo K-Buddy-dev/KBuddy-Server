@@ -19,6 +19,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import java.util.List;
 import lombok.Builder.Default;
 import lombok.RequiredArgsConstructor;
@@ -44,7 +45,7 @@ public class QnaController {
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "Q&A 게시글 작성", description = "Q&A 게시글을 작성합니다. qnaSaveRequest는 JSON 형식의 문자열로, 이미지는 선택적으로 multipart form data로 전송합니다.")
     public ResponseEntity<DefaultResponse> saveQna(
-        @RequestPart(value="qnaSaveRequest") QnaSaveRequest qnaSaveRequest,
+        @Valid @RequestPart(value="qnaSaveRequest") QnaSaveRequest qnaSaveRequest,
         @RequestPart(value = "images", required = false) List<MultipartFile> images,
             @Parameter(hidden = true) @CurrentUser User user) {
         qnaService.saveQna(qnaSaveRequest, images, user);
@@ -73,7 +74,7 @@ public class QnaController {
     @PatchMapping("/{qnaId}")
     @Operation(summary = "Q&A 게시글 업데이트", description = "Q&A 게시글을 업데이트 합니다.")
     public ResponseEntity<QnaResponse> updateQna(@PathVariable final Long qnaId,
-                                                 @RequestBody QnaUpdateRequest qnaUpdateRequest,
+                                                 @Valid @RequestBody QnaUpdateRequest qnaUpdateRequest,
                                                  @Parameter(hidden = true) @CurrentUser User user) {
         QnaResponse qna = qnaService.updateQna(qnaId, qnaUpdateRequest, user);
         return ResponseEntity.ok().body(qna);
@@ -108,7 +109,7 @@ public class QnaController {
     //단일 QnA 컨텐츠 북마크
     @PostMapping("/{qnaId}/bookmark")
     @Operation(summary = "Q&A 게시글 즐겨찾기", description = "Q&A 게시글을 사용자 즐겨찾기 목록에 추가 합니다.")
-    public ResponseEntity<String> addBookmark(@RequestBody BookmarkRequest bookmarkRequest,
+    public ResponseEntity<String> addBookmark(@Valid @RequestBody BookmarkRequest bookmarkRequest,
                                               @PathVariable final Long qnaId) {
         qnaService.addBookmark(bookmarkRequest, qnaId);
         return ResponseEntity.ok().body("성공적으로 북마크 하였습니다.");
@@ -117,7 +118,7 @@ public class QnaController {
     //단일 QnA 컨텐츠 북마크 해제
     @DeleteMapping("/{qnaId}/unbookmark")
     @Operation(summary = "Q&A 게시글 즐겨찾기 삭제", description = "Q&A 게시글을 사용자 즐겨찾기 목록에 추가된 항목을 삭제 합니다.")
-    public ResponseEntity<String> removeBookmark(@RequestBody BookmarkRequest bookmarkRequest,
+    public ResponseEntity<String> removeBookmark(@Valid @RequestBody BookmarkRequest bookmarkRequest,
                                                  @PathVariable final Long qnaId) {
         qnaService.removeBookmark(bookmarkRequest, qnaId);
         return ResponseEntity.ok().body("성공적으로 북마크 해제 하였습니다.");
@@ -126,16 +127,18 @@ public class QnaController {
 
     @PostMapping("/{qnaId}/comments")
     @Operation(summary = "댓글 작성", description = "Q&A 게시글에서 댓글을 작성 합니다.")
-    public ResponseEntity<String> saveQnaComment(@PathVariable Long qnaId,@RequestBody QnaCommentSaveRequest qnaCommentSaveRequest,
-                                            @Parameter(hidden = true) @CurrentUser User user) {
+    public ResponseEntity<String> saveQnaComment(@PathVariable Long qnaId,
+                                                @Valid @RequestBody QnaCommentSaveRequest qnaCommentSaveRequest,
+                                                @Parameter(hidden = true) @CurrentUser User user) {
         qnaCommentService.saveQnaComment(qnaId,qnaCommentSaveRequest, user);
         return ResponseEntity.ok().body("success");
     }
 
     @PutMapping("/{qnaId}/comments/{commentId}")
     @Operation(summary = "댓글 수정", description = "Q&A 게시글에서 댓글을 수정 합니다.")
-    public ResponseEntity<String> updateQnaComment(@PathVariable Long qnaId, @PathVariable Long commentId,
-                                              @RequestBody QnaCommentSaveRequest qnaCommentSaveRequest,
+    public ResponseEntity<String> updateQnaComment(@PathVariable Long qnaId, 
+                                              @PathVariable Long commentId,
+                                              @Valid @RequestBody QnaCommentSaveRequest qnaCommentSaveRequest,
                                               @Parameter(hidden = true) @CurrentUser User user) {
         qnaCommentService.updateQnaComment(qnaId, commentId, qnaCommentSaveRequest, user);
         //todo: 응답
