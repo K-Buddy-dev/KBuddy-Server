@@ -1,6 +1,9 @@
 package com.example.kbuddy_backend.qna.entity;
 
-import com.example.kbuddy_backend.qna.constant.QnaCategoryEnum;
+import java.util.List;
+
+import com.example.kbuddy_backend.qna.dto.response.QnaPaginationResponse;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -25,8 +28,8 @@ public class QnaCategory {
     @Column(name = "category_id")
     private Long id;
 
-    @Enumerated(EnumType.STRING)
-    private QnaCategoryEnum category;
+    @Column(nullable = false)
+    private String categoryCode;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "qna_id")
