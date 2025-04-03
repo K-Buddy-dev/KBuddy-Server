@@ -16,9 +16,9 @@ public record QnaUpdateRequest(
         List<String> hashtags,
         
         @NotNull(message = "카테고리 ID는 필수입니다")
-        Long categoryId) {
+        int categoryId) {
     
-    public static QnaUpdateRequest of(String title, String description, List<String> hashtags, Long categoryId) {
+    public static QnaUpdateRequest of(String title, String description, List<String> hashtags, int categoryId) {
         return new QnaUpdateRequest(title, description, hashtags, categoryId);
     }
 }

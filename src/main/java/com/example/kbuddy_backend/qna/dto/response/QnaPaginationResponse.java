@@ -5,10 +5,10 @@ import java.time.LocalDateTime;
 /*
 * 고려사항 : 카테고리 관리
 * */
-public record QnaPaginationResponse(Long id, Long writerId, Long categoryId, String title, String description,
+public record QnaPaginationResponse(Long id, Long writerId, int categoryId, String title, String description,
                                     int viewCount, int heartCount,
                                     int commentCount, LocalDateTime createdAt, LocalDateTime modifiedAt) {
-    public static QnaPaginationResponse of(Long id, Long writerId, Long categoryId, String title, String description,
+    public static QnaPaginationResponse of(Long id, Long writerId, int categoryId, String title, String description,
                                            int viewCount, int heartCount,
                                            int commentCount, LocalDateTime createdAt, LocalDateTime modifiedAt) {
         return new QnaPaginationResponse(id, writerId, categoryId, title, description, viewCount, heartCount,

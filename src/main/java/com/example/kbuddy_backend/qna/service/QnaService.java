@@ -4,7 +4,6 @@ import com.example.kbuddy_backend.common.constant.ImageFileType;
 import com.example.kbuddy_backend.common.dto.ImageFileDto;
 import com.example.kbuddy_backend.qna.constant.SortBy;
 import com.example.kbuddy_backend.qna.dto.request.BookmarkRequest;
-import com.example.kbuddy_backend.qna.dto.request.QnaImageRequest;
 import com.example.kbuddy_backend.qna.dto.request.QnaSaveRequest;
 import com.example.kbuddy_backend.qna.dto.request.QnaUpdateRequest;
 import com.example.kbuddy_backend.qna.dto.response.AllQnaResponse;
@@ -13,7 +12,6 @@ import com.example.kbuddy_backend.qna.dto.response.QnaPaginationResponse;
 import com.example.kbuddy_backend.qna.dto.response.QnaResponse;
 import com.example.kbuddy_backend.qna.entity.Qna;
 import com.example.kbuddy_backend.qna.entity.QnaBookmark;
-import com.example.kbuddy_backend.qna.entity.QnaCategory;
 import com.example.kbuddy_backend.qna.entity.QnaCollection;
 import com.example.kbuddy_backend.qna.entity.QnaHeart;
 import com.example.kbuddy_backend.qna.entity.QnaImage;
@@ -22,7 +20,6 @@ import com.example.kbuddy_backend.qna.exception.NotWriterException;
 import com.example.kbuddy_backend.qna.exception.QnaHeartNotFoundException;
 import com.example.kbuddy_backend.qna.exception.QnaNotFoundException;
 import com.example.kbuddy_backend.qna.repository.QnaBookmarkRepository;
-import com.example.kbuddy_backend.qna.repository.QnaCategoryRepository;
 import com.example.kbuddy_backend.qna.repository.QnaCollectionRepository;
 import com.example.kbuddy_backend.qna.repository.QnaHeartRepository;
 import com.example.kbuddy_backend.qna.repository.QnaRepository;
@@ -33,7 +30,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -46,7 +43,6 @@ public class QnaService {
 
     private final QnaRepository qnaRepository;
     private final QnaHeartRepository qnaHeartRepository;
-    private final QnaCategoryRepository qnaCategoryRepository;
     private final QnaCollectionRepository qnaCollectionRepository;
     private final QnaBookmarkRepository qnaBookmarkRepository;
     private final S3Service s3Service;
@@ -55,10 +51,10 @@ public class QnaService {
     public QnaResponse saveQna(QnaSaveRequest qnaSaveRequest, List<MultipartFile> imageFiles, User user) {
         String hashtag = String.join(",", qnaSaveRequest.hashtags());
 
-
         Qna qna = Qna.builder()
                 .title(qnaSaveRequest.title())
                 .description(qnaSaveRequest.description())
+                .category(qnaSaveRequest.categoryId())
                 .hashtag(hashtag)
                 .writer(user)
                 .build();
@@ -115,7 +111,7 @@ public class QnaService {
     public AllQnaResponse getAllQna(int pageSize, Long qnaId, String title, SortBy sortBy) {
         List<Qna> allQna = qnaRepository.paginationNoOffset(qnaId, title, pageSize, sortBy);
         List<QnaPaginationResponse> qnaPaginationResponseList = allQna.stream()
-                .map(qna -> QnaPaginationResponse.of(qna.getId(), qna.getWriter().getId(), qna.getCategory().getId(),
+                .map(qna -> QnaPaginationResponse.of(qna.getId(), qna.getWriter().getId(), qna.getCategoryCode(),
                         qna.getTitle(), qna.getDescription(), qna.getViewCount(), qna.getHeartCount(),
                         qna.getCommentCount(), qna.getCreatedDate(),
                         qna.getLastModifiedDate()))
@@ -148,8 +144,7 @@ public class QnaService {
         isQnaWriter(user, qnaById);
 
         String hashtag = String.join(",", qnaUpdateRequest.hashtags());
-        QnaCategory categoryById = findCategoryById(qnaUpdateRequest.categoryId());
-        qnaById.update(qnaUpdateRequest.title(), qnaUpdateRequest.description(), hashtag, categoryById);
+        qnaById.update(qnaUpdateRequest.title(), qnaUpdateRequest.description(), hashtag, qnaUpdateRequest.categoryId());
         return createQnaResponseDto(qnaById);
     }
 
@@ -215,7 +210,7 @@ public class QnaService {
                 .sorted(Comparator.comparing(QnaCommentResponse::createdAt))
                 .toList();
 
-        return QnaResponse.of(qna.getId(), qna.getWriter().getId(), null, qna.getTitle(),
+        return QnaResponse.of(qna.getId(), qna.getWriter().getId(), qna.getCategoryCode(), qna.getTitle(),
                 qna.getDescription(), qna.getViewCount(), qna.getCreatedDate(), qna.getLastModifiedDate(),
                 images, comments, qna.getHeartCount(), qna.getCommentCount());
     }
@@ -272,11 +267,6 @@ public class QnaService {
 
     public Qna findQnaById(Long qnaId) {
         return qnaRepository.findById(qnaId).orElseThrow(QnaNotFoundException::new);
-    }
-
-    private QnaCategory findCategoryById(Long categoryId) {
-        return qnaCategoryRepository.findById(categoryId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 카테고리입니다."));
     }
 
     public QnaCollection findCollectionById(Long bookmarkId) {
