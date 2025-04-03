@@ -75,6 +75,10 @@ public class QnaComment extends BaseTimeEntity {
         this.qnaHearts.remove(qnaHeart);
     }
 
+    public void updateContent(String content) {
+        this.content = content;
+    }
+
 
     public void addQna(Qna qna) {
         this.qna = qna;

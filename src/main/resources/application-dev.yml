@@ -1,5 +1,9 @@
 
 spring:
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 50MB
   config:
     activate:
       on-profile: dev
@@ -31,7 +35,7 @@ spring:
   sql.init.mode: always
   data:
     redis:
-      host: redis
+      host: localhost
       port: 6379
   mail:
     host: smtp.gmail.com
@@ -85,3 +89,5 @@ management:
     web:
       exposure:
         include: "*" # 모든 엔드포인트 노출 -> 추후 변경
+server:
+  port: 8082
