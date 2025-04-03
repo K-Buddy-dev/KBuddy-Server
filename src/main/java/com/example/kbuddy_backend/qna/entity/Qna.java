@@ -52,13 +52,9 @@ public class Qna extends BaseTimeEntity {
 
     private String hashtag;
 
-    @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(
-        name = "qna_categories",
-        joinColumns = @JoinColumn(name = "qna_id"),
-        inverseJoinColumns = @JoinColumn(name = "category_id")
-    )
-    private Set<QnaCategory> category;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category_id")
+    private QnaCategory category;
 
     private String title;
     private String description;
@@ -67,7 +63,7 @@ public class Qna extends BaseTimeEntity {
     private int viewCount;
 
     @Builder
-    public Qna(User writer, String title, String description, String hashtag, Set<QnaCategory> category) {
+    public Qna(User writer, String title, String description, String hashtag, QnaCategory category) {
         this.writer = writer;
         this.title = title;
         this.hashtag = hashtag;
@@ -75,7 +71,7 @@ public class Qna extends BaseTimeEntity {
         this.description = description;
     }
 
-    public void update(String title, String description, String hashtag,  Set<QnaCategory> category) {
+    public void update(String title, String description, String hashtag,  QnaCategory category) {
         this.title = title;
         this.description = description;
         this.hashtag = hashtag;
