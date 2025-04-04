@@ -10,8 +10,7 @@ import java.util.List;
 public class BlogFixtures {
 
     public static BlogSaveRequest createBlogSaveRequest() {
-        return BlogSaveRequest.of("title", "description", List.of(
-                ImageFileDto.of(ImageFileType.PNG,"test_pic","test_url")), List.of("cafe","theater"), 1L);
+        return BlogSaveRequest.of("title", "description", List.of("cafe","theater"), 1L);
     }
 
     public static BlogResponse createBlogResponse() {

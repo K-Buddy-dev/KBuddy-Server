@@ -16,12 +16,14 @@ import com.example.kbuddy_backend.user.dto.response.DefaultResponse;
 import com.example.kbuddy_backend.user.entity.User;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.example.kbuddy_backend.blog.constant.SortBy;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequiredArgsConstructor
@@ -32,10 +34,13 @@ public class BlogController {
     private final BlogService blogService;
     private final BlogCommentService blogCommentService;
 
-    @PostMapping
-    @Operation(summary = "블로그 게시글 작성", description = "새로운 블로그 게시글을 작성합니다.")
-    public ResponseEntity<Void> saveBlog(@RequestBody BlogSaveRequest blogSaveRequest, @Parameter(hidden = true) @CurrentUser User user) {
-        blogService.saveBlog(blogSaveRequest, user);
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "블로그 게시글 작성", description = "새로운 블로그 게시글을 작성합니다. blogSaveRequest 는 JSON 형식의 문자열로, 이미지는 선택적으로 multipart form data 로 전송합니다.")
+    public ResponseEntity<Void> saveBlog(
+            @RequestPart(value = "blogSaveRequest") BlogSaveRequest blogSaveRequest,
+            @RequestPart(value = "images", required = false) List<MultipartFile> images,
+            @Parameter(hidden = true) @CurrentUser User user) {
+        blogService.saveBlog(blogSaveRequest, images, user);
         return ResponseEntity.noContent().build(); // 204 No content 반환
     }
 
@@ -69,10 +74,12 @@ public class BlogController {
         // ok().body(blog) -> ok(blog)로 변경: ok() 자체가 argument가 통과했을때 body값과 함께 응답하기 때문에 굳이 .body()를 사용할 필요가 없다.
     }
 
-    @PostMapping("/{blogId}/images")
-    @Operation(summary = "Blog 게시글 이미지 추가", description = "Blog 게시글에 이미지를 추가 합니다.")
-    public ResponseEntity<Void> addBlogImages(@PathVariable final Long blogId, @RequestPart List<ImageFileDto> images,
-                                               @Parameter(hidden = true) @CurrentUser User user) {
+    @PostMapping(value = "/{blogId}/images", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "Blog 게시글 이미지 추가", description = "Blog 게시글에 이미지를 추가 합니다. 이미지는 multipart form으로 전송합니다.")
+    public ResponseEntity<Void> addBlogImages(
+            @PathVariable final Long blogId,
+            @RequestPart(value = "images") List<MultipartFile> images,
+            @Parameter(hidden = true) @CurrentUser User user) {
         blogService.addImages(blogId, images, user);
         return ResponseEntity.noContent().build(); // 204 No Content 반환
     }
@@ -104,7 +111,7 @@ public class BlogController {
     }
 
     // 단일 블로그 게시글을 북마크에서 제거합니다.
-    @PostMapping("{blogId}/unbookmark")
+    @DeleteMapping("/{blogId}/unbookmark")
     @Operation(summary = "Blog 게시글 즐겨찾기 삭제", description = "Blog 게시글을 사용자 즐겨찾기 목록에 추가된 항목을 삭제 합니다.")
     public ResponseEntity<String> removeBookmark(@RequestBody BlogBookmarkRequest blogBookmarkRequest,
                                                  @PathVariable final Long blogId) {
