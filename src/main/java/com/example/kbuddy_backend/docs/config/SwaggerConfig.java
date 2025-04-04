@@ -77,7 +77,7 @@ public class SwaggerConfig {
 			.info(apiInfo())
 			.addSecurityItem(securityRequirement)  // Security Requirement 추가
 			.schemaRequirement("BearerAuth", securityScheme)
-			.servers(List.of(new Server().url("https://api.k-buddy.kr").description("Production Server"), new Server().url("http://localhost:8080").description("Local Server")));
+			.servers(List.of(new Server().url("https://api.k-buddy.kr").description("Production Server"), new Server().url("http://localhost:8080").description("Local Server"), new Server().url("http://localhost:8082").description("Local Server")));
 	}
 
 	private Info apiInfo() {
