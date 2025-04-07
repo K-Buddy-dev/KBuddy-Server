@@ -1,11 +1,10 @@
 package com.example.kbuddy_backend.blog.controller;
 
-import com.example.kbuddy_backend.blog.constant.BlogCategoryEnum;
 import com.example.kbuddy_backend.blog.dto.request.BlogCommentSaveRequest;
 import com.example.kbuddy_backend.blog.dto.request.BlogReportRequest;
 import com.example.kbuddy_backend.blog.dto.request.BlogSaveRequest;
 import com.example.kbuddy_backend.blog.dto.request.BlogUpdateRequest;
-import com.example.kbuddy_backend.blog.dto.request.BlogBookmarkRequest;
+import com.example.kbuddy_backend.blog.dto.request.BookmarkRequest;
 import com.example.kbuddy_backend.blog.dto.response.AllBlogResponse;
 import com.example.kbuddy_backend.blog.dto.response.BlogResponse;
 import com.example.kbuddy_backend.blog.service.BlogCommentService;
@@ -14,6 +13,7 @@ import com.example.kbuddy_backend.common.config.CurrentUser;
 import com.example.kbuddy_backend.common.dto.ImageFileDto;
 import com.example.kbuddy_backend.user.dto.response.DefaultResponse;
 import com.example.kbuddy_backend.user.entity.User;
+import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
@@ -37,7 +37,7 @@ public class BlogController {
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "블로그 게시글 작성", description = "새로운 블로그 게시글을 작성합니다. blogSaveRequest 는 JSON 형식의 문자열로, 이미지는 선택적으로 multipart form data 로 전송합니다.")
     public ResponseEntity<Void> saveBlog(
-            @RequestPart(value = "blogSaveRequest") BlogSaveRequest blogSaveRequest,
+            @Valid @RequestPart(value = "blogSaveRequest") BlogSaveRequest blogSaveRequest,
             @RequestPart(value = "images", required = false) List<MultipartFile> images,
             @Parameter(hidden = true) @CurrentUser User user) {
         blogService.saveBlog(blogSaveRequest, images, user);
@@ -49,9 +49,9 @@ public class BlogController {
     public ResponseEntity<AllBlogResponse> getAllBlog(@RequestParam(value = "size") int pageSize,
                                                       @RequestParam(value = "id", required = false) Long blogId,
                                                       @RequestParam(value = "keyword", required = false) String title,
-                                                      @RequestParam(value = "sort", required = false) SortBy sortBy,
-                                                      @RequestParam(value = "category", required = false) BlogCategoryEnum category) {
-        AllBlogResponse allBlogResponse = blogService.getAllBlog(pageSize, blogId, title, sortBy, category);
+                                                      @RequestParam(value = "sort", required = false)
+                                                          SortBy sortBy) {
+        AllBlogResponse allBlogResponse = blogService.getAllBlog(pageSize, blogId, title, sortBy);
         return ResponseEntity.ok().body(allBlogResponse);
     }
 
@@ -67,7 +67,7 @@ public class BlogController {
     @PatchMapping("/{blogId}")
     @Operation(summary = "블로그 게시글 업데이트", description = "블로그 게시글을 업데이트 합니다.")
     public ResponseEntity<BlogResponse> updateBlog(@PathVariable Long blogId,
-                                                      @RequestBody BlogUpdateRequest blogUpdateRequest,
+                                                      @Valid @RequestBody BlogUpdateRequest blogUpdateRequest,
                                                       @Parameter(hidden = true) @CurrentUser User user) {
         BlogResponse blog = blogService.updateBlog(blogId, blogUpdateRequest, user);
         return ResponseEntity.ok(blog); // 200 OK, 수정된 블로그 데이터 반환
@@ -104,28 +104,40 @@ public class BlogController {
     // 단일 블로그 게시글을 북마크에 추가합니다.
     @PostMapping("/{blogId}/bookmark")
     @Operation(summary = "Blog 게시글 즐겨찾기", description = "Blog 게시글을 사용자 즐겨찾기 목록에 추가합니다.")
-    public ResponseEntity<Void> addBookmark(@RequestBody BlogBookmarkRequest blogBookmarkRequest,
+    public ResponseEntity<Void> addBookmark(@Valid @RequestBody BookmarkRequest bookmarkRequest,
                                               @PathVariable final Long blogId) {
-        blogService.addBookmark(blogBookmarkRequest, blogId);
+        blogService.addBookmark(bookmarkRequest, blogId);
         return ResponseEntity.noContent().build(); // 204 No Content 반환
     }
 
     // 단일 블로그 게시글을 북마크에서 제거합니다.
     @DeleteMapping("/{blogId}/unbookmark")
     @Operation(summary = "Blog 게시글 즐겨찾기 삭제", description = "Blog 게시글을 사용자 즐겨찾기 목록에 추가된 항목을 삭제 합니다.")
-    public ResponseEntity<String> removeBookmark(@RequestBody BlogBookmarkRequest blogBookmarkRequest,
+    public ResponseEntity<String> removeBookmark(@Valid @RequestBody BookmarkRequest bookmarkRequest,
                                                  @PathVariable final Long blogId) {
-        blogService.removeBookmark(blogBookmarkRequest, blogId);
+        blogService.removeBookmark(bookmarkRequest, blogId);
         return ResponseEntity.ok().body("성공적으로 북마크 해제 하였습니다.");
     }
 
     // 블로그에 댓글을 추가합니다.
-    @PostMapping("/{blogId}/comment")
+    @PostMapping("/{blogId}/comments") // REST 원칙에 맞게 URI 수정
     @Operation(summary = "댓글 작성", description = "블로그 게시글에 댓글을 작성합니다.")
-    public ResponseEntity<Void> saveComment(@PathVariable Long blogId, @RequestBody BlogCommentSaveRequest blogCommentSaveRequest,
+    public ResponseEntity<Void> saveComment(@PathVariable Long blogId,
+                                            @Valid @RequestBody BlogCommentSaveRequest blogCommentSaveRequest,
                                                        @Parameter(hidden = true) @CurrentUser User user) {
         blogCommentService.saveBlogComment(blogId, blogCommentSaveRequest, user);
         return ResponseEntity.noContent().build(); // 204 No Content 반환
+    }
+
+    @PatchMapping("/{blogId}/comments/{commentId}") // REST 원칙에 맞게 URI 수정
+    @Operation(summary = "댓글 수정", description = "블로그 게시글의 댓글을 수정합니다.")
+    public ResponseEntity<DefaultResponse> updateBlogComment(
+            @PathVariable Long blogId,
+            @PathVariable Long commentId,
+            @Valid @RequestBody BlogCommentSaveRequest blogCommentSaveRequest,
+            @Parameter(hidden = true) @CurrentUser User user) {
+        blogCommentService.updateBlogComment(blogId, commentId, blogCommentSaveRequest, user);
+        return ResponseEntity.ok(DefaultResponse.of(true, "댓글 수정 성공"));
     }
 
     // 블로그에 좋아요를 추가합니다.
@@ -179,15 +191,4 @@ public class BlogController {
         blogService.reportBlog(blogId, request, user);
         return ResponseEntity.noContent().build(); // 204 No Content 반환
     }
-
-//    @PatchMapping("/{blogId}/comment/{commentId}")
-//    @Operation(summary = "댓글 수정", description = "블로그 게시글의 댓글을 수정합니다.")
-//    public ResponseEntity<DefaultResponse> updateComment(
-//            @PathVariable Long blogId,
-//            @PathVariable Long commentId,
-//            @RequestBody BlogCommentSaveRequest request,
-//            @Parameter(hidden = true) @CurrentUser User user) {
-//        blogService.updateComment(blogId, commentId, request, user);
-//        return ResponseEntity.ok(DefaultResponse.of(true, "댓글 수정 성공"));
-//    }
 } 

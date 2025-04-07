@@ -68,9 +68,10 @@ public class BlogComment extends BaseTimeEntity {
         this.blogHearts.remove(blogHeart);
     }
 
+    public void updateContent(String content) { this.content = content; }
+
     public void addBlog(Blog blog) {
         this.blog = blog;
         blog.addComment(this);
     }
-
 }
