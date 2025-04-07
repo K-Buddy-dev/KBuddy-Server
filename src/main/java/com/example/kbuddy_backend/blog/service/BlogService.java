@@ -165,10 +165,10 @@ public class BlogService {
         isBlogWriter(user, blog);
 
         // 이미지 파일을 S3에 업로드
-        List<ImageFileDto> uploadedIamges = uploadImages(imagesFiles);
+        List<ImageFileDto> uploadedImages = uploadImages(imagesFiles);
 
         // 업로드된 이미지를 blog에 연결
-        saveImageFiles(uploadedIamges, blog);
+        saveImageFiles(uploadedImages, blog);
     }
 
     @Transactional
