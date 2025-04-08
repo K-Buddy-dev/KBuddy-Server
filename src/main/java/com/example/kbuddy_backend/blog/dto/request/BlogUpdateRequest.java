@@ -16,9 +16,9 @@ public record BlogUpdateRequest(
         List<String> hashtags,
 
         @NotNull(message = "카테고리 ID는 필수입니다.")
-        int categoryId) {
+        List<Integer> categoryId) {
 
-    public static BlogUpdateRequest of(String title, String description, List<String> hashtags, int categoryId) {
+    public static BlogUpdateRequest of(String title, String description, List<String> hashtags, List<Integer> categoryId) {
         return new BlogUpdateRequest(title, description, hashtags, categoryId);
     }
 }

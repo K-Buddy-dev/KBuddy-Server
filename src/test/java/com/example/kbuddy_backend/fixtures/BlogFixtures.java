@@ -10,10 +10,10 @@ import java.util.List;
 public class BlogFixtures {
 
     public static BlogSaveRequest createBlogSaveRequest() {
-        return BlogSaveRequest.of("title", "description", List.of("cafe","theater"), 1);
+        return BlogSaveRequest.of("title", "description", List.of("cafe","theater"), List.of(1, 2));
     }
 
     public static BlogResponse createBlogResponse() {
-        return BlogResponse.of(1L, 123L, 1, "title", "description", 0, LocalDateTime.now(), LocalDateTime.now(), List.of(ImageFileDto.of(ImageFileType.PNG,"test_pic","test_url")), null, 0, 0);
+        return BlogResponse.of(1L, 123L, List.of(1, 2), "title", "description", 0, LocalDateTime.now(), LocalDateTime.now(), List.of(ImageFileDto.of(ImageFileType.PNG,"test_pic","test_url")), null, 0, 0);
     }
 }

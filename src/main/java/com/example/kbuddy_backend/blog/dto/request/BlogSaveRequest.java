@@ -8,7 +8,7 @@ import java.util.List;
 
 public record BlogSaveRequest(
         @NotNull(message = "카테고리 ID는 필수입니다.")
-        int categoryId,
+        List<Integer> categoryId,
 
         @NotBlank(message = "제목은 필수입니다.")
         @Size(max = 100, message = "제목은 최대 100자까지 입력 가능합니다.")
@@ -19,7 +19,7 @@ public record BlogSaveRequest(
 
         List<String> hashtags) {
 
-    public static BlogSaveRequest of(String title, String description, List<String> hashtags, int categoryId) {
+    public static BlogSaveRequest of(String title, String description, List<String> hashtags, List<Integer> categoryId) {
         return new BlogSaveRequest(categoryId, title, description, hashtags);
     }
 }

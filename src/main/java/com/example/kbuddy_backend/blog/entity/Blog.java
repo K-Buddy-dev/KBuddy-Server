@@ -37,7 +37,13 @@ public class Blog extends BaseTimeEntity {
 
     private String hashtag;
 
-    private int categoryCode;
+    @ElementCollection
+    @CollectionTable(
+            name = "blog_categories", // 생성될 테이블 이름
+            joinColumns = @JoinColumn(name = "blog_id") // 외래 키 칼럼 이름
+    )
+    @Column(name = "category_code") // 카테고리 코드가 저장될 칼럼 이름
+    private List<Integer> categoryCode = new ArrayList<>();
 
     private String title;
     private String description;
@@ -47,7 +53,7 @@ public class Blog extends BaseTimeEntity {
     private int reportCount;
 
     @Builder
-    public Blog(User writer, String title, String description, String hashtag, int category) {
+    public Blog(User writer, String title, String description, String hashtag, List<Integer> category) {
         this.writer = writer;
         this.title = title;
         this.description = description;
@@ -55,7 +61,7 @@ public class Blog extends BaseTimeEntity {
         this.categoryCode = category;
     }
 
-    public void update(String title, String description, String hashtag, int category) {
+    public void update(String title, String description, String hashtag, List<Integer> category) {
         this.title = title;
         this.description = description;
         this.hashtag = hashtag;
