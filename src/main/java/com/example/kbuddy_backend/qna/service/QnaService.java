@@ -49,13 +49,16 @@ public class QnaService {
 
     @Transactional
     public QnaResponse saveQna(QnaSaveRequest qnaSaveRequest, List<MultipartFile> imageFiles, User user) {
-        String hashtag = String.join(",", qnaSaveRequest.hashtags());
+        String hashTag = "";
+        if (qnaSaveRequest.hashtags() != null && !qnaSaveRequest.hashtags().isEmpty()) {
+            hashTag = String.join(",", qnaSaveRequest.hashtags());
+        }
 
         Qna qna = Qna.builder()
                 .title(qnaSaveRequest.title())
                 .description(qnaSaveRequest.description())
                 .category(qnaSaveRequest.categoryId())
-                .hashtag(hashtag)
+                .hashtag(hashTag)
                 .writer(user)
                 .build();
 
@@ -67,14 +70,6 @@ public class QnaService {
 
         Qna saveQna = qnaRepository.save(qna);
         return createQnaResponseDto(saveQna);
-    }
-    
-    /**
-     * 테스트 및 하위 호환성을 위한 메서드
-     */
-    @Transactional
-    public QnaResponse saveQna(QnaSaveRequest qnaSaveRequest, User user) {
-        return saveQna(qnaSaveRequest, null, user);
     }
 
     /**
@@ -107,9 +102,9 @@ public class QnaService {
         
         return uploadedImages;
     }
-
-    public AllQnaResponse getAllQna(int pageSize, Long qnaId, String title, SortBy sortBy) {
-        List<Qna> allQna = qnaRepository.paginationNoOffset(qnaId, title, pageSize, sortBy);
+    
+    public AllQnaResponse getAllQna(int pageSize, Long qnaId, String title, SortBy sortBy, Integer categoryCode) {
+        List<Qna> allQna = qnaRepository.paginationNoOffset(qnaId, title, pageSize, sortBy, categoryCode);
         List<QnaPaginationResponse> qnaPaginationResponseList = allQna.stream()
                 .map(qna -> QnaPaginationResponse.of(qna.getId(), qna.getWriter().getId(), qna.getCategoryCode(),
                         qna.getTitle(), qna.getDescription(), qna.getViewCount(), qna.getHeartCount(),
@@ -139,12 +134,15 @@ public class QnaService {
     @Transactional
     public QnaResponse updateQna(Long qnaId, QnaUpdateRequest qnaUpdateRequest, User user) {
 
+        String hashTag = "";
+        if (qnaUpdateRequest.hashtags() != null && !qnaUpdateRequest.hashtags().isEmpty()) {
+            hashTag = String.join(",", qnaUpdateRequest.hashtags());
+        }
         Qna qnaById = findQnaById(qnaId);
 
         isQnaWriter(user, qnaById);
 
-        String hashtag = String.join(",", qnaUpdateRequest.hashtags());
-        qnaById.update(qnaUpdateRequest.title(), qnaUpdateRequest.description(), hashtag, qnaUpdateRequest.categoryId());
+        qnaById.update(qnaUpdateRequest.title(), qnaUpdateRequest.description(), hashTag, qnaUpdateRequest.categoryId());
         return createQnaResponseDto(qnaById);
     }
 

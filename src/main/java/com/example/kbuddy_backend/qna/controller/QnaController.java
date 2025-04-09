@@ -54,13 +54,13 @@ public class QnaController {
 
     //전체 조회 (페이징)
     @GetMapping
-    @Operation(summary = "Q&A 게시글 전체 조회", description = "Q&A 게시글을 전체 조회 합니다.")
+    @Operation(summary = "Q&A 게시글 전체 조회", description = "Q&A 게시글을 전체 조회 합니다. 카테고리 코드로 필터링할 수 있습니다.")
     public ResponseEntity<AllQnaResponse> getAllQna(@RequestParam(value = "size") int pageSize,
                                                     @RequestParam(value = "id", required = false) Long qnaId,
-                                                    @RequestParam(value = "keyword") String title,
-                                                    @RequestParam(required = false, value = "sort")
-                                                    SortBy sortBy) {
-        AllQnaResponse allQnaResponse = qnaService.getAllQna(pageSize, qnaId, title, sortBy);
+                                                    @RequestParam(value = "keyword", defaultValue = "") String title,
+                                                    @RequestParam(required = false, value = "sort") SortBy sortBy,
+                                                    @RequestParam(required = false, value = "categoryCode") Integer categoryCode) {
+        AllQnaResponse allQnaResponse = qnaService.getAllQna(pageSize, qnaId, title, sortBy, categoryCode);
         return ResponseEntity.ok().body(allQnaResponse);
     }
 
