@@ -84,7 +84,7 @@ public class ControllerAdviceException {
     public ResponseEntity<ErrorResponse> handleInternalServerError(final Exception e) {
         log.error("Internal Server Error: ", e);
         return ResponseEntity.status(INTERNAL_SERVER_ERROR)
-                .body(new ErrorResponse("서버에서 예기치 못한 오류가 발생했습니다.", CustomCode.HTTP_500));
+                .body(new ErrorResponse("서버에서 예기치 못한 오류가 발생했습니다.", CustomCode.HTTP_500, List.of(e.getMessage())));
     }
 
 }

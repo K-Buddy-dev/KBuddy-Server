@@ -8,8 +8,8 @@ import com.example.kbuddy_backend.common.constant.ImageFileType;
  * url : public 이미지 url
  * */
 
-public record ImageFileDto(ImageFileType type, String name, String url) {
-    public static ImageFileDto of(ImageFileType type, String name, String url) {
-        return new ImageFileDto(type, name, url);
+public record ImageFileDto(Long id,ImageFileType type, String name, String url) {
+    public static ImageFileDto of(Long id,ImageFileType type, String name, String url) {
+        return new ImageFileDto(id, type, name, url);
     }
 }

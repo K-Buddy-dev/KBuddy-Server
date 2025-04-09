@@ -173,7 +173,7 @@ public class BlogService {
     private BlogResponse createBlogResponseDto(Blog blog) {
         List<ImageFileDto> images = blog.getImageUrls()
                 .stream()
-                .map(blogImage -> new ImageFileDto(blogImage.getFileType(), blogImage.getFilePath(),
+                .map(blogImage -> new ImageFileDto(blogImage.getId(),blogImage.getFileType(), blogImage.getFilePath(),
                         blogImage.getImageUrl()
                 ))
                 .toList();

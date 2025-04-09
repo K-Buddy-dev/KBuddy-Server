@@ -71,32 +71,14 @@ public class QnaController {
         return ResponseEntity.ok().body(qna);
     }
 
-    @PatchMapping("/{qnaId}")
+    @PatchMapping(value = "/{qnaId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "Q&A 게시글 업데이트", description = "Q&A 게시글을 업데이트 합니다.")
     public ResponseEntity<QnaResponse> updateQna(@PathVariable final Long qnaId,
-                                                 @Valid @RequestBody QnaUpdateRequest qnaUpdateRequest,
+                                                 @Valid @RequestPart QnaUpdateRequest qnaUpdateRequest,
+                                                 @RequestPart(value = "images", required = false) List<MultipartFile> images,
                                                  @Parameter(hidden = true) @CurrentUser User user) {
-        QnaResponse qna = qnaService.updateQna(qnaId, qnaUpdateRequest, user);
+        QnaResponse qna = qnaService.updateQna(qnaId, qnaUpdateRequest, images, user);
         return ResponseEntity.ok().body(qna);
-    }
-
-    @PostMapping(value = "/{qnaId}/images", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @Operation(summary = "Q&A 게시글 이미지 추가", description = "Q&A 게시글에 이미지를 추가합니다. 이미지는 multipart form으로 전송합니다.")
-    public ResponseEntity<String> addQnaImages(
-            @PathVariable final Long qnaId, 
-            @RequestPart(value = "images") List<MultipartFile> images,
-            @Parameter(hidden = true) @CurrentUser User user) {
-        qnaService.addImages(qnaId, images, user);
-        return ResponseEntity.ok().body("이미지가 성공적으로 추가되었습니다.");
-    }
-
-    @DeleteMapping("/{qnaId}/images")
-    @Operation(summary = "Q&A 게시글 이미지 삭제", description = "Q&A 게시글에 포함된 이미지를 삭제 합니다.")
-    public ResponseEntity<String> deleteQnaImages(@PathVariable final Long qnaId,
-                                                  @RequestBody List<ImageFileDto> images,
-                                                  @Parameter(hidden = true) @CurrentUser User user) {
-        qnaService.deleteImages(qnaId, images, user);
-        return ResponseEntity.ok().body("이미지가 성공적으로 삭제되었습니다.");
     }
 
     @DeleteMapping("/{qnaId}")

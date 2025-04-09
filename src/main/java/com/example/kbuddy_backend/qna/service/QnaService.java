@@ -15,14 +15,8 @@ import com.example.kbuddy_backend.qna.entity.QnaBookmark;
 import com.example.kbuddy_backend.qna.entity.QnaCollection;
 import com.example.kbuddy_backend.qna.entity.QnaHeart;
 import com.example.kbuddy_backend.qna.entity.QnaImage;
-import com.example.kbuddy_backend.qna.exception.DuplicatedQnaHeartException;
-import com.example.kbuddy_backend.qna.exception.NotWriterException;
-import com.example.kbuddy_backend.qna.exception.QnaHeartNotFoundException;
-import com.example.kbuddy_backend.qna.exception.QnaNotFoundException;
-import com.example.kbuddy_backend.qna.repository.QnaBookmarkRepository;
-import com.example.kbuddy_backend.qna.repository.QnaCollectionRepository;
-import com.example.kbuddy_backend.qna.repository.QnaHeartRepository;
-import com.example.kbuddy_backend.qna.repository.QnaRepository;
+import com.example.kbuddy_backend.qna.exception.*;
+import com.example.kbuddy_backend.qna.repository.*;
 import com.example.kbuddy_backend.s3.dto.response.S3Response;
 import com.example.kbuddy_backend.s3.service.S3Service;
 import com.example.kbuddy_backend.user.entity.User;
@@ -45,6 +39,7 @@ public class QnaService {
     private final QnaHeartRepository qnaHeartRepository;
     private final QnaCollectionRepository qnaCollectionRepository;
     private final QnaBookmarkRepository qnaBookmarkRepository;
+    private final QnaImageRepository qnaImageRepository;
     private final S3Service s3Service;
 
     @Transactional
@@ -93,7 +88,7 @@ public class QnaService {
                     ? ImageFileType.PNG : ImageFileType.JPEG;
             
             // ImageFileDto 생성 및 리스트에 추가
-            uploadedImages.add(new ImageFileDto(
+            uploadedImages.add(new ImageFileDto(0L,
                     fileType,
                     s3Response.filePath(),
                     s3Response.s3ImageUrl()
@@ -132,16 +127,24 @@ public class QnaService {
     }
 
     @Transactional
-    public QnaResponse updateQna(Long qnaId, QnaUpdateRequest qnaUpdateRequest, User user) {
-
+    public QnaResponse updateQna(Long qnaId, QnaUpdateRequest qnaUpdateRequest, List<MultipartFile> imageFiles, User user) {
+        //추후에 해시태그 변경 로직 추가
         String hashTag = "";
         if (qnaUpdateRequest.hashtags() != null && !qnaUpdateRequest.hashtags().isEmpty()) {
             hashTag = String.join(",", qnaUpdateRequest.hashtags());
         }
         Qna qnaById = findQnaById(qnaId);
 
+        // 이미지가 있으면 S3에 업로드하고 연결
+        if (imageFiles != null && !imageFiles.isEmpty()) {
+            List<ImageFileDto> uploadedImages = uploadImages(imageFiles);
+            saveImageFiles(uploadedImages, qnaById);
+        }
+        // 기존 이미지 삭제
+        if (!qnaUpdateRequest.deleteImageIds().isEmpty()) {
+            deleteImages(qnaId,qnaUpdateRequest.deleteImageIds(), user);
+        }
         isQnaWriter(user, qnaById);
-
         qnaById.update(qnaUpdateRequest.title(), qnaUpdateRequest.description(), hashTag, qnaUpdateRequest.categoryId());
         return createQnaResponseDto(qnaById);
     }
@@ -153,25 +156,14 @@ public class QnaService {
     }
 
     @Transactional
-    public void addImages(Long qnaId, List<MultipartFile> imageFiles, User user) {
+    public void deleteImages(Long qnaId, List<Long> imageIds, User user) {
         Qna qna = findQnaById(qnaId);
         isQnaWriter(user, qna);
-        
-        // 이미지 파일을 S3에 업로드
-        List<ImageFileDto> uploadedImages = uploadImages(imageFiles);
-        
-        // 업로드된 이미지를 Qna에 연결
-        saveImageFiles(uploadedImages, qna);
-    }
-
-    @Transactional
-    public void deleteImages(Long qnaId, List<ImageFileDto> images, User user) {
-        Qna qna = findQnaById(qnaId);
-        isQnaWriter(user, qna);
-        for (ImageFileDto image : images) {
-            qna.deleteImage(image.name());
+        for (Long imageId : imageIds) {
+            qna.deleteImage(imageId);
+            QnaImage qnaImage = qnaImageRepository.findById(imageId).orElseThrow(QnaImageNotFoundException::new);
             // S3에서도 이미지 삭제
-            s3Service.deleteFile(image.name());
+            s3Service.deleteFile(qnaImage.getImageUrl());
         }
     }
 
@@ -187,14 +179,13 @@ public class QnaService {
         for (QnaImage image : images) {
             s3Service.deleteFile(image.getFilePath());
         }
-        
         qnaRepository.delete(qna);
     }
 
     private QnaResponse createQnaResponseDto(Qna qna) {
         List<ImageFileDto> images = qna.getImageUrls()
                 .stream()
-                .map(qnaImage -> new ImageFileDto(qnaImage.getFileType(), qnaImage.getFilePath(),
+                .map(qnaImage -> new ImageFileDto(qnaImage.getId(),qnaImage.getFileType(), qnaImage.getFilePath(),
                         qnaImage.getImageUrl()
                 ))
                 .toList();
