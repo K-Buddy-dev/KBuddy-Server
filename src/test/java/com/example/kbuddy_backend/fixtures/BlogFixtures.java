@@ -7,17 +7,12 @@ import com.example.kbuddy_backend.common.dto.ImageFileDto;
 import java.time.LocalDateTime;
 import java.util.List;
 
-public class BlogFixtures {
-
-    public static BlogSaveRequest createBlogSaveRequest() {
-        return BlogSaveRequest.of("title", "description", List.of(
-                ImageFileDto.of(1L,ImageFileType.PNG,"test_pic","test_url")), List.of("cafe","theater"), 1L);
-    }
-
-    public static BlogResponse createBlogResponse() {
-        return BlogResponse.of(1L, 123L, 1L, "title", "description", 0, LocalDateTime.now(), LocalDateTime.now(), List.of(ImageFileDto.of(1l,ImageFileType.PNG,"test_pic","test_url")), null, 0, 0);
-
-        return BlogSaveRequest.of("title", "description", List.of("cafe","theater"), List.of(1, 2));
-    }
-
-}
+//public class BlogFixtures {
+//
+//    public static BlogSaveRequest createBlogSaveRequest() {
+//        return BlogSaveRequest.of("title", "description", List.of("cafe","theater"), List.of(1,2));
+//
+//    public static BlogResponse createBlogResponse() {
+//        return BlogResponse.of(1L, 123L, List.of(1,2), "title", "description", 0, LocalDateTime.now(), LocalDateTime.now(), List.of(ImageFileDto.of(1l,ImageFileType.PNG,"test_pic","test_url")), null, 0, 0);
+//    }
+//}

@@ -15,7 +15,6 @@ import com.example.kbuddy_backend.blog.dto.request.BlogSaveRequest;
 import com.example.kbuddy_backend.blog.dto.response.BlogResponse;
 import com.example.kbuddy_backend.blog.service.BlogService;
 import com.example.kbuddy_backend.common.WebMVCTest;
-import com.example.kbuddy_backend.fixtures.BlogFixtures;
 import com.example.kbuddy_backend.fixtures.UserFixtures;
 import com.example.kbuddy_backend.user.entity.User;
 import java.util.Optional;
