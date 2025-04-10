@@ -16,5 +16,8 @@ public class BlogFixtures {
 
     public static BlogResponse createBlogResponse() {
         return BlogResponse.of(1L, 123L, 1L, "title", "description", 0, LocalDateTime.now(), LocalDateTime.now(), List.of(ImageFileDto.of(1l,ImageFileType.PNG,"test_pic","test_url")), null, 0, 0);
+
+        return BlogSaveRequest.of("title", "description", List.of("cafe","theater"), List.of(1, 2));
     }
+
 }
