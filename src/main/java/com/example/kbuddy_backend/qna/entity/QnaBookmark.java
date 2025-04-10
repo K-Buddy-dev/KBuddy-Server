@@ -16,7 +16,7 @@ public class QnaBookmark {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "qna_boomark_id")
+    @Column(name = "qna_bookmark_id")
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)

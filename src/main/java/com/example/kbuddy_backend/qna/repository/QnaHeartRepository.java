@@ -12,5 +12,5 @@ public interface QnaHeartRepository extends JpaRepository<QnaHeart, Long> {
     Optional<QnaHeart> findByQnaCommentIdAndUserId(Long qnaCommentId, Long userId);
     Optional<QnaHeart> findByQnaIdAndUserId(Long qnaId, Long userId);
 
-    boolean existsByQnaIdAndUserId(Long id, Long id1);
+    boolean existsByQnaIdAndUserId(Long qnaId, Long userId);
 }

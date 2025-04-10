@@ -10,7 +10,7 @@ public interface QnaBookmarkRepository extends JpaRepository<QnaBookmark, Long> 
 
     Optional<QnaBookmark> findByQna(Qna qna);
 
-    Optional<QnaBookmark> findByQnaIdAndUserId(Long qnaId, Long id);
+    Optional<QnaBookmark> findByQnaIdAndUserId(Long qnaId, Long userId);
 
     boolean existsByQnaIdAndUserId(Long qnaId, Long userId);
 }
