@@ -101,7 +101,7 @@ public class BlogService {
                     ? ImageFileType.PNG : ImageFileType.JPEG;
 
             // ImageFileDto 생성 및 리스트에 추가
-            uploadedImages.add(new ImageFileDto(
+            uploadedImages.add(new ImageFileDto(0L,
                     fileType,
                     s3Response.filePath(),
                     s3Response.s3ImageUrl()
