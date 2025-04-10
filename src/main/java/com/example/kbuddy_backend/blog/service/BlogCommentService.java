@@ -6,9 +6,11 @@ import com.example.kbuddy_backend.blog.entity.BlogComment;
 import com.example.kbuddy_backend.blog.entity.BlogHeart;
 import com.example.kbuddy_backend.blog.exception.BlogCommentNotFoundException;
 import com.example.kbuddy_backend.blog.exception.DuplicatedBlogCommentHeartException;
+import com.example.kbuddy_backend.blog.exception.NotWriterException;
 import com.example.kbuddy_backend.blog.repository.BlogCommentRepository;
 import com.example.kbuddy_backend.blog.repository.BlogHeartRepository;
 import com.example.kbuddy_backend.user.entity.User;
+import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -57,5 +59,20 @@ public class BlogCommentService {
     private BlogComment findBlogCommentById(Long commentId) {
         return blogCommentRepository.findById(commentId)
             .orElseThrow(BlogCommentNotFoundException::new);
+    }
+
+    // 블로그 댓글 수정 메소드 추가
+    @Transactional
+    public void updateBlogComment(Long blogId, Long commentId, BlogCommentSaveRequest blogCommentSaveRequest, User user) {
+        Blog blogById = blogService.findBlogById(blogId);
+        BlogComment blogComment = findBlogCommentById(commentId);
+        isBlogCommentWriter(user, blogById);
+        blogComment.updateContent(blogCommentSaveRequest.content());
+    }
+
+    private static void isBlogCommentWriter(User user, Blog blogById) {
+        if (!Objects.equals(blogById.getWriter().getId(), user.getId())) {
+            throw new NotWriterException();
+        }
     }
 }
