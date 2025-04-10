@@ -28,28 +28,8 @@ public class SwaggerConfig {
 	public OperationCustomizer operationCustomizer() {
 		return (operation, handlerMethod) -> {
 			this.addResponseBodyWrapperSchemaExample(operation, com.example.kbuddy_backend.common.advice.response.ApiResponse.class, "data");
-			this.addStandardResponses(operation);
 			return operation;
 		};
-	}
-
-	/**
-	 * 모든 API에 공통 응답 코드 및 설명 추가
-	 */
-	private void addStandardResponses(Operation operation) {
-		ApiResponses responses = operation.getResponses();
-		
-		// 이미 정의된 응답이 없는 경우 기본 응답 추가
-		if (!responses.containsKey("200")) {
-			responses.addApiResponse("200", new io.swagger.v3.oas.models.responses.ApiResponse().description("요청이 성공적으로 처리되었습니다."));
-		}
-		
-		// 공통 오류 응답 추가
-		responses.addApiResponse("400", new io.swagger.v3.oas.models.responses.ApiResponse().description("잘못된 요청입니다. 요청 파라미터를 확인하세요."));
-		responses.addApiResponse("401", new io.swagger.v3.oas.models.responses.ApiResponse().description("인증이 필요합니다. 유효한 JWT 토큰이 필요합니다."));
-		responses.addApiResponse("403", new io.swagger.v3.oas.models.responses.ApiResponse().description("접근 권한이 없습니다."));
-		responses.addApiResponse("404", new io.swagger.v3.oas.models.responses.ApiResponse().description("요청한 리소스를 찾을 수 없습니다."));
-		responses.addApiResponse("500", new io.swagger.v3.oas.models.responses.ApiResponse().description("서버 내부 오류가 발생했습니다."));
 	}
 
 	private void addResponseBodyWrapperSchemaExample(Operation operation, Class<?> type, String wrapFieldName) {

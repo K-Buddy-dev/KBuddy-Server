@@ -3,7 +3,6 @@ package com.example.kbuddy_backend.qna.service;
 import com.example.kbuddy_backend.common.constant.ImageFileType;
 import com.example.kbuddy_backend.common.dto.ImageFileDto;
 import com.example.kbuddy_backend.qna.constant.SortBy;
-import com.example.kbuddy_backend.qna.dto.request.BookmarkRequest;
 import com.example.kbuddy_backend.qna.dto.request.QnaSaveRequest;
 import com.example.kbuddy_backend.qna.dto.request.QnaUpdateRequest;
 import com.example.kbuddy_backend.qna.dto.response.AllQnaResponse;
@@ -12,7 +11,6 @@ import com.example.kbuddy_backend.qna.dto.response.QnaPaginationResponse;
 import com.example.kbuddy_backend.qna.dto.response.QnaResponse;
 import com.example.kbuddy_backend.qna.entity.Qna;
 import com.example.kbuddy_backend.qna.entity.QnaBookmark;
-import com.example.kbuddy_backend.qna.entity.QnaCollection;
 import com.example.kbuddy_backend.qna.entity.QnaHeart;
 import com.example.kbuddy_backend.qna.entity.QnaImage;
 import com.example.kbuddy_backend.qna.exception.*;
@@ -37,7 +35,6 @@ public class QnaService {
 
     private final QnaRepository qnaRepository;
     private final QnaHeartRepository qnaHeartRepository;
-    private final QnaCollectionRepository qnaCollectionRepository;
     private final QnaBookmarkRepository qnaBookmarkRepository;
     private final QnaImageRepository qnaImageRepository;
     private final S3Service s3Service;
@@ -189,6 +186,9 @@ public class QnaService {
                         qnaImage.getImageUrl()
                 ))
                 .toList();
+        // 북마크, 좋아요된 게시글인지 여부
+        boolean isBookmarked = qnaBookmarkRepository.existsByQnaIdAndUserId(qna.getId(), qna.getWriter().getId());
+        boolean isHearted = qnaHeartRepository.existsByQnaIdAndUserId(qna.getId(), qna.getWriter().getId());
         List<QnaCommentResponse> comments = qna.getComments()
                 .stream()
                 .map(qnaComment ->
@@ -201,7 +201,7 @@ public class QnaService {
 
         return QnaResponse.of(qna.getId(), qna.getWriter().getId(), qna.getCategoryCode(), qna.getTitle(),
                 qna.getDescription(), qna.getViewCount(), qna.getCreatedDate(), qna.getLastModifiedDate(),
-                images, comments, qna.getHeartCount(), qna.getCommentCount());
+                images, comments, qna.getHeartCount(), qna.getCommentCount(), isBookmarked, isHearted);
     }
 
     private void saveImageFiles(List<ImageFileDto> imageFiles, Qna qna) {
@@ -239,27 +239,20 @@ public class QnaService {
     }
 
     @Transactional
-    public void addBookmark(BookmarkRequest bookmarkRequest, Long qnaId) {
-        QnaCollection collectionById = findCollectionById(bookmarkRequest.collectionId());
-        QnaBookmark qnaBookmark = new QnaBookmark(findQnaById(qnaId), collectionById);
-        collectionById.addBookmark(qnaBookmark);
+    public void addBookmark(User user, Long qnaId) {
+        QnaBookmark qnaBookmark = new QnaBookmark(findQnaById(qnaId), user);
+        qnaBookmarkRepository.save(qnaBookmark);
     }
 
-
     @Transactional
-    public void removeBookmark(BookmarkRequest bookmarkRequest, Long qnaId) {
-        QnaCollection collectionById = findCollectionById(bookmarkRequest.collectionId());
-        QnaBookmark qnaBookmark = qnaBookmarkRepository.findByQna(findQnaById(qnaId))
-                .orElseThrow(() -> new IllegalArgumentException("북마크 된 QnA가 아닙니다."));
-        collectionById.removeBookmark(qnaBookmark);
+    public void removeBookmark(User user, Long qnaId) {
+        QnaBookmark qnaBookmark = qnaBookmarkRepository.findByQnaIdAndUserId(qnaId, user.getId())
+                .orElseThrow(QnaBookmarkNotFoundException::new);
+        qnaBookmarkRepository.delete(qnaBookmark);
     }
 
     public Qna findQnaById(Long qnaId) {
         return qnaRepository.findById(qnaId).orElseThrow(QnaNotFoundException::new);
     }
 
-    public QnaCollection findCollectionById(Long bookmarkId) {
-        return qnaCollectionRepository.findById(bookmarkId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 컬렉션입니다."));
-    }
 }

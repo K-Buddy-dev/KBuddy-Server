@@ -4,7 +4,6 @@ package com.example.kbuddy_backend.qna.controller;
 import com.example.kbuddy_backend.common.config.CurrentUser;
 import com.example.kbuddy_backend.common.dto.ImageFileDto;
 import com.example.kbuddy_backend.qna.constant.SortBy;
-import com.example.kbuddy_backend.qna.dto.request.BookmarkRequest;
 import com.example.kbuddy_backend.qna.dto.request.QnaCommentSaveRequest;
 import com.example.kbuddy_backend.qna.dto.request.QnaSaveRequest;
 import com.example.kbuddy_backend.qna.dto.request.QnaUpdateRequest;
@@ -16,6 +15,7 @@ import com.example.kbuddy_backend.user.dto.response.DefaultResponse;
 import com.example.kbuddy_backend.user.entity.User;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -91,18 +91,18 @@ public class QnaController {
     //단일 QnA 컨텐츠 북마크
     @PostMapping("/{qnaId}/bookmark")
     @Operation(summary = "Q&A 게시글 즐겨찾기", description = "Q&A 게시글을 사용자 즐겨찾기 목록에 추가 합니다.")
-    public ResponseEntity<String> addBookmark(@Valid @RequestBody BookmarkRequest bookmarkRequest,
-                                              @PathVariable final Long qnaId) {
-        qnaService.addBookmark(bookmarkRequest, qnaId);
+    public ResponseEntity<String> addBookmark(@PathVariable final Long qnaId,@Parameter(hidden = true)  @CurrentUser User user)
+                                              {
+        qnaService.addBookmark(user,qnaId);
         return ResponseEntity.ok().body("성공적으로 북마크 하였습니다.");
     }
 
     //단일 QnA 컨텐츠 북마크 해제
     @DeleteMapping("/{qnaId}/unbookmark")
     @Operation(summary = "Q&A 게시글 즐겨찾기 삭제", description = "Q&A 게시글을 사용자 즐겨찾기 목록에 추가된 항목을 삭제 합니다.")
-    public ResponseEntity<String> removeBookmark(@Valid @RequestBody BookmarkRequest bookmarkRequest,
-                                                 @PathVariable final Long qnaId) {
-        qnaService.removeBookmark(bookmarkRequest, qnaId);
+    public ResponseEntity<String> removeBookmark(
+                                                 @PathVariable final Long qnaId, @Parameter(hidden = true) @CurrentUser User user){
+        qnaService.removeBookmark(user, qnaId);
         return ResponseEntity.ok().body("성공적으로 북마크 해제 하였습니다.");
     }
 
