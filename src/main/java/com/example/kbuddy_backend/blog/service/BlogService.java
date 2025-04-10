@@ -101,7 +101,7 @@ public class BlogService {
                     ? ImageFileType.PNG : ImageFileType.JPEG;
 
             // ImageFileDto 생성 및 리스트에 추가
-            uploadedImages.add(new ImageFileDto(
+            uploadedImages.add(new ImageFileDto(0L,
                     fileType,
                     s3Response.filePath(),
                     s3Response.s3ImageUrl()
@@ -203,7 +203,7 @@ public class BlogService {
     private BlogResponse createBlogResponseDto(Blog blog) {
         List<ImageFileDto> images = blog.getImageUrls()
                 .stream()
-                .map(blogImage -> new ImageFileDto(blogImage.getFileType(), blogImage.getFilePath(),
+                .map(blogImage -> new ImageFileDto(blogImage.getId(),blogImage.getFileType(), blogImage.getFilePath(),
                         blogImage.getImageUrl()
                 ))
                 .toList();

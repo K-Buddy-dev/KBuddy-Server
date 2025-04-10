@@ -45,4 +45,8 @@ public class QnaImage {
         this.fileType = fileType;
         this.filePath = filePath;
     }
+
+    public void setQna(Qna qna) {
+        this.qna = qna;
+    }
 }

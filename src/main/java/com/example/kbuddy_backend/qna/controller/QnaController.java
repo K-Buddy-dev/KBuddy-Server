@@ -4,7 +4,6 @@ package com.example.kbuddy_backend.qna.controller;
 import com.example.kbuddy_backend.common.config.CurrentUser;
 import com.example.kbuddy_backend.common.dto.ImageFileDto;
 import com.example.kbuddy_backend.qna.constant.SortBy;
-import com.example.kbuddy_backend.qna.dto.request.BookmarkRequest;
 import com.example.kbuddy_backend.qna.dto.request.QnaCommentSaveRequest;
 import com.example.kbuddy_backend.qna.dto.request.QnaSaveRequest;
 import com.example.kbuddy_backend.qna.dto.request.QnaUpdateRequest;
@@ -16,6 +15,7 @@ import com.example.kbuddy_backend.user.dto.response.DefaultResponse;
 import com.example.kbuddy_backend.user.entity.User;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -54,13 +54,13 @@ public class QnaController {
 
     //전체 조회 (페이징)
     @GetMapping
-    @Operation(summary = "Q&A 게시글 전체 조회", description = "Q&A 게시글을 전체 조회 합니다.")
+    @Operation(summary = "Q&A 게시글 전체 조회", description = "Q&A 게시글을 전체 조회 합니다. 카테고리 코드로 필터링할 수 있습니다.")
     public ResponseEntity<AllQnaResponse> getAllQna(@RequestParam(value = "size") int pageSize,
                                                     @RequestParam(value = "id", required = false) Long qnaId,
-                                                    @RequestParam(value = "keyword") String title,
-                                                    @RequestParam(required = false, value = "sort")
-                                                    SortBy sortBy) {
-        AllQnaResponse allQnaResponse = qnaService.getAllQna(pageSize, qnaId, title, sortBy);
+                                                    @RequestParam(value = "keyword", defaultValue = "") String title,
+                                                    @RequestParam(required = false, value = "sort") SortBy sortBy,
+                                                    @RequestParam(required = false, value = "categoryCode") Integer categoryCode) {
+        AllQnaResponse allQnaResponse = qnaService.getAllQna(pageSize, qnaId, title, sortBy, categoryCode);
         return ResponseEntity.ok().body(allQnaResponse);
     }
 
@@ -71,32 +71,14 @@ public class QnaController {
         return ResponseEntity.ok().body(qna);
     }
 
-    @PatchMapping("/{qnaId}")
+    @PatchMapping(value = "/{qnaId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "Q&A 게시글 업데이트", description = "Q&A 게시글을 업데이트 합니다.")
     public ResponseEntity<QnaResponse> updateQna(@PathVariable final Long qnaId,
-                                                 @Valid @RequestBody QnaUpdateRequest qnaUpdateRequest,
+                                                 @Valid @RequestPart QnaUpdateRequest qnaUpdateRequest,
+                                                 @RequestPart(value = "images", required = false) List<MultipartFile> images,
                                                  @Parameter(hidden = true) @CurrentUser User user) {
-        QnaResponse qna = qnaService.updateQna(qnaId, qnaUpdateRequest, user);
+        QnaResponse qna = qnaService.updateQna(qnaId, qnaUpdateRequest, images, user);
         return ResponseEntity.ok().body(qna);
-    }
-
-    @PostMapping(value = "/{qnaId}/images", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @Operation(summary = "Q&A 게시글 이미지 추가", description = "Q&A 게시글에 이미지를 추가합니다. 이미지는 multipart form으로 전송합니다.")
-    public ResponseEntity<String> addQnaImages(
-            @PathVariable final Long qnaId, 
-            @RequestPart(value = "images") List<MultipartFile> images,
-            @Parameter(hidden = true) @CurrentUser User user) {
-        qnaService.addImages(qnaId, images, user);
-        return ResponseEntity.ok().body("이미지가 성공적으로 추가되었습니다.");
-    }
-
-    @DeleteMapping("/{qnaId}/images")
-    @Operation(summary = "Q&A 게시글 이미지 삭제", description = "Q&A 게시글에 포함된 이미지를 삭제 합니다.")
-    public ResponseEntity<String> deleteQnaImages(@PathVariable final Long qnaId,
-                                                  @RequestBody List<ImageFileDto> images,
-                                                  @Parameter(hidden = true) @CurrentUser User user) {
-        qnaService.deleteImages(qnaId, images, user);
-        return ResponseEntity.ok().body("이미지가 성공적으로 삭제되었습니다.");
     }
 
     @DeleteMapping("/{qnaId}")
@@ -109,18 +91,18 @@ public class QnaController {
     //단일 QnA 컨텐츠 북마크
     @PostMapping("/{qnaId}/bookmark")
     @Operation(summary = "Q&A 게시글 즐겨찾기", description = "Q&A 게시글을 사용자 즐겨찾기 목록에 추가 합니다.")
-    public ResponseEntity<String> addBookmark(@Valid @RequestBody BookmarkRequest bookmarkRequest,
-                                              @PathVariable final Long qnaId) {
-        qnaService.addBookmark(bookmarkRequest, qnaId);
+    public ResponseEntity<String> addBookmark(@PathVariable final Long qnaId,@Parameter(hidden = true)  @CurrentUser User user)
+                                              {
+        qnaService.addBookmark(user,qnaId);
         return ResponseEntity.ok().body("성공적으로 북마크 하였습니다.");
     }
 
     //단일 QnA 컨텐츠 북마크 해제
     @DeleteMapping("/{qnaId}/unbookmark")
     @Operation(summary = "Q&A 게시글 즐겨찾기 삭제", description = "Q&A 게시글을 사용자 즐겨찾기 목록에 추가된 항목을 삭제 합니다.")
-    public ResponseEntity<String> removeBookmark(@Valid @RequestBody BookmarkRequest bookmarkRequest,
-                                                 @PathVariable final Long qnaId) {
-        qnaService.removeBookmark(bookmarkRequest, qnaId);
+    public ResponseEntity<String> removeBookmark(
+                                                 @PathVariable final Long qnaId, @Parameter(hidden = true) @CurrentUser User user){
+        qnaService.removeBookmark(user, qnaId);
         return ResponseEntity.ok().body("성공적으로 북마크 해제 하였습니다.");
     }
 

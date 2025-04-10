@@ -77,15 +77,12 @@ public class Qna extends BaseTimeEntity {
     }
 
     public void addImage(QnaImage qnaImage) {
+        qnaImage.setQna(this);
         imageUrls.add(qnaImage);
     }
 
-    public void deleteImage(String filePath) {
-        QnaImage qnaImage = imageUrls.stream()
-                .filter(image -> image.getFilePath().equals(filePath))
-                .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("해당 이미지가 없습니다."));
-        imageUrls.remove(qnaImage);
+    public void deleteImage(Long imageId) {
+        imageUrls.removeIf(image -> image.getId().equals(imageId));
     }
 
     public void addComment(QnaComment qnaComment) {

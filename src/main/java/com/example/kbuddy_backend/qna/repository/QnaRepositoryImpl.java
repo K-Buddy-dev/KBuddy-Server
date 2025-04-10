@@ -17,8 +17,17 @@ public class QnaRepositoryImpl implements QnaRepositoryCustom {
 
     @Override
     public List<Qna> paginationNoOffset(Long qnaId, String title, int pageSize, SortBy sortBy) {
+        return paginationNoOffset(qnaId, title, pageSize, sortBy, null);
+    }
+    
+    @Override
+    public List<Qna> paginationNoOffset(Long qnaId, String title, int pageSize, SortBy sortBy, Integer categoryCode) {
         return jpaQueryFactory.selectFrom(qna)
-                .where(ltQnaId(qnaId), qna.title.like("%"+title + "%").or(qna.description.like("%" + title + "%")))
+                .where(
+                    ltQnaId(qnaId), 
+                    titleOrDescriptionContains(title),
+                    eqCategoryCode(categoryCode)
+                )
                 .orderBy(getOrderSpecifier(sortBy))
                 .limit(pageSize)
                 .fetch();
@@ -29,6 +38,20 @@ public class QnaRepositoryImpl implements QnaRepositoryCustom {
             return null;
         }
         return qna.id.lt(qnaId);
+    }
+    
+    private BooleanExpression titleOrDescriptionContains(String keyword) {
+        if (keyword == null || keyword.trim().isEmpty()) {
+            return null;
+        }
+        return qna.title.like("%" + keyword + "%").or(qna.description.like("%" + keyword + "%"));
+    }
+    
+    private BooleanExpression eqCategoryCode(Integer categoryCode) {
+        if (categoryCode == null) {
+            return null;
+        }
+        return qna.categoryCode.eq(categoryCode);
     }
 
     private OrderSpecifier<?> getOrderSpecifier(SortBy sortBy) {
