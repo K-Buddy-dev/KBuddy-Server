@@ -11,10 +11,10 @@ public class BlogFixtures {
 
     public static BlogSaveRequest createBlogSaveRequest() {
         return BlogSaveRequest.of("title", "description", List.of(
-                ImageFileDto.of(ImageFileType.PNG,"test_pic","test_url")), List.of("cafe","theater"), 1L);
+                ImageFileDto.of(1L,ImageFileType.PNG,"test_pic","test_url")), List.of("cafe","theater"), 1L);
     }
 
     public static BlogResponse createBlogResponse() {
-        return BlogResponse.of(1L, 123L, 1L, "title", "description", 0, LocalDateTime.now(), LocalDateTime.now(), List.of(ImageFileDto.of(ImageFileType.PNG,"test_pic","test_url")), null, 0, 0);
+        return BlogResponse.of(1L, 123L, 1L, "title", "description", 0, LocalDateTime.now(), LocalDateTime.now(), List.of(ImageFileDto.of(1l,ImageFileType.PNG,"test_pic","test_url")), null, 0, 0);
     }
 }
