@@ -72,7 +72,7 @@ public class QnaController {
     }
 
     @PatchMapping(value = "/{qnaId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @Operation(summary = "Q&A 게시글 업데이트", description = "Q&A 게시글을 업데이트 합니다.")
+    @Operation(summary = "Q&A 게시글 업데이트", description = "Q&A 게시글을 업데이트 합니다. 이미지는 선택적으로 multipart form data로 전송합니다. 빈 문자열을 업데이트할 수 없습니다.")
     public ResponseEntity<QnaResponse> updateQna(@PathVariable final Long qnaId,
                                                  @Valid @RequestPart QnaUpdateRequest qnaUpdateRequest,
                                                  @RequestPart(value = "images", required = false) List<MultipartFile> images,
