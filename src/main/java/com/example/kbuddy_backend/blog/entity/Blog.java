@@ -69,15 +69,12 @@ public class Blog extends BaseTimeEntity {
     }
 
     public void addImage(BlogImage blogImage){
+        blogImage.setBlog(this);
         imageUrls.add(blogImage);
     }
 
-    public void deleteImage(String filePath){
-        BlogImage blogImage = imageUrls.stream()
-                .filter(image -> image.getFilePath().equals(filePath))
-                .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("해당 이미지가 없습니다."));
-        imageUrls.remove(blogImage);
+    public void deleteImage(Long imageId){
+        imageUrls.removeIf(image -> image.getId().equals(imageId));
     }
 
     public void addComment(BlogComment blogComment){comments.add(blogComment);}

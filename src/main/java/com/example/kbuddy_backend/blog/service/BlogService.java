@@ -13,14 +13,8 @@ import com.example.kbuddy_backend.blog.entity.BlogHeart;
 import com.example.kbuddy_backend.blog.entity.BlogBookmark;
 import com.example.kbuddy_backend.blog.entity.BlogImage;
 import com.example.kbuddy_backend.blog.entity.BlogReport;
-import com.example.kbuddy_backend.blog.exception.BlogNotFoundException;
-import com.example.kbuddy_backend.blog.exception.DuplicatedBlogHeartException;
-import com.example.kbuddy_backend.blog.exception.NotWriterException;
-import com.example.kbuddy_backend.blog.repository.BlogCollectionRepository;
-import com.example.kbuddy_backend.blog.repository.BlogHeartRepository;
-import com.example.kbuddy_backend.blog.repository.BlogReportRepository;
-import com.example.kbuddy_backend.blog.repository.BlogRepository;
-import com.example.kbuddy_backend.blog.repository.BlogBookmarkRepository;
+import com.example.kbuddy_backend.blog.exception.*;
+import com.example.kbuddy_backend.blog.repository.*;
 import com.example.kbuddy_backend.common.constant.ImageFileType;
 import com.example.kbuddy_backend.common.dto.ImageFileDto;
 import com.example.kbuddy_backend.common.exception.BadRequestException;
@@ -49,7 +43,7 @@ public class BlogService {
     private final BlogHeartRepository blogHeartRepository;
     private final BlogCollectionRepository blogCollectionRepository;
     private final BlogBookmarkRepository blogBookmarkRepository;
-
+    private final BlogImageRepository blogImageRepository;
     private final BlogReportRepository blogReportRepository;
     private final S3Service s3Service;
 
@@ -139,13 +133,25 @@ public class BlogService {
 
     // 블로그 내용을 수정합니다.
     @Transactional
-    public BlogResponse updateBlog(Long blogId, BlogUpdateRequest blogUpdateRequest, User user) {
-
+    public BlogResponse updateBlog(Long blogId, BlogUpdateRequest blogUpdateRequest, List<MultipartFile> imageFiles, User user) {
+        // 추후에 해시태그 변경 로직 추가
+        String hashTag = "";
+        if (blogUpdateRequest.hashtags() != null && !blogUpdateRequest.hashtags().isEmpty()) {
+            hashTag = String.join(",", blogUpdateRequest.hashtags());
+        }
         Blog blogById = findBlogById(blogId);
 
+        // 이미지가 있으면 S3에 업로드하고 연결
+        if (imageFiles != null && !imageFiles.isEmpty()) {
+            List<ImageFileDto> uploadedImages = uploadImages(imageFiles);
+            saveImageFiles(uploadedImages, blogById);
+        }
+        // 기존 이미지 삭제
+        if (!blogUpdateRequest.deleteImageIds().isEmpty()) {
+            deleteImages(blogId, blogUpdateRequest.deleteImageIds(), user);
+        }
         isBlogWriter(user, blogById);
-        
-        String hashTag = String.join(",", blogUpdateRequest.hashtags());
+
         blogById.update(blogUpdateRequest.title(), blogUpdateRequest.description(), hashTag, blogUpdateRequest.categoryId());
         return createBlogResponseDto(blogById);
     }
@@ -157,25 +163,15 @@ public class BlogService {
     }
 
     @Transactional
-    public void addImages(Long blogId, List<MultipartFile> imagesFiles, User user) {
+    public void deleteImages(Long blogId, List<Long> imageIds, User user) {
         Blog blog = findBlogById(blogId);
         isBlogWriter(user, blog);
 
-        // 이미지 파일을 S3에 업로드
-        List<ImageFileDto> uploadedImages = uploadImages(imagesFiles);
-
-        // 업로드된 이미지를 blog에 연결
-        saveImageFiles(uploadedImages, blog);
-    }
-
-    @Transactional
-    public void deleteImages(Long blogId, List<ImageFileDto> images, User user) {
-        Blog blog = findBlogById(blogId);
-        isBlogWriter(user, blog);
-        for(ImageFileDto image : images) {
-            blog.deleteImage(image.name());
+        for(Long imageId : imageIds) {
+            blog.deleteImage(imageId);
+            BlogImage blogImage = blogImageRepository.findById(imageId).orElseThrow(BlogImageNotFoundException::new);
             // S3에서도 이미지 삭제
-            s3Service.deleteFile(image.name());
+            s3Service.deleteFile(blogImage.getImageUrl());
         }
     }
 

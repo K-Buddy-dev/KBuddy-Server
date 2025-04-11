@@ -67,30 +67,12 @@ public class BlogController {
     @PatchMapping("/{blogId}")
     @Operation(summary = "블로그 게시글 업데이트", description = "블로그 게시글을 업데이트 합니다.")
     public ResponseEntity<BlogResponse> updateBlog(@PathVariable Long blogId,
-                                                      @Valid @RequestBody BlogUpdateRequest blogUpdateRequest,
+                                                      @Valid @RequestPart BlogUpdateRequest blogUpdateRequest,
+                                                      @RequestPart(value = "images", required = false) List<MultipartFile> images,
                                                       @Parameter(hidden = true) @CurrentUser User user) {
-        BlogResponse blog = blogService.updateBlog(blogId, blogUpdateRequest, user);
+        BlogResponse blog = blogService.updateBlog(blogId, blogUpdateRequest, images, user);
         return ResponseEntity.ok(blog); // 200 OK, 수정된 블로그 데이터 반환
         // ok().body(blog) -> ok(blog)로 변경: ok() 자체가 argument가 통과했을때 body값과 함께 응답하기 때문에 굳이 .body()를 사용할 필요가 없다.
-    }
-
-    @PostMapping(value = "/{blogId}/images", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @Operation(summary = "Blog 게시글 이미지 추가", description = "Blog 게시글에 이미지를 추가 합니다. 이미지는 multipart form으로 전송합니다.")
-    public ResponseEntity<Void> addBlogImages(
-            @PathVariable final Long blogId,
-            @RequestPart(value = "images") List<MultipartFile> images,
-            @Parameter(hidden = true) @CurrentUser User user) {
-        blogService.addImages(blogId, images, user);
-        return ResponseEntity.noContent().build(); // 204 No Content 반환
-    }
-
-    @DeleteMapping("/{blogId}/images")
-    @Operation(summary = "Blog 게시글 이미지 삭제", description = "Blog 게시글에 포함된 이미지를 삭제 합니다.")
-    public ResponseEntity<String> deleteBlogImages(@PathVariable final Long blogId,
-                                                   @RequestBody List<ImageFileDto> images,
-                                                   @Parameter(hidden = true) @CurrentUser User user) {
-        blogService.deleteImages(blogId, images, user);
-        return ResponseEntity.ok().body("이미지가 성공적으로 삭제되었습니다.");
     }
 
     // 블로그를 삭제합니다.    
