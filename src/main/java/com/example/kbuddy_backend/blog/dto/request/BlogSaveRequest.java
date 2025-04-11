@@ -1,6 +1,7 @@
 package com.example.kbuddy_backend.blog.dto.request;
 
 import com.example.kbuddy_backend.common.dto.ImageFileDto;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -17,6 +18,7 @@ public record BlogSaveRequest(
         @NotBlank(message = "내용은 필수입니다.")
         String description,
 
+        @Schema(hidden = true)
         List<String> hashtags) {
 
     public static BlogSaveRequest of(String title, String description, List<String> hashtags, List<Integer> categoryId) {

@@ -45,13 +45,13 @@ public class BlogController {
     }
 
     @GetMapping
-    @Operation(summary = "블로그 게시글 전체 조회", description = "블로그 게시글 전체 조회합니다.")
+    @Operation(summary = "블로그 게시글 전체 조회", description = "블로그 게시글 전체 조회합니다. 카테고리 코드로 필터링 할 수 있습니다.")
     public ResponseEntity<AllBlogResponse> getAllBlog(@RequestParam(value = "size") int pageSize,
                                                       @RequestParam(value = "id", required = false) Long blogId,
-                                                      @RequestParam(value = "keyword", required = false) String title,
-                                                      @RequestParam(value = "sort", required = false)
-                                                          SortBy sortBy) {
-        AllBlogResponse allBlogResponse = blogService.getAllBlog(pageSize, blogId, title, sortBy);
+                                                      @RequestParam(value = "keyword", defaultValue = "") String title,
+                                                      @RequestParam(required = false, value = "sort") SortBy sortBy,
+                                                      @RequestParam(required = false, value = "categoryCode") Integer categoryCode) {
+        AllBlogResponse allBlogResponse = blogService.getAllBlog(pageSize, blogId, title, sortBy, categoryCode);
         return ResponseEntity.ok().body(allBlogResponse);
     }
 

@@ -56,13 +56,16 @@ public class BlogService {
     // 새로운 블로그를 저장
     @Transactional
     public BlogResponse saveBlog(BlogSaveRequest blogSaveRequest, List<MultipartFile> imageFiles, User user) {
-        String hashtag = String.join(",", blogSaveRequest.hashtags());
+        String hashTag = "";
+        if (blogSaveRequest.hashtags() != null && !blogSaveRequest.hashtags().isEmpty()) {
+            hashTag = String.join(",", blogSaveRequest.hashtags());
+        }
 
         Blog blog = Blog.builder()
                 .title(blogSaveRequest.title())
                 .description(blogSaveRequest.description())
                 .category(blogSaveRequest.categoryId())
-                .hashtag(hashtag)
+                .hashtag(hashTag)
                 .writer(user)
                 .build();
 
@@ -74,12 +77,6 @@ public class BlogService {
 
         Blog saveBlog = blogRepository.save(blog);
         return createBlogResponseDto(saveBlog);
-    }
-
-    // 테스트 및 하위 호환성을 위한 메서드
-    @Transactional
-    public BlogResponse saveBlog(BlogSaveRequest blogSaveRequest, User user) {
-        return saveBlog(blogSaveRequest, null, user);
     }
 
     // 이미지 파일들을 S3에 업로드하고 ImageFileDto 리스트를 반환합니다.
@@ -111,8 +108,8 @@ public class BlogService {
         return uploadedImages;
     }
 
-    public AllBlogResponse getAllBlog(int pageSize, Long blogId, String title, SortBy sortBy) {
-        List<Blog> allBlog = blogRepository.paginationNoOffset(blogId, title, pageSize, sortBy);
+    public AllBlogResponse getAllBlog(int pageSize, Long blogId, String title, SortBy sortBy, Integer categoryCode) {
+        List<Blog> allBlog = blogRepository.paginationNoOffset(blogId, title, pageSize, sortBy, categoryCode);
         List<BlogPaginationResponse> blogPaginationResponseList = allBlog.stream()
                 .map(blog -> BlogPaginationResponse.of(blog.getId(), blog.getWriter().getId(), blog.getCategoryCode(),
                         blog.getTitle(), blog.getDescription(), blog.getViewCount(), blog.getHeartCount(),
@@ -148,8 +145,8 @@ public class BlogService {
 
         isBlogWriter(user, blogById);
         
-        String hashtag = String.join(",", blogUpdateRequest.hashtags());
-        blogById.update(blogUpdateRequest.title(), blogUpdateRequest.description(), hashtag, blogUpdateRequest.categoryId());
+        String hashTag = String.join(",", blogUpdateRequest.hashtags());
+        blogById.update(blogUpdateRequest.title(), blogUpdateRequest.description(), hashTag, blogUpdateRequest.categoryId());
         return createBlogResponseDto(blogById);
     }
 

@@ -17,10 +17,17 @@ public class BlogRepositoryImpl implements BlogRepositoryCustom {
 
     @Override
     public List<Blog> paginationNoOffset(Long blogId, String title, int pageSize, SortBy sortBy) {
-//        BooleanExpression categoryFilter = (category != null) ? blog.category.category.eq(category) : null;
+        return paginationNoOffset(blogId, title, pageSize, sortBy, null);
+    }
 
+    @Override
+    public List<Blog> paginationNoOffset(Long blogId, String title, int pageSize, SortBy sortBy, Integer categoryCode) {
         return jpaQueryFactory.selectFrom(blog)
-                .where(ltBlogId(blogId), blog.title.like("%" + title + "%").or(blog.description.like("%" + title + "%")))
+                .where(
+                        ltBlogId(blogId), 
+                        titleOrDescriptionContains(title),
+                        eqCategoryCode(categoryCode)
+                )
                 .orderBy(getOrderSpecifiers(sortBy)) // <-- 수정된 부분
                 .limit(pageSize)
                 .fetch();
@@ -32,6 +39,21 @@ public class BlogRepositoryImpl implements BlogRepositoryCustom {
             return null;
         }
         return blog.id.lt(blogId);
+    }
+
+    private BooleanExpression titleOrDescriptionContains(String keyword) {
+        if (keyword == null || keyword.trim().isEmpty()) {
+            return null;
+        }
+        return blog.title.like("%" + keyword + "%").or(blog.description.like("%" + keyword + "%"));
+    }
+
+    private BooleanExpression eqCategoryCode(Integer categoryCode) {
+        if (categoryCode == null) {
+            return null;
+        }
+        // blog 의 categoryCode 는 list 타입이기 때문에 eq -> contains 으로 변경
+        return blog.categoryCode.contains(categoryCode);
     }
 
 //    private BooleanExpression containsTitleOrDescription(String title) {
