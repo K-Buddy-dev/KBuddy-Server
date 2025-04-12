@@ -9,23 +9,22 @@ import java.util.List;
 
 @Schema(description = "Blog 게시글 업데이트 요청")
 public record BlogUpdateRequest(
-        @Schema(description = "게시글 제목", example = "블로그 게시글 제목1", required = true, maxLength = 100)
+        @Schema(description = "게시글 제목", example = "블로그 게시글 제목1", maxLength = 100)
         @NotBlank(message = "제목은 필수입니다.")
         @Size(max = 100, message = "제목은 최대 100자까지 입력 가능합니다.")
         String title,
 
-        @Schema(description = "게시글 내용", example = "블로그 게시글 내용1", required = true)
+        @Schema(description = "게시글 내용", example = "블로그 게시글 내용1")
         @NotBlank(message = "내용은 필수입니다.")
         String description,
 
         @Schema(hidden = true)
         List<String> hashtags,
 
-        @Schema(description = "카테고리 ID", example = "2", requiredMode = Schema.RequiredMode.REQUIRED)
-        @NotNull(message = "카테고리 ID는 필수입니다.")
+        @Schema(description = "카테고리 ID", example = "2")
         List<Integer> categoryId,
 
-        @Schema(description = "삭제할 기존 이미지 파일", requiredMode = Schema.RequiredMode.REQUIRED)
+        @Schema(description = "삭제할 기존 이미지 파일 ID 목록")
         List<Long> deleteImageIds
 
 ) {

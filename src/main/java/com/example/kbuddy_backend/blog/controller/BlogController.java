@@ -64,7 +64,7 @@ public class BlogController {
 
     // 블로그 내용을 수정합니다.
     @PatchMapping("/{blogId}")
-    @Operation(summary = "블로그 게시글 업데이트", description = "블로그 게시글을 업데이트 합니다.")
+    @Operation(summary = "블로그 게시글 업데이트", description = "블로그 게시글을 업데이트 합니다. 이미지는 선택적으로 multipart form data로 전송합니다. 빈 문자열을 업데이트 할 수 없습니다.")
     public ResponseEntity<BlogResponse> updateBlog(@PathVariable Long blogId,
                                                       @Valid @RequestPart BlogUpdateRequest blogUpdateRequest,
                                                       @RequestPart(value = "images", required = false) List<MultipartFile> images,

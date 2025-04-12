@@ -62,10 +62,18 @@ public class Blog extends BaseTimeEntity {
     }
 
     public void update(String title, String description, String hashtag, List<Integer> category) {
-        this.title = title;
-        this.description = description;
-        this.hashtag = hashtag;
-        this.categoryCode = category;
+        if (title != null && !title.isEmpty()) {
+            this.title = title;
+        }
+        if (description != null && !description.isEmpty()) {
+            this.description = description;
+        }
+        if (hashtag != null && !hashtag.isEmpty()) {
+            this.hashtag = hashtag;
+        }
+        if (category != null) {
+            this.categoryCode = category;
+        }
     }
 
     public void addImage(BlogImage blogImage){
