@@ -2,26 +2,23 @@ package com.example.kbuddy_backend.qna.controller;
 
 
 import com.example.kbuddy_backend.common.config.CurrentUser;
-import com.example.kbuddy_backend.common.dto.ImageFileDto;
 import com.example.kbuddy_backend.qna.constant.SortBy;
 import com.example.kbuddy_backend.qna.dto.request.QnaCommentSaveRequest;
 import com.example.kbuddy_backend.qna.dto.request.QnaSaveRequest;
 import com.example.kbuddy_backend.qna.dto.request.QnaUpdateRequest;
 import com.example.kbuddy_backend.qna.dto.response.AllQnaResponse;
+import com.example.kbuddy_backend.qna.dto.response.QnaPaginationResponse;
 import com.example.kbuddy_backend.qna.dto.response.QnaResponse;
 import com.example.kbuddy_backend.qna.service.QnaCommentService;
 import com.example.kbuddy_backend.qna.service.QnaService;
 import com.example.kbuddy_backend.user.dto.response.DefaultResponse;
 import com.example.kbuddy_backend.user.entity.User;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
-import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.List;
-import lombok.Builder.Default;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -43,7 +40,7 @@ public class QnaController {
 
     //todo: 응답 dto 추가
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @Operation(summary = "Q&A 게시글 작성", description = "Q&A 게시글을 작성합니다. qnaSaveRequest는 JSON 형식의 문자열로, 이미지는 선택적으로 multipart form data로 전송합니다.")
+    @Operation(summary = "Q&A 게시글 작성", description = "Q&A 게시글을 작성합니다. qnaSaveRequest는 JSON 형식의 문자열로, 이미지는 선택적으로 multipart form data로 전송합니다. <br> 임시 저장 글은 status를 DRAFT로 설정합니다.")
     public ResponseEntity<DefaultResponse> saveQna(
         @Valid @RequestPart(value="qnaSaveRequest") QnaSaveRequest qnaSaveRequest,
         @RequestPart(value = "images", required = false) List<MultipartFile> images,
@@ -65,19 +62,22 @@ public class QnaController {
     }
 
     @GetMapping("/{qnaId}")
-    @Operation(summary = "특정 Q&A 게시글 조회", description = "Q&A 게시글 id를 통해 조회 합니다.")
-    public ResponseEntity<QnaResponse> getQna(@PathVariable Long qnaId) {
-        QnaResponse qna = qnaService.getQna(qnaId);
+    @Operation(summary = "특정 Q&A 게시글 조회", description = "Q&A 게시글 id를 통해 조회 합니다. 임시저장 글은 작성자만 조회 가능합니다.")
+    public ResponseEntity<QnaResponse> getQna(
+            @PathVariable Long qnaId,
+            @Parameter(hidden = true) @CurrentUser User user) {
+        QnaResponse qna = qnaService.getQna(qnaId, user);
         return ResponseEntity.ok().body(qna);
     }
 
     @PatchMapping(value = "/{qnaId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @Operation(summary = "Q&A 게시글 업데이트", description = "Q&A 게시글을 업데이트 합니다. 이미지는 선택적으로 multipart form data로 전송합니다. 빈 문자열을 업데이트할 수 없습니다.")
-    public ResponseEntity<QnaResponse> updateQna(@PathVariable final Long qnaId,
-                                                 @Valid @RequestPart QnaUpdateRequest qnaUpdateRequest,
-                                                 @RequestPart(value = "images", required = false) List<MultipartFile> images,
-                                                 @Parameter(hidden = true) @CurrentUser User user) {
-        QnaResponse qna = qnaService.updateQna(qnaId, qnaUpdateRequest, images, user);
+    @Operation(summary = "Q&A 게시글 업데이트", description = "Q&A 게시글을 업데이트 합니다. status, 이미지 추가/삭제 등을 포함합니다. <br> 임시 저장에서 게시글로 변경 시 status를 PUBLISHED로 설정합니다.")
+    public ResponseEntity<QnaResponse> updateQna(
+            @PathVariable final Long qnaId,
+            @Valid @RequestPart(value = "qnaUpdateRequest") QnaUpdateRequest qnaUpdateRequest,
+            @RequestPart(value = "images", required = false) List<MultipartFile> newFiles,
+            @Parameter(hidden = true) @CurrentUser User user) {
+        QnaResponse qna = qnaService.updateQna(qnaId, qnaUpdateRequest, newFiles, user);
         return ResponseEntity.ok().body(qna);
     }
 
@@ -157,5 +157,14 @@ public class QnaController {
     public ResponseEntity<String> minusCommentHeart(@PathVariable Long commentId,@Parameter(hidden = true) @CurrentUser User user) {
         qnaCommentService.minusHeart(commentId, user);
         return ResponseEntity.ok().body("success");
+    }
+
+    //임시 저장 게시글 조회 API
+    @GetMapping("/drafts")
+    @Operation(summary = "내 임시 저장 Q&A 목록 조회", description = "현재 로그인한 사용자가 임시 저장한 Q&A 게시글 전체 목록을 조회합니다.")
+    public ResponseEntity<List<QnaPaginationResponse>> getMyDrafts(
+            @Parameter(hidden = true) @CurrentUser User user) {
+        List<QnaPaginationResponse> drafts = qnaService.getMyDrafts(user);
+        return ResponseEntity.ok(drafts);
     }
 }

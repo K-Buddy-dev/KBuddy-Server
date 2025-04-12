@@ -9,5 +9,4 @@ public class KBuddyBackendApplication {
     public static void main(String[] args) {
         SpringApplication.run(KBuddyBackendApplication.class, args);
     }
-
 }
