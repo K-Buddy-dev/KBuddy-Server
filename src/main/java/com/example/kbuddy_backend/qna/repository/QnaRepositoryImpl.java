@@ -17,11 +17,6 @@ public class QnaRepositoryImpl implements QnaRepositoryCustom {
     private final JPAQueryFactory jpaQueryFactory;
 
     @Override
-    public List<Qna> paginationNoOffset(Long qnaId, String title, int pageSize, SortBy sortBy, QnaStatus status) {
-        return paginationNoOffset(qnaId, title, pageSize, sortBy, null, status);
-    }
-    
-    @Override
     public List<Qna> paginationNoOffset(Long qnaId, String title, int pageSize, SortBy sortBy, Integer categoryCode, QnaStatus status) {
         return jpaQueryFactory.selectFrom(qna)
                 .where(

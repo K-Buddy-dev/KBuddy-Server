@@ -1,8 +1,10 @@
 package com.example.kbuddy_backend.user.controller;
 
 import com.example.kbuddy_backend.common.config.CurrentUser;
+import com.example.kbuddy_backend.qna.dto.response.QnaPaginationResponse;
 import com.example.kbuddy_backend.user.dto.request.UserBioRequest;
 import com.example.kbuddy_backend.user.dto.response.DefaultResponse;
+import com.example.kbuddy_backend.user.dto.response.DraftListResponse;
 import com.example.kbuddy_backend.user.dto.response.UserResponse;
 import com.example.kbuddy_backend.user.entity.User;
 import com.example.kbuddy_backend.user.service.UserService;
@@ -16,6 +18,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -38,5 +42,13 @@ public class UserPageController {
     public ResponseEntity<String> saveUserBio(@RequestBody UserBioRequest request,@Parameter(hidden = true) @CurrentUser User user) {
         userService.saveUserBio(request, user);
         return ResponseEntity.ok().body("성공적으로 저장되었습니다.");
+    }
+
+    @GetMapping("/drafts")
+    @Operation(summary = "내 임시 저장 게시글 목록 조회", description = "현재 로그인한 사용자가 임시 저장한 게시글 전체 목록을 조회합니다.")
+    public ResponseEntity<List<DraftListResponse>> getMyDrafts(
+            @Parameter(hidden = true) @CurrentUser User user) {
+        List<DraftListResponse> drafts = userService.getMyDrafts(user);
+        return ResponseEntity.ok(drafts);
     }
 }

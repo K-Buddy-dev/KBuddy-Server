@@ -8,8 +8,6 @@ import java.util.List;
 
 public interface QnaRepositoryCustom {
 
-    List<Qna> paginationNoOffset(Long qnaId, String title, int pageSize, SortBy sortBy, QnaStatus status);
-    
     List<Qna> paginationNoOffset(Long qnaId, String title, int pageSize, SortBy sortBy, Integer categoryCode, QnaStatus status);
 
 }

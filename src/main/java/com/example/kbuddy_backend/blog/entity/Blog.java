@@ -1,6 +1,8 @@
 package com.example.kbuddy_backend.blog.entity;
 
+import com.example.kbuddy_backend.blog.constant.BlogStatus;
 import com.example.kbuddy_backend.common.entity.BaseTimeEntity;
+import com.example.kbuddy_backend.qna.constant.QnaStatus;
 import com.example.kbuddy_backend.user.entity.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -45,6 +47,10 @@ public class Blog extends BaseTimeEntity {
     @Column(name = "category_code") // 카테고리 코드가 저장될 칼럼 이름
     private List<Integer> categoryCode = new ArrayList<>();
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private BlogStatus status = BlogStatus.DRAFT;
+
     private String title;
     private String description;
 
@@ -53,15 +59,16 @@ public class Blog extends BaseTimeEntity {
     private int reportCount;
 
     @Builder
-    public Blog(User writer, String title, String description, String hashtag, List<Integer> category) {
+    public Blog(User writer, String title, String description, String hashtag, List<Integer> category,BlogStatus status) {
         this.writer = writer;
         this.title = title;
         this.description = description;
         this.hashtag = hashtag;
         this.categoryCode = category;
+        this.status = (status != null) ? status : BlogStatus.DRAFT;
     }
 
-    public void update(String title, String description, String hashtag, List<Integer> category) {
+    public void update(String title, String description, String hashtag, List<Integer> category, BlogStatus status) {
         if (title != null && !title.isEmpty()) {
             this.title = title;
         }
@@ -73,6 +80,10 @@ public class Blog extends BaseTimeEntity {
         }
         if (category != null) {
             this.categoryCode = category;
+        }
+
+        if (status != null) {
+            this.status = status;
         }
     }
 

@@ -1,9 +1,12 @@
 package com.example.kbuddy_backend.blog.repository;
 
 import static com.example.kbuddy_backend.blog.entity.QBlog.blog;
+import static com.example.kbuddy_backend.qna.entity.QQna.qna;
 
+import com.example.kbuddy_backend.blog.constant.BlogStatus;
 import com.example.kbuddy_backend.blog.constant.SortBy;
 import com.example.kbuddy_backend.blog.entity.Blog;
+import com.example.kbuddy_backend.qna.constant.QnaStatus;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -16,17 +19,13 @@ public class BlogRepositoryImpl implements BlogRepositoryCustom {
     private final JPAQueryFactory jpaQueryFactory;
 
     @Override
-    public List<Blog> paginationNoOffset(Long blogId, String title, int pageSize, SortBy sortBy) {
-        return paginationNoOffset(blogId, title, pageSize, sortBy, null);
-    }
-
-    @Override
-    public List<Blog> paginationNoOffset(Long blogId, String title, int pageSize, SortBy sortBy, Integer categoryCode) {
+    public List<Blog> paginationNoOffset(Long blogId, String title, int pageSize, SortBy sortBy, Integer categoryCode, BlogStatus status) {
         return jpaQueryFactory.selectFrom(blog)
                 .where(
                         ltBlogId(blogId), 
                         titleOrDescriptionContains(title),
-                        eqCategoryCode(categoryCode)
+                        eqCategoryCode(categoryCode),
+                        eqStatus(status) // <-- 수정된 부분
                 )
                 .orderBy(getOrderSpecifiers(sortBy)) // <-- 수정된 부분
                 .limit(pageSize)
@@ -56,9 +55,16 @@ public class BlogRepositoryImpl implements BlogRepositoryCustom {
         return blog.categoryCode.contains(categoryCode);
     }
 
+    private BooleanExpression eqStatus(BlogStatus status) {
+        if (status == null) {
+            return null;
+        }
+        return blog.status.eq(status);
+    }
+
 //    private BooleanExpression containsTitleOrDescription(String title) {
 //        if (title == null || title.isEmpty()) {
-//            return null;
+//            return null;“
 //        }
 //        return blog.title.like("%" + title + "%").or(blog.description.like("%" + title + "%"));
 //    }

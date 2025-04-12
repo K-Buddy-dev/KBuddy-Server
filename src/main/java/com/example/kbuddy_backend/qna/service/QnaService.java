@@ -35,10 +35,14 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import com.example.kbuddy_backend.common.exception.BadRequestException;
+
 @Service
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class QnaService {
+
+    private static final int MAX_QNA_IMAGES = 5;
 
     private final QnaRepository qnaRepository;
     private final QnaHeartRepository qnaHeartRepository;
@@ -48,6 +52,10 @@ public class QnaService {
 
     @Transactional
     public QnaResponse saveQna(QnaSaveRequest qnaSaveRequest, List<MultipartFile> imageFiles, User user) {
+        if (imageFiles != null && imageFiles.size() > MAX_QNA_IMAGES) {
+            throw new BadRequestException("Q&A 게시글에는 이미지를 최대 " + MAX_QNA_IMAGES + "개까지 첨부할 수 있습니다.");
+        }
+
         String hashTag = "";
         if (qnaSaveRequest.hashtags() != null && !qnaSaveRequest.hashtags().isEmpty()) {
             hashTag = String.join(",", qnaSaveRequest.hashtags());
@@ -62,7 +70,6 @@ public class QnaService {
                 .status(qnaSaveRequest.status())
                 .build();
 
-        // 이미지가 있으면 S3에 업로드하고 연결
         if (imageFiles != null && !imageFiles.isEmpty()) {
             List<ImageFileDto> uploadedImages = uploadImages(imageFiles);
             saveImageFiles(uploadedImages, qna);
@@ -142,11 +149,22 @@ public class QnaService {
 
     @Transactional
     public QnaResponse updateQna(Long qnaId, QnaUpdateRequest qnaUpdateRequest, List<MultipartFile> newFiles, User user) {
+        Qna qnaById = findQnaById(qnaId);
+        isQnaWriter(user, qnaById);
+
+        int currentImageCount = qnaById.getImageUrls().size();
+        int deletedImageCount = (qnaUpdateRequest.deleteImageIds() != null) ? qnaUpdateRequest.deleteImageIds().size() : 0;
+        int newImageCount = (newFiles != null) ? newFiles.size() : 0;
+        int finalImageCount = currentImageCount - deletedImageCount + newImageCount;
+
+        if (finalImageCount > MAX_QNA_IMAGES) {
+            throw new BadRequestException("Q&A 게시글에는 이미지를 최대 " + MAX_QNA_IMAGES + "개까지 첨부할 수 있습니다. (현재 " + finalImageCount + "개)");
+        }
+
         String hashTag = "";
         if (qnaUpdateRequest.hashtags() != null && !qnaUpdateRequest.hashtags().isEmpty()) {
             hashTag = String.join(",", qnaUpdateRequest.hashtags());
         }
-        Qna qnaById = findQnaById(qnaId);
 
         if (qnaUpdateRequest.deleteImageIds() != null && !qnaUpdateRequest.deleteImageIds().isEmpty()) {
             deleteImages(qnaId, qnaUpdateRequest.deleteImageIds(), user);
@@ -157,7 +175,6 @@ public class QnaService {
             saveImageFiles(uploadedImages, qnaById);
         }
 
-        isQnaWriter(user, qnaById);
         qnaById.update(qnaUpdateRequest.title(), qnaUpdateRequest.description(), hashTag,
                 qnaUpdateRequest.categoryId(), qnaUpdateRequest.status());
         return createQnaResponseDto(qnaById, user);

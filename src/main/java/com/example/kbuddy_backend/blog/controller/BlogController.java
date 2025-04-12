@@ -11,6 +11,7 @@ import com.example.kbuddy_backend.blog.service.BlogService;
 import com.example.kbuddy_backend.common.config.CurrentUser;
 import com.example.kbuddy_backend.common.dto.ImageFileDto;
 import com.example.kbuddy_backend.user.dto.response.DefaultResponse;
+import com.example.kbuddy_backend.common.advice.response.ErrorResponse;
 import com.example.kbuddy_backend.user.entity.User;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -35,7 +36,7 @@ public class BlogController {
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "블로그 게시글 작성", description = "새로운 블로그 게시글을 작성합니다. blogSaveRequest 는 JSON 형식의 문자열로, 이미지는 선택적으로 multipart form data 로 전송합니다. <br> 임시 저장 글은 status를 DRAFT로 설정합니다.")
-    public ResponseEntity<Void> saveBlog(
+    public ResponseEntity<DefaultResponse> saveBlog(
             @Valid @RequestPart(value = "blogSaveRequest") BlogSaveRequest blogSaveRequest,
             @RequestPart(value = "images", required = false) List<MultipartFile> images,
             @Parameter(hidden = true) @CurrentUser User user) {
@@ -68,7 +69,7 @@ public class BlogController {
     @PatchMapping(value = "/{blogId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "블로그 게시글 업데이트", description = "블로그 게시글을 업데이트 합니다. status, 이미지 추가/삭제 등을 포함합니다. <br> 임시 저장에서 게시글로 변경 시 status를 PUBLISHED로 설정합니다.")
     public ResponseEntity<BlogResponse> updateBlog(
-            @PathVariable Long blogId,
+            @PathVariable final Long blogId,
             @Valid @RequestPart(value = "blogUpdateRequest") BlogUpdateRequest blogUpdateRequest,
             @RequestPart(value = "images", required = false) List<MultipartFile> newFiles,
             @Parameter(hidden = true) @CurrentUser User user) {
@@ -80,9 +81,9 @@ public class BlogController {
     // 블로그를 삭제합니다.    
     @DeleteMapping("/{blogId}")
     @Operation(summary = "Blog 게시글 삭제", description = "Blog 게시글을 삭제합니다.")
-    public ResponseEntity<String> deleteBlog(@PathVariable final Long blogId, @Parameter(hidden = true) @CurrentUser User user) {
+    public ResponseEntity<Void> deleteBlog(@PathVariable final Long blogId, @Parameter(hidden = true) @CurrentUser User user) {
         blogService.deleteBlog(blogId, user);
-        return ResponseEntity.ok().body("Blog 게시글이 성공적으로 삭제되었습니다");
+        return ResponseEntity.noContent().build();
     }
 
     // 단일 블로그 게시글을 북마크에 추가합니다.
@@ -96,9 +97,9 @@ public class BlogController {
     // 단일 블로그 게시글을 북마크에서 제거합니다.
     @DeleteMapping("/{blogId}/unbookmark")
     @Operation(summary = "Blog 게시글 즐겨찾기 삭제", description = "Blog 게시글을 사용자 즐겨찾기 목록에 추가된 항목을 삭제 합니다.")
-    public ResponseEntity<String> removeBookmark(@PathVariable final Long blogId, @Parameter(hidden = true) @CurrentUser User user) {
+    public ResponseEntity<Void> removeBookmark(@PathVariable final Long blogId, @Parameter(hidden = true) @CurrentUser User user) {
         blogService.removeBookmark(user, blogId);
-        return ResponseEntity.ok().body("성공적으로 북마크 해제 하였습니다.");
+        return ResponseEntity.noContent().build();
     }
 
     // 블로그에 댓글을 추가합니다.
@@ -119,7 +120,7 @@ public class BlogController {
             @Valid @RequestBody BlogCommentSaveRequest blogCommentSaveRequest,
             @Parameter(hidden = true) @CurrentUser User user) {
         blogCommentService.updateBlogComment(blogId, commentId, blogCommentSaveRequest, user);
-        return ResponseEntity.ok(DefaultResponse.of(true, "댓글 수정 성공"));
+        return ResponseEntity.noContent().build();
     }
 
     // 블로그에 좋아요를 추가합니다.
@@ -133,9 +134,9 @@ public class BlogController {
     // 블로그의 좋아요를 취소합니다.
     @DeleteMapping("/{blogId}/hearts")
     @Operation(summary = "Blog 게시글 좋아요 취소", description = "Blog 게시글의 좋아요를 1개 내립니다.")
-    public ResponseEntity<?> minusBlogHeart(@PathVariable Long blogId, @Parameter(hidden = true) @CurrentUser User user) {
+    public ResponseEntity<Void> minusBlogHeart(@PathVariable Long blogId, @Parameter(hidden = true) @CurrentUser User user) {
         blogService.minusHeart(blogId, user);
-        return ResponseEntity.ok().body("블로그 좋아요 취소");
+        return ResponseEntity.noContent().build();
     }
 
     // 댓글에 좋아요를 추가합니다.
@@ -149,9 +150,9 @@ public class BlogController {
     // 댓글의 좋아요를 취소합니다.
     @DeleteMapping("/{blogId}/{commentId}/hearts")
     @Operation(summary = "댓글 좋아요 취소", description = "블로그 댓글의 좋아요를 1개 내립니다.")
-    public ResponseEntity<?> minusCommentHeart(@PathVariable Long commentId, @Parameter(hidden = true) @CurrentUser User user) {
+    public ResponseEntity<Void> minusCommentHeart(@PathVariable Long commentId, @Parameter(hidden = true) @CurrentUser User user) {
         blogService.minusHeart(commentId, user);
-        return ResponseEntity.ok(DefaultResponse.of(true, "댓글 좋아요 취소 성공"));
+        return ResponseEntity.noContent().build();
     }
 
     // 블로그를 신고합니다.

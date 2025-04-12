@@ -1,10 +1,15 @@
 package com.example.kbuddy_backend.blog.repository;
 
+import com.example.kbuddy_backend.blog.constant.BlogStatus;
 import com.example.kbuddy_backend.blog.entity.Blog;
+import com.example.kbuddy_backend.user.entity.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.List;
+
 public interface BlogRepository extends JpaRepository<Blog, Long>, BlogRepositoryCustom {
 
+    List<Blog> findByWriterAndStatus(User user, BlogStatus blogStatus);
 }

@@ -18,14 +18,16 @@ import com.example.kbuddy_backend.common.constant.ImageFileType;
 import com.example.kbuddy_backend.common.dto.ImageFileDto;
 import com.example.kbuddy_backend.common.exception.BadRequestException;
 import com.example.kbuddy_backend.common.exception.DuplicateException;
+import com.example.kbuddy_backend.qna.constant.QnaStatus;
 import com.example.kbuddy_backend.s3.dto.response.S3Response;
 import com.example.kbuddy_backend.s3.service.S3Service;
 import com.example.kbuddy_backend.user.entity.User;
-import java.nio.file.AccessDeniedException;
+
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Objects;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.example.kbuddy_backend.blog.constant.SortBy;
@@ -39,6 +41,8 @@ import org.springframework.web.multipart.MultipartFile;
 @RequiredArgsConstructor
 public class BlogService {
 
+    private static final int MAX_BLOG_IMAGES = 10; // Define max image count constant for blog
+
     private final BlogRepository blogRepository;
     private final BlogHeartRepository blogHeartRepository;
     private final BlogBookmarkRepository blogBookmarkRepository;
@@ -49,6 +53,11 @@ public class BlogService {
     // 새로운 블로그를 저장
     @Transactional
     public BlogResponse saveBlog(BlogSaveRequest blogSaveRequest, List<MultipartFile> imageFiles, User user) {
+        // Validate image count before proceeding
+        if (imageFiles != null && imageFiles.size() > MAX_BLOG_IMAGES) {
+            throw new BadRequestException("블로그 게시글에는 이미지를 최대 " + MAX_BLOG_IMAGES + "개까지 첨부할 수 있습니다.");
+        }
+
         String hashTag = "";
         if (blogSaveRequest.hashtags() != null && !blogSaveRequest.hashtags().isEmpty()) {
             hashTag = String.join(",", blogSaveRequest.hashtags());
@@ -60,6 +69,7 @@ public class BlogService {
                 .category(blogSaveRequest.categoryId())
                 .hashtag(hashTag)
                 .writer(user)
+                .status(blogSaveRequest.status())
                 .build();
 
         // 이미지가 있으면 S3에 업로드하고 연결
@@ -69,7 +79,7 @@ public class BlogService {
         }
 
         Blog saveBlog = blogRepository.save(blog);
-        return createBlogResponseDto(saveBlog);
+        return createBlogResponseDto(saveBlog,user);
     }
 
     // 이미지 파일들을 S3에 업로드하고 ImageFileDto 리스트를 반환합니다.
@@ -102,12 +112,12 @@ public class BlogService {
     }
 
     public AllBlogResponse getAllBlog(int pageSize, Long blogId, String title, SortBy sortBy, Integer categoryCode) {
-        List<Blog> allBlog = blogRepository.paginationNoOffset(blogId, title, pageSize, sortBy, categoryCode);
+        List<Blog> allBlog = blogRepository.paginationNoOffset(blogId, title, pageSize, sortBy, categoryCode, BlogStatus.PUBLISHED);
         List<BlogPaginationResponse> blogPaginationResponseList = allBlog.stream()
                 .map(blog -> BlogPaginationResponse.of(blog.getId(), blog.getWriter().getId(), blog.getCategoryCode(),
                         blog.getTitle(), blog.getDescription(), blog.getViewCount(), blog.getHeartCount(),
                         blog.getCommentCount(), blog.getCreatedDate(),
-                        blog.getLastModifiedDate()))
+                        blog.getLastModifiedDate(), blog.getStatus()))
                 .toList();
 
         Long nextId = getNextId(blogPaginationResponseList);
@@ -126,33 +136,58 @@ public class BlogService {
     @Transactional
     public BlogResponse getBlog(Long blogId, User currentUser) {
         Blog blogById = findBlogById(blogId);
+        if (blogById.getStatus() == BlogStatus.DRAFT) {
+            if (currentUser == null) {
+                throw new AccessDeniedException("로그인이 필요합니다.");
+            }
+            if (!Objects.equals(blogById.getWriter().getId(), currentUser.getId())) {
+                throw new AccessDeniedException("임시 저장된 글은 작성자만 조회할 수 있습니다."); // Or use NotWriterException
+            }
+        }
+
         blogById.plusViewCount();
-        return createBlogResponseDto(blogById);
+        return createBlogResponseDto(blogById,currentUser);
     }
 
     // 블로그 내용을 수정합니다.
     @Transactional
-    public BlogResponse updateBlog(Long blogId, BlogUpdateRequest blogUpdateRequest, List<MultipartFile> imageFiles, User user) {
-        // 추후에 해시태그 변경 로직 추가
+    public BlogResponse updateBlog(Long blogId, BlogUpdateRequest blogUpdateRequest, List<MultipartFile> newFiles, User user) {
+        Blog blogById = findBlogById(blogId);
+        isBlogWriter(user, blogById);
+
+        // Calculate final image count for validation
+        int currentImageCount = blogById.getImageUrls().size();
+        // Assuming BlogUpdateRequest has deleteImageIds and newFiles (adjust if names differ)
+        int deletedImageCount = (blogUpdateRequest.deleteImageIds() != null) ? blogUpdateRequest.deleteImageIds().size() : 0;
+        int newImageCount = (newFiles != null) ? newFiles.size() : 0;
+        int finalImageCount = currentImageCount - deletedImageCount + newImageCount;
+
+        if (finalImageCount > MAX_BLOG_IMAGES) {
+            throw new BadRequestException("블로그 게시글에는 이미지를 최대 " + MAX_BLOG_IMAGES + "개까지 첨부할 수 있습니다. (현재 " + finalImageCount + "개)");
+        }
+
+        // Proceed with updates only after validation passes
         String hashTag = "";
         if (blogUpdateRequest.hashtags() != null && !blogUpdateRequest.hashtags().isEmpty()) {
             hashTag = String.join(",", blogUpdateRequest.hashtags());
         }
-        Blog blogById = findBlogById(blogId);
 
-        // 이미지가 있으면 S3에 업로드하고 연결
-        if (imageFiles != null && !imageFiles.isEmpty()) {
-            List<ImageFileDto> uploadedImages = uploadImages(imageFiles);
-            saveImageFiles(uploadedImages, blogById);
-        }
-        // 기존 이미지 삭제
-        if (!blogUpdateRequest.deleteImageIds().isEmpty()) {
+        // Handle image deletions
+        if (blogUpdateRequest.deleteImageIds() != null && !blogUpdateRequest.deleteImageIds().isEmpty()) {
             deleteImages(blogId, blogUpdateRequest.deleteImageIds(), user);
         }
-        isBlogWriter(user, blogById);
 
-        blogById.update(blogUpdateRequest.title(), blogUpdateRequest.description(), hashTag, blogUpdateRequest.categoryId());
-        return createBlogResponseDto(blogById);
+        // Handle new image uploads
+        if (newFiles != null && !newFiles.isEmpty()) {
+            List<ImageFileDto> uploadedImages = uploadImages(newFiles);
+            saveImageFiles(uploadedImages, blogById);
+        }
+
+        // Update Blog entity
+        blogById.update(blogUpdateRequest.title(), blogUpdateRequest.description(), hashTag, blogUpdateRequest.categoryId(),
+                blogUpdateRequest.status());
+
+        return createBlogResponseDto(blogById, user);
     }
 
     private static void isBlogWriter(User user, Blog blogById) {
@@ -192,7 +227,7 @@ public class BlogService {
     }
 
     // 블로그 엔티티를 응답 DTO로 변환합니다.
-    private BlogResponse createBlogResponseDto(Blog blog) {
+    private BlogResponse createBlogResponseDto(Blog blog, User currentUser) {
         List<ImageFileDto> images = blog.getImageUrls()
                 .stream()
                 .map(blogImage -> new ImageFileDto(blogImage.getId(),blogImage.getFileType(), blogImage.getFilePath(),
@@ -200,8 +235,8 @@ public class BlogService {
                 ))
                 .toList();
         // 북마크, 좋아요된 게시글인지 여부
-        boolean isBookmarked = blogBookmarkRepository.existsByBlogIdAndUserId(blog.getId(), blog.getWriter().getId());
-        boolean isHearted = blogHeartRepository.existsByBlogIdAndUserId(blog.getId(), blog.getWriter().getId());
+        boolean isBookmarked = blogBookmarkRepository.existsByBlogIdAndUserId(blog.getId(), currentUser.getId());
+        boolean isHearted = blogHeartRepository.existsByBlogIdAndUserId(blog.getId(), currentUser.getId());
         List<BlogCommentResponse> comments = blog.getComments()
                 .stream()
                 .map(blogComment ->
@@ -214,7 +249,7 @@ public class BlogService {
 
         return BlogResponse.of(blog.getId(), blog.getWriter().getId(), blog.getCategoryCode(), blog.getTitle(),
                 blog.getDescription(), blog.getViewCount(), blog.getCreatedDate(), blog.getLastModifiedDate(),
-                images, comments, blog.getHeartCount(), blog.getCommentCount(), isBookmarked, isHearted);
+                images, comments, blog.getHeartCount(), blog.getCommentCount(), isBookmarked, isHearted, blog.getStatus());
     }
 
     private void saveImageFiles(List<ImageFileDto> imageFiles, Blog blog) {

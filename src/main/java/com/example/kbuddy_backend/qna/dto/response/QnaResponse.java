@@ -7,7 +7,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDateTime;
 import java.util.List;
 
-public record QnaResponse(Long id, @Schema(description = "작성자") Long writerId, int categoryId, String title, String description, int viewCount, LocalDateTime createdAt, LocalDateTime modifiedAt,
+public record QnaResponse(Long id, Long writerId, int categoryId, String title, String description, int viewCount, LocalDateTime createdAt, LocalDateTime modifiedAt,
                           List<ImageFileDto> images, List<QnaCommentResponse> comments, int heartCount, int commentCount, boolean isBookmarked, boolean isHearted,
                           QnaStatus status) {
     public static QnaResponse of(Long id, Long writerId, int categoryId, String title, String description, int viewCount, LocalDateTime createdAt, LocalDateTime modifiedAt,
