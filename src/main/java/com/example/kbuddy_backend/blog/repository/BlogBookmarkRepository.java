@@ -11,7 +11,7 @@ import java.util.Optional;
 public interface BlogBookmarkRepository extends JpaRepository<BlogBookmark, Long> {
     Optional<BlogBookmark> findByBlog(Blog blog);
 
-    Optional<BlogBookmark> findByBlogIdAndUserId(Long BlogId, Long id);
+    Optional<BlogBookmark> findByBlogIdAndUserId(Long BlogId, Long Userid);
 
-    boolean existsByBlogIdAndUserId(Long BlogId, Long id);
+    boolean existsByBlogIdAndUserId(Long BlogId, Long Userid);
 } 
