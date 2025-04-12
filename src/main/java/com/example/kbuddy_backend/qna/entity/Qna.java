@@ -78,18 +78,22 @@ public class Qna extends BaseTimeEntity {
     }
 
     public void update(String title, String description, String hashtag, Integer category, QnaStatus status) {
+
         if (title != null && !title.isEmpty()) {
             this.title = title;
         }
         if (description != null && !description.isEmpty()) {
             this.description = description;
         }
-        if (hashtag != null) {
+
+        if (hashtag != null && !hashtag.isEmpty()) {
             this.hashtag = hashtag;
         }
+      
         if (category != null) {
             this.categoryCode = category;
         }
+
         if (status != null) {
             this.status = status;
         }
