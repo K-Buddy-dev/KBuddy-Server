@@ -4,7 +4,6 @@ import com.example.kbuddy_backend.blog.dto.request.BlogCommentSaveRequest;
 import com.example.kbuddy_backend.blog.dto.request.BlogReportRequest;
 import com.example.kbuddy_backend.blog.dto.request.BlogSaveRequest;
 import com.example.kbuddy_backend.blog.dto.request.BlogUpdateRequest;
-import com.example.kbuddy_backend.blog.dto.request.BookmarkRequest;
 import com.example.kbuddy_backend.blog.dto.response.AllBlogResponse;
 import com.example.kbuddy_backend.blog.dto.response.BlogResponse;
 import com.example.kbuddy_backend.blog.service.BlogCommentService;
@@ -35,7 +34,7 @@ public class BlogController {
     private final BlogCommentService blogCommentService;
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @Operation(summary = "블로그 게시글 작성", description = "새로운 블로그 게시글을 작성합니다. blogSaveRequest 는 JSON 형식의 문자열로, 이미지는 선택적으로 multipart form data 로 전송합니다.")
+    @Operation(summary = "블로그 게시글 작성", description = "새로운 블로그 게시글을 작성합니다. blogSaveRequest 는 JSON 형식의 문자열로, 이미지는 선택적으로 multipart form data 로 전송합니다. <br> 임시 저장 글은 status를 DRAFT로 설정합니다.")
     public ResponseEntity<Void> saveBlog(
             @Valid @RequestPart(value = "blogSaveRequest") BlogSaveRequest blogSaveRequest,
             @RequestPart(value = "images", required = false) List<MultipartFile> images,
@@ -45,52 +44,37 @@ public class BlogController {
     }
 
     @GetMapping
-    @Operation(summary = "블로그 게시글 전체 조회", description = "블로그 게시글 전체 조회합니다.")
+    @Operation(summary = "블로그 게시글 전체 조회", description = "블로그 게시글 전체 조회합니다. 카테고리 코드로 필터링 할 수 있습니다.")
     public ResponseEntity<AllBlogResponse> getAllBlog(@RequestParam(value = "size") int pageSize,
                                                       @RequestParam(value = "id", required = false) Long blogId,
-                                                      @RequestParam(value = "keyword", required = false) String title,
-                                                      @RequestParam(value = "sort", required = false)
-                                                          SortBy sortBy) {
-        AllBlogResponse allBlogResponse = blogService.getAllBlog(pageSize, blogId, title, sortBy);
+                                                      @RequestParam(value = "keyword", defaultValue = "") String title,
+                                                      @RequestParam(required = false, value = "sort") SortBy sortBy,
+                                                      @RequestParam(required = false, value = "categoryCode") Integer categoryCode) {
+        AllBlogResponse allBlogResponse = blogService.getAllBlog(pageSize, blogId, title, sortBy, categoryCode);
         return ResponseEntity.ok().body(allBlogResponse);
     }
 
     // 특정 블로그를 조회합니다.
     @GetMapping("/{blogId}")
-    @Operation(summary = "특정 블로그 게시글 조회", description = "블로그 게시글 id를 통해 조회합니다.")
-    public ResponseEntity<BlogResponse> getBlog(@PathVariable Long blogId) {
-        BlogResponse blog = blogService.getBlog(blogId);
+    @Operation(summary = "특정 블로그 게시글 조회", description = "블로그 게시글 id를 통해 조회합니다. 임시저장 글은 작성자만 조회 가능합니다.")
+    public ResponseEntity<BlogResponse> getBlog(
+            @PathVariable Long blogId,
+            @Parameter(hidden = true) @CurrentUser User user) {
+        BlogResponse blog = blogService.getBlog(blogId, user);
         return ResponseEntity.ok().body(blog);
     }
 
     // 블로그 내용을 수정합니다.
-    @PatchMapping("/{blogId}")
-    @Operation(summary = "블로그 게시글 업데이트", description = "블로그 게시글을 업데이트 합니다.")
-    public ResponseEntity<BlogResponse> updateBlog(@PathVariable Long blogId,
-                                                      @Valid @RequestBody BlogUpdateRequest blogUpdateRequest,
-                                                      @Parameter(hidden = true) @CurrentUser User user) {
-        BlogResponse blog = blogService.updateBlog(blogId, blogUpdateRequest, user);
+    @PatchMapping(value = "/{blogId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "블로그 게시글 업데이트", description = "블로그 게시글을 업데이트 합니다. status, 이미지 추가/삭제 등을 포함합니다. <br> 임시 저장에서 게시글로 변경 시 status를 PUBLISHED로 설정합니다.")
+    public ResponseEntity<BlogResponse> updateBlog(
+            @PathVariable Long blogId,
+            @Valid @RequestPart(value = "blogUpdateRequest") BlogUpdateRequest blogUpdateRequest,
+            @RequestPart(value = "images", required = false) List<MultipartFile> newFiles,
+            @Parameter(hidden = true) @CurrentUser User user) {
+        BlogResponse blog = blogService.updateBlog(blogId, blogUpdateRequest, newFiles, user);
         return ResponseEntity.ok(blog); // 200 OK, 수정된 블로그 데이터 반환
         // ok().body(blog) -> ok(blog)로 변경: ok() 자체가 argument가 통과했을때 body값과 함께 응답하기 때문에 굳이 .body()를 사용할 필요가 없다.
-    }
-
-    @PostMapping(value = "/{blogId}/images", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @Operation(summary = "Blog 게시글 이미지 추가", description = "Blog 게시글에 이미지를 추가 합니다. 이미지는 multipart form으로 전송합니다.")
-    public ResponseEntity<Void> addBlogImages(
-            @PathVariable final Long blogId,
-            @RequestPart(value = "images") List<MultipartFile> images,
-            @Parameter(hidden = true) @CurrentUser User user) {
-        blogService.addImages(blogId, images, user);
-        return ResponseEntity.noContent().build(); // 204 No Content 반환
-    }
-
-    @DeleteMapping("/{blogId}/images")
-    @Operation(summary = "Blog 게시글 이미지 삭제", description = "Blog 게시글에 포함된 이미지를 삭제 합니다.")
-    public ResponseEntity<String> deleteBlogImages(@PathVariable final Long blogId,
-                                                   @RequestBody List<ImageFileDto> images,
-                                                   @Parameter(hidden = true) @CurrentUser User user) {
-        blogService.deleteImages(blogId, images, user);
-        return ResponseEntity.ok().body("이미지가 성공적으로 삭제되었습니다.");
     }
 
     // 블로그를 삭제합니다.    
@@ -104,18 +88,16 @@ public class BlogController {
     // 단일 블로그 게시글을 북마크에 추가합니다.
     @PostMapping("/{blogId}/bookmark")
     @Operation(summary = "Blog 게시글 즐겨찾기", description = "Blog 게시글을 사용자 즐겨찾기 목록에 추가합니다.")
-    public ResponseEntity<Void> addBookmark(@Valid @RequestBody BookmarkRequest bookmarkRequest,
-                                              @PathVariable final Long blogId) {
-        blogService.addBookmark(bookmarkRequest, blogId);
+    public ResponseEntity<Void> addBookmark(@PathVariable final Long blogId, @Parameter(hidden = true) @CurrentUser User user) {
+        blogService.addBookmark(user, blogId);
         return ResponseEntity.noContent().build(); // 204 No Content 반환
     }
 
     // 단일 블로그 게시글을 북마크에서 제거합니다.
     @DeleteMapping("/{blogId}/unbookmark")
     @Operation(summary = "Blog 게시글 즐겨찾기 삭제", description = "Blog 게시글을 사용자 즐겨찾기 목록에 추가된 항목을 삭제 합니다.")
-    public ResponseEntity<String> removeBookmark(@Valid @RequestBody BookmarkRequest bookmarkRequest,
-                                                 @PathVariable final Long blogId) {
-        blogService.removeBookmark(bookmarkRequest, blogId);
+    public ResponseEntity<String> removeBookmark(@PathVariable final Long blogId, @Parameter(hidden = true) @CurrentUser User user) {
+        blogService.removeBookmark(user, blogId);
         return ResponseEntity.ok().body("성공적으로 북마크 해제 하였습니다.");
     }
 
@@ -171,15 +153,6 @@ public class BlogController {
         blogService.minusHeart(commentId, user);
         return ResponseEntity.ok(DefaultResponse.of(true, "댓글 좋아요 취소 성공"));
     }
-
-//    // 블로그의 댓글을 삭제합니다.
-//    @DeleteMapping("/{blogId}/comment/{commentId}")
-//    @Operation(summary = "댓글 삭제", description = "블로그 게시글의 댓글을 삭제합니다.")
-//    public ResponseEntity<?> deleteComment(@PathVariable Long blogId, @RequestBody BlogCommentSaveRequest blogCommentSaveRequest,
-//                                           @Parameter(hidden = true) @CurrentUser User user) {
-//        blogCommentService.deleteBlogComment(blogId, blogCommentSaveRequest, user);
-//        return ResponseEntity.ok(DefaultResponse.of(true, "댓글 삭제 성공"));
-//    }
 
     // 블로그를 신고합니다.
     @PostMapping("/{blogId}/report")

@@ -62,22 +62,27 @@ public class Blog extends BaseTimeEntity {
     }
 
     public void update(String title, String description, String hashtag, List<Integer> category) {
-        this.title = title;
-        this.description = description;
-        this.hashtag = hashtag;
-        this.categoryCode = category;
+        if (title != null && !title.isEmpty()) {
+            this.title = title;
+        }
+        if (description != null && !description.isEmpty()) {
+            this.description = description;
+        }
+        if (hashtag != null && !hashtag.isEmpty()) {
+            this.hashtag = hashtag;
+        }
+        if (category != null) {
+            this.categoryCode = category;
+        }
     }
 
     public void addImage(BlogImage blogImage){
+        blogImage.setBlog(this);
         imageUrls.add(blogImage);
     }
 
-    public void deleteImage(String filePath){
-        BlogImage blogImage = imageUrls.stream()
-                .filter(image -> image.getFilePath().equals(filePath))
-                .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("해당 이미지가 없습니다."));
-        imageUrls.remove(blogImage);
+    public void deleteImage(Long imageId){
+        imageUrls.removeIf(image -> image.getId().equals(imageId));
     }
 
     public void addComment(BlogComment blogComment){comments.add(blogComment);}

@@ -1,6 +1,6 @@
 package com.example.kbuddy_backend.blog.service;
 
-import com.example.kbuddy_backend.blog.dto.request.BookmarkRequest;
+import com.example.kbuddy_backend.blog.constant.BlogStatus;
 import com.example.kbuddy_backend.blog.dto.request.BlogReportRequest;
 import com.example.kbuddy_backend.blog.dto.request.BlogSaveRequest;
 import com.example.kbuddy_backend.blog.dto.request.BlogUpdateRequest;
@@ -8,19 +8,12 @@ import com.example.kbuddy_backend.blog.dto.response.AllBlogResponse;
 import com.example.kbuddy_backend.blog.dto.response.BlogResponse;
 import com.example.kbuddy_backend.blog.dto.response.BlogCommentResponse;
 import com.example.kbuddy_backend.blog.entity.Blog;
-import com.example.kbuddy_backend.blog.entity.BlogCollection;
 import com.example.kbuddy_backend.blog.entity.BlogHeart;
 import com.example.kbuddy_backend.blog.entity.BlogBookmark;
 import com.example.kbuddy_backend.blog.entity.BlogImage;
 import com.example.kbuddy_backend.blog.entity.BlogReport;
-import com.example.kbuddy_backend.blog.exception.BlogNotFoundException;
-import com.example.kbuddy_backend.blog.exception.DuplicatedBlogHeartException;
-import com.example.kbuddy_backend.blog.exception.NotWriterException;
-import com.example.kbuddy_backend.blog.repository.BlogCollectionRepository;
-import com.example.kbuddy_backend.blog.repository.BlogHeartRepository;
-import com.example.kbuddy_backend.blog.repository.BlogReportRepository;
-import com.example.kbuddy_backend.blog.repository.BlogRepository;
-import com.example.kbuddy_backend.blog.repository.BlogBookmarkRepository;
+import com.example.kbuddy_backend.blog.exception.*;
+import com.example.kbuddy_backend.blog.repository.*;
 import com.example.kbuddy_backend.common.constant.ImageFileType;
 import com.example.kbuddy_backend.common.dto.ImageFileDto;
 import com.example.kbuddy_backend.common.exception.BadRequestException;
@@ -28,6 +21,7 @@ import com.example.kbuddy_backend.common.exception.DuplicateException;
 import com.example.kbuddy_backend.s3.dto.response.S3Response;
 import com.example.kbuddy_backend.s3.service.S3Service;
 import com.example.kbuddy_backend.user.entity.User;
+import java.nio.file.AccessDeniedException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Objects;
@@ -47,22 +41,24 @@ public class BlogService {
 
     private final BlogRepository blogRepository;
     private final BlogHeartRepository blogHeartRepository;
-    private final BlogCollectionRepository blogCollectionRepository;
     private final BlogBookmarkRepository blogBookmarkRepository;
-
+    private final BlogImageRepository blogImageRepository;
     private final BlogReportRepository blogReportRepository;
     private final S3Service s3Service;
 
     // 새로운 블로그를 저장
     @Transactional
     public BlogResponse saveBlog(BlogSaveRequest blogSaveRequest, List<MultipartFile> imageFiles, User user) {
-        String hashtag = String.join(",", blogSaveRequest.hashtags());
+        String hashTag = "";
+        if (blogSaveRequest.hashtags() != null && !blogSaveRequest.hashtags().isEmpty()) {
+            hashTag = String.join(",", blogSaveRequest.hashtags());
+        }
 
         Blog blog = Blog.builder()
                 .title(blogSaveRequest.title())
                 .description(blogSaveRequest.description())
                 .category(blogSaveRequest.categoryId())
-                .hashtag(hashtag)
+                .hashtag(hashTag)
                 .writer(user)
                 .build();
 
@@ -74,12 +70,6 @@ public class BlogService {
 
         Blog saveBlog = blogRepository.save(blog);
         return createBlogResponseDto(saveBlog);
-    }
-
-    // 테스트 및 하위 호환성을 위한 메서드
-    @Transactional
-    public BlogResponse saveBlog(BlogSaveRequest blogSaveRequest, User user) {
-        return saveBlog(blogSaveRequest, null, user);
     }
 
     // 이미지 파일들을 S3에 업로드하고 ImageFileDto 리스트를 반환합니다.
@@ -111,8 +101,8 @@ public class BlogService {
         return uploadedImages;
     }
 
-    public AllBlogResponse getAllBlog(int pageSize, Long blogId, String title, SortBy sortBy) {
-        List<Blog> allBlog = blogRepository.paginationNoOffset(blogId, title, pageSize, sortBy);
+    public AllBlogResponse getAllBlog(int pageSize, Long blogId, String title, SortBy sortBy, Integer categoryCode) {
+        List<Blog> allBlog = blogRepository.paginationNoOffset(blogId, title, pageSize, sortBy, categoryCode);
         List<BlogPaginationResponse> blogPaginationResponseList = allBlog.stream()
                 .map(blog -> BlogPaginationResponse.of(blog.getId(), blog.getWriter().getId(), blog.getCategoryCode(),
                         blog.getTitle(), blog.getDescription(), blog.getViewCount(), blog.getHeartCount(),
@@ -134,7 +124,7 @@ public class BlogService {
 
     // 특정 블로그를 조회하고 조회수를 증가
     @Transactional
-    public BlogResponse getBlog(Long blogId) {
+    public BlogResponse getBlog(Long blogId, User currentUser) {
         Blog blogById = findBlogById(blogId);
         blogById.plusViewCount();
         return createBlogResponseDto(blogById);
@@ -142,14 +132,26 @@ public class BlogService {
 
     // 블로그 내용을 수정합니다.
     @Transactional
-    public BlogResponse updateBlog(Long blogId, BlogUpdateRequest blogUpdateRequest, User user) {
-
+    public BlogResponse updateBlog(Long blogId, BlogUpdateRequest blogUpdateRequest, List<MultipartFile> imageFiles, User user) {
+        // 추후에 해시태그 변경 로직 추가
+        String hashTag = "";
+        if (blogUpdateRequest.hashtags() != null && !blogUpdateRequest.hashtags().isEmpty()) {
+            hashTag = String.join(",", blogUpdateRequest.hashtags());
+        }
         Blog blogById = findBlogById(blogId);
 
+        // 이미지가 있으면 S3에 업로드하고 연결
+        if (imageFiles != null && !imageFiles.isEmpty()) {
+            List<ImageFileDto> uploadedImages = uploadImages(imageFiles);
+            saveImageFiles(uploadedImages, blogById);
+        }
+        // 기존 이미지 삭제
+        if (!blogUpdateRequest.deleteImageIds().isEmpty()) {
+            deleteImages(blogId, blogUpdateRequest.deleteImageIds(), user);
+        }
         isBlogWriter(user, blogById);
-        
-        String hashtag = String.join(",", blogUpdateRequest.hashtags());
-        blogById.update(blogUpdateRequest.title(), blogUpdateRequest.description(), hashtag, blogUpdateRequest.categoryId());
+
+        blogById.update(blogUpdateRequest.title(), blogUpdateRequest.description(), hashTag, blogUpdateRequest.categoryId());
         return createBlogResponseDto(blogById);
     }
 
@@ -160,25 +162,15 @@ public class BlogService {
     }
 
     @Transactional
-    public void addImages(Long blogId, List<MultipartFile> imagesFiles, User user) {
+    public void deleteImages(Long blogId, List<Long> imageIds, User user) {
         Blog blog = findBlogById(blogId);
         isBlogWriter(user, blog);
 
-        // 이미지 파일을 S3에 업로드
-        List<ImageFileDto> uploadedImages = uploadImages(imagesFiles);
-
-        // 업로드된 이미지를 blog에 연결
-        saveImageFiles(uploadedImages, blog);
-    }
-
-    @Transactional
-    public void deleteImages(Long blogId, List<ImageFileDto> images, User user) {
-        Blog blog = findBlogById(blogId);
-        isBlogWriter(user, blog);
-        for(ImageFileDto image : images) {
-            blog.deleteImage(image.name());
+        for(Long imageId : imageIds) {
+            blog.deleteImage(imageId);
+            BlogImage blogImage = blogImageRepository.findById(imageId).orElseThrow(BlogImageNotFoundException::new);
             // S3에서도 이미지 삭제
-            s3Service.deleteFile(image.name());
+            s3Service.deleteFile(blogImage.getImageUrl());
         }
     }
 
@@ -207,6 +199,9 @@ public class BlogService {
                         blogImage.getImageUrl()
                 ))
                 .toList();
+        // 북마크, 좋아요된 게시글인지 여부
+        boolean isBookmarked = blogBookmarkRepository.existsByBlogIdAndUserId(blog.getId(), blog.getWriter().getId());
+        boolean isHearted = blogHeartRepository.existsByBlogIdAndUserId(blog.getId(), blog.getWriter().getId());
         List<BlogCommentResponse> comments = blog.getComments()
                 .stream()
                 .map(blogComment ->
@@ -219,7 +214,7 @@ public class BlogService {
 
         return BlogResponse.of(blog.getId(), blog.getWriter().getId(), blog.getCategoryCode(), blog.getTitle(),
                 blog.getDescription(), blog.getViewCount(), blog.getCreatedDate(), blog.getLastModifiedDate(),
-                images, comments, blog.getHeartCount(), blog.getCommentCount());
+                images, comments, blog.getHeartCount(), blog.getCommentCount(), isBookmarked, isHearted);
     }
 
     private void saveImageFiles(List<ImageFileDto> imageFiles, Blog blog) {
@@ -260,19 +255,17 @@ public class BlogService {
 
     //블로그를 북마크에 추가합니다.
     @Transactional
-    public void addBookmark(BookmarkRequest bookmarkRequest, Long blogId) {
-        BlogCollection collectionById = findCollectionById(bookmarkRequest.collectionId());
-        BlogBookmark blogBookmark = new BlogBookmark(findBlogById(blogId), collectionById);
-        collectionById.addBookmark(blogBookmark);
+    public void addBookmark(User user, Long blogId) {
+        BlogBookmark blogBookmark = new BlogBookmark(findBlogById(blogId), user);
+        blogBookmarkRepository.save(blogBookmark);
     }
 
     //블로그를 북마크에서 제거합니다.
     @Transactional
-    public void removeBookmark(BookmarkRequest bookmarkRequest, Long blogId) {
-        BlogCollection collectionById = findCollectionById(bookmarkRequest.collectionId());
-        BlogBookmark blogBookmark = blogBookmarkRepository.findByBlog(findBlogById(blogId))
-                .orElseThrow(() -> new IllegalArgumentException("북마크 된 Blog가 아닙니다."));
-        collectionById.removeBookmark(blogBookmark);
+    public void removeBookmark(User user, Long blogId) {
+        BlogBookmark blogBookmark = blogBookmarkRepository.findByBlogIdAndUserId(blogId, user.getId())
+                .orElseThrow(BlogBookmarkNotFoundException::new);
+        blogBookmarkRepository.delete(blogBookmark);
     }
 
     // 블로그를 신고합니다.
@@ -304,10 +297,5 @@ public class BlogService {
 
     public Blog findBlogById(Long blogId) {
         return blogRepository.findById(blogId).orElseThrow(BlogNotFoundException::new);
-    }
-
-    public BlogCollection findCollectionById(Long bookmarkId) {
-        return blogCollectionRepository.findById(bookmarkId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 컬렉션입니다."));
     }
 }

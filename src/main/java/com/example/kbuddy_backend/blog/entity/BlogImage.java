@@ -43,4 +43,8 @@ public class BlogImage {
         this.fileType = fileType;
         this.filePath = filePath;
     }
+
+    public void setBlog(Blog blog) {
+        this.blog = blog;
+    }
 }

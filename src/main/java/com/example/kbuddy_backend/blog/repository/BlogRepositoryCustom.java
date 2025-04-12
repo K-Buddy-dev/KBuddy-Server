@@ -6,4 +6,6 @@ import java.util.List;
 
 public interface BlogRepositoryCustom {
     List<Blog> paginationNoOffset(Long blogId, String title, int pageSize, SortBy sortBy);
+
+    List<Blog> paginationNoOffset(Long blogId, String title, int pageSize, SortBy sortBy, Integer categoryCode);
 } 

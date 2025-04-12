@@ -1,6 +1,8 @@
 package com.example.kbuddy_backend.blog.dto.request;
 
+import com.example.kbuddy_backend.blog.constant.BlogStatus;
 import com.example.kbuddy_backend.common.dto.ImageFileDto;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -17,9 +19,14 @@ public record BlogSaveRequest(
         @NotBlank(message = "내용은 필수입니다.")
         String description,
 
-        List<String> hashtags) {
+        @Schema(hidden = true)
+        List<String> hashtags,
 
-    public static BlogSaveRequest of(String title, String description, List<String> hashtags, List<Integer> categoryId) {
-        return new BlogSaveRequest(categoryId, title, description, hashtags);
+        @Schema(description = "게시물 상태 (DRAFT or PUBLISHED), 미입력 시 DRAFT")
+        BlogStatus status
+) {
+
+    public static BlogSaveRequest of(String title, String description, List<String> hashtags, List<Integer> categoryId, BlogStatus status) {
+        return new BlogSaveRequest(categoryId, title, description, hashtags, status);
     }
 }
