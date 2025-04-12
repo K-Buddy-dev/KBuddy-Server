@@ -35,9 +35,10 @@ public record QnaUpdateRequest(
             String description,
             List<String> hashtags,
             Integer categoryId,
-            List<Long> deleteImageIds
+            List<Long> deleteImageIds,
+            QnaStatus status
     ) {
-        return new QnaUpdateRequest(title, description, hashtags, categoryId, deleteImageIds);
+        return new QnaUpdateRequest(title, description, hashtags, categoryId, status, deleteImageIds);
     }
 }
 

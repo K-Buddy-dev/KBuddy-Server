@@ -78,8 +78,8 @@ public class QnaController {
             @RequestPart(value = "images", required = false) List<MultipartFile> newFiles,
             @Parameter(hidden = true) @CurrentUser User user) {
         QnaResponse qna = qnaService.updateQna(qnaId, qnaUpdateRequest, newFiles, user);
-
-
+        return ResponseEntity.ok().body(qna);
+    }
 
     @DeleteMapping("/{qnaId}")
     @Operation(summary = "Q&A 게시글 삭제", description = "Q&A 게시글을 삭제 합니다.")
