@@ -34,7 +34,7 @@ public class BlogController {
     private final BlogCommentService blogCommentService;
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @Operation(summary = "블로그 게시글 작성", description = "새로운 블로그 게시글을 작성합니다. blogSaveRequest 는 JSON 형식의 문자열로, 이미지는 선택적으로 multipart form data 로 전송합니다.")
+    @Operation(summary = "블로그 게시글 작성", description = "새로운 블로그 게시글을 작성합니다. blogSaveRequest 는 JSON 형식의 문자열로, 이미지는 선택적으로 multipart form data 로 전송합니다. <br> 임시 저장 글은 status를 DRAFT로 설정합니다.")
     public ResponseEntity<Void> saveBlog(
             @Valid @RequestPart(value = "blogSaveRequest") BlogSaveRequest blogSaveRequest,
             @RequestPart(value = "images", required = false) List<MultipartFile> images,
@@ -56,20 +56,23 @@ public class BlogController {
 
     // 특정 블로그를 조회합니다.
     @GetMapping("/{blogId}")
-    @Operation(summary = "특정 블로그 게시글 조회", description = "블로그 게시글 id를 통해 조회합니다.")
-    public ResponseEntity<BlogResponse> getBlog(@PathVariable Long blogId) {
-        BlogResponse blog = blogService.getBlog(blogId);
+    @Operation(summary = "특정 블로그 게시글 조회", description = "블로그 게시글 id를 통해 조회합니다. 임시저장 글은 작성자만 조회 가능합니다.")
+    public ResponseEntity<BlogResponse> getBlog(
+            @PathVariable Long blogId,
+            @Parameter(hidden = true) @CurrentUser User user) {
+        BlogResponse blog = blogService.getBlog(blogId, user);
         return ResponseEntity.ok().body(blog);
     }
 
     // 블로그 내용을 수정합니다.
     @PatchMapping("/{blogId}")
-    @Operation(summary = "블로그 게시글 업데이트", description = "블로그 게시글을 업데이트 합니다. 이미지는 선택적으로 multipart form data로 전송합니다. 빈 문자열을 업데이트 할 수 없습니다.")
-    public ResponseEntity<BlogResponse> updateBlog(@PathVariable Long blogId,
-                                                      @Valid @RequestPart BlogUpdateRequest blogUpdateRequest,
-                                                      @RequestPart(value = "images", required = false) List<MultipartFile> images,
-                                                      @Parameter(hidden = true) @CurrentUser User user) {
-        BlogResponse blog = blogService.updateBlog(blogId, blogUpdateRequest, images, user);
+    @Operation(summary = "블로그 게시글 업데이트", description = "블로그 게시글을 업데이트 합니다. status, 이미지 추가/삭제 등을 포함합니다. <br> 임시 저장에서 게시글로 변경 시 status를 PUBLISHED로 설정합니다.")
+    public ResponseEntity<BlogResponse> updateBlog(
+            @PathVariable Long blogId,
+            @Valid @RequestPart(value = "blogUpdateRequest") BlogUpdateRequest blogUpdateRequest,
+            @RequestPart(value = "images", required = false) List<MultipartFile> newFiles,
+            @Parameter(hidden = true) @CurrentUser User user) {
+        BlogResponse blog = blogService.updateBlog(blogId, blogUpdateRequest, newFiles, user);
         return ResponseEntity.ok(blog); // 200 OK, 수정된 블로그 데이터 반환
         // ok().body(blog) -> ok(blog)로 변경: ok() 자체가 argument가 통과했을때 body값과 함께 응답하기 때문에 굳이 .body()를 사용할 필요가 없다.
     }

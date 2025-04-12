@@ -1,5 +1,6 @@
 package com.example.kbuddy_backend.blog.service;
 
+import com.example.kbuddy_backend.blog.constant.BlogStatus;
 import com.example.kbuddy_backend.blog.dto.request.BlogReportRequest;
 import com.example.kbuddy_backend.blog.dto.request.BlogSaveRequest;
 import com.example.kbuddy_backend.blog.dto.request.BlogUpdateRequest;
@@ -20,6 +21,7 @@ import com.example.kbuddy_backend.common.exception.DuplicateException;
 import com.example.kbuddy_backend.s3.dto.response.S3Response;
 import com.example.kbuddy_backend.s3.service.S3Service;
 import com.example.kbuddy_backend.user.entity.User;
+import java.nio.file.AccessDeniedException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Objects;
@@ -122,7 +124,7 @@ public class BlogService {
 
     // 특정 블로그를 조회하고 조회수를 증가
     @Transactional
-    public BlogResponse getBlog(Long blogId) {
+    public BlogResponse getBlog(Long blogId, User currentUser) {
         Blog blogById = findBlogById(blogId);
         blogById.plusViewCount();
         return createBlogResponseDto(blogById);
