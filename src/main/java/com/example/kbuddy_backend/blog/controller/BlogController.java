@@ -65,7 +65,7 @@ public class BlogController {
     }
 
     // 블로그 내용을 수정합니다.
-    @PatchMapping("/{blogId}")
+    @PatchMapping(value = "/{blogId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "블로그 게시글 업데이트", description = "블로그 게시글을 업데이트 합니다. status, 이미지 추가/삭제 등을 포함합니다. <br> 임시 저장에서 게시글로 변경 시 status를 PUBLISHED로 설정합니다.")
     public ResponseEntity<BlogResponse> updateBlog(
             @PathVariable Long blogId,
@@ -153,15 +153,6 @@ public class BlogController {
         blogService.minusHeart(commentId, user);
         return ResponseEntity.ok(DefaultResponse.of(true, "댓글 좋아요 취소 성공"));
     }
-
-//    // 블로그의 댓글을 삭제합니다.
-//    @DeleteMapping("/{blogId}/comment/{commentId}")
-//    @Operation(summary = "댓글 삭제", description = "블로그 게시글의 댓글을 삭제합니다.")
-//    public ResponseEntity<?> deleteComment(@PathVariable Long blogId, @RequestBody BlogCommentSaveRequest blogCommentSaveRequest,
-//                                           @Parameter(hidden = true) @CurrentUser User user) {
-//        blogCommentService.deleteBlogComment(blogId, blogCommentSaveRequest, user);
-//        return ResponseEntity.ok(DefaultResponse.of(true, "댓글 삭제 성공"));
-//    }
 
     // 블로그를 신고합니다.
     @PostMapping("/{blogId}/report")
