@@ -1,6 +1,5 @@
 package com.example.kbuddy_backend.blog.service;
 
-import com.example.kbuddy_backend.blog.dto.request.BookmarkRequest;
 import com.example.kbuddy_backend.blog.dto.request.BlogReportRequest;
 import com.example.kbuddy_backend.blog.dto.request.BlogSaveRequest;
 import com.example.kbuddy_backend.blog.dto.request.BlogUpdateRequest;
@@ -8,7 +7,6 @@ import com.example.kbuddy_backend.blog.dto.response.AllBlogResponse;
 import com.example.kbuddy_backend.blog.dto.response.BlogResponse;
 import com.example.kbuddy_backend.blog.dto.response.BlogCommentResponse;
 import com.example.kbuddy_backend.blog.entity.Blog;
-import com.example.kbuddy_backend.blog.entity.BlogCollection;
 import com.example.kbuddy_backend.blog.entity.BlogHeart;
 import com.example.kbuddy_backend.blog.entity.BlogBookmark;
 import com.example.kbuddy_backend.blog.entity.BlogImage;
@@ -41,7 +39,6 @@ public class BlogService {
 
     private final BlogRepository blogRepository;
     private final BlogHeartRepository blogHeartRepository;
-    private final BlogCollectionRepository blogCollectionRepository;
     private final BlogBookmarkRepository blogBookmarkRepository;
     private final BlogImageRepository blogImageRepository;
     private final BlogReportRepository blogReportRepository;
@@ -200,6 +197,9 @@ public class BlogService {
                         blogImage.getImageUrl()
                 ))
                 .toList();
+        // 북마크, 좋아요된 게시글인지 여부
+        boolean isBookmarked = blogBookmarkRepository.existsByBlogIdAndUserId(blog.getId(), blog.getWriter().getId());
+        boolean isHearted = blogHeartRepository.existsByBlogIdAndUserId(blog.getId(), blog.getWriter().getId());
         List<BlogCommentResponse> comments = blog.getComments()
                 .stream()
                 .map(blogComment ->
@@ -212,7 +212,7 @@ public class BlogService {
 
         return BlogResponse.of(blog.getId(), blog.getWriter().getId(), blog.getCategoryCode(), blog.getTitle(),
                 blog.getDescription(), blog.getViewCount(), blog.getCreatedDate(), blog.getLastModifiedDate(),
-                images, comments, blog.getHeartCount(), blog.getCommentCount());
+                images, comments, blog.getHeartCount(), blog.getCommentCount(), isBookmarked, isHearted);
     }
 
     private void saveImageFiles(List<ImageFileDto> imageFiles, Blog blog) {
@@ -253,19 +253,17 @@ public class BlogService {
 
     //블로그를 북마크에 추가합니다.
     @Transactional
-    public void addBookmark(BookmarkRequest bookmarkRequest, Long blogId) {
-        BlogCollection collectionById = findCollectionById(bookmarkRequest.collectionId());
-        BlogBookmark blogBookmark = new BlogBookmark(findBlogById(blogId), collectionById);
-        collectionById.addBookmark(blogBookmark);
+    public void addBookmark(User user, Long blogId) {
+        BlogBookmark blogBookmark = new BlogBookmark(findBlogById(blogId), user);
+        blogBookmarkRepository.save(blogBookmark);
     }
 
     //블로그를 북마크에서 제거합니다.
     @Transactional
-    public void removeBookmark(BookmarkRequest bookmarkRequest, Long blogId) {
-        BlogCollection collectionById = findCollectionById(bookmarkRequest.collectionId());
-        BlogBookmark blogBookmark = blogBookmarkRepository.findByBlog(findBlogById(blogId))
-                .orElseThrow(() -> new IllegalArgumentException("북마크 된 Blog가 아닙니다."));
-        collectionById.removeBookmark(blogBookmark);
+    public void removeBookmark(User user, Long blogId) {
+        BlogBookmark blogBookmark = blogBookmarkRepository.findByBlogIdAndUserId(blogId, user.getId())
+                .orElseThrow(BlogBookmarkNotFoundException::new);
+        blogBookmarkRepository.delete(blogBookmark);
     }
 
     // 블로그를 신고합니다.
@@ -297,10 +295,5 @@ public class BlogService {
 
     public Blog findBlogById(Long blogId) {
         return blogRepository.findById(blogId).orElseThrow(BlogNotFoundException::new);
-    }
-
-    public BlogCollection findCollectionById(Long bookmarkId) {
-        return blogCollectionRepository.findById(bookmarkId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 컬렉션입니다."));
     }
 }

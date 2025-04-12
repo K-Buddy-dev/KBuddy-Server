@@ -4,7 +4,6 @@ import com.example.kbuddy_backend.blog.dto.request.BlogCommentSaveRequest;
 import com.example.kbuddy_backend.blog.dto.request.BlogReportRequest;
 import com.example.kbuddy_backend.blog.dto.request.BlogSaveRequest;
 import com.example.kbuddy_backend.blog.dto.request.BlogUpdateRequest;
-import com.example.kbuddy_backend.blog.dto.request.BookmarkRequest;
 import com.example.kbuddy_backend.blog.dto.response.AllBlogResponse;
 import com.example.kbuddy_backend.blog.dto.response.BlogResponse;
 import com.example.kbuddy_backend.blog.service.BlogCommentService;
@@ -86,18 +85,16 @@ public class BlogController {
     // 단일 블로그 게시글을 북마크에 추가합니다.
     @PostMapping("/{blogId}/bookmark")
     @Operation(summary = "Blog 게시글 즐겨찾기", description = "Blog 게시글을 사용자 즐겨찾기 목록에 추가합니다.")
-    public ResponseEntity<Void> addBookmark(@Valid @RequestBody BookmarkRequest bookmarkRequest,
-                                              @PathVariable final Long blogId) {
-        blogService.addBookmark(bookmarkRequest, blogId);
+    public ResponseEntity<Void> addBookmark(@PathVariable final Long blogId, @Parameter(hidden = true) @CurrentUser User user) {
+        blogService.addBookmark(user, blogId);
         return ResponseEntity.noContent().build(); // 204 No Content 반환
     }
 
     // 단일 블로그 게시글을 북마크에서 제거합니다.
     @DeleteMapping("/{blogId}/unbookmark")
     @Operation(summary = "Blog 게시글 즐겨찾기 삭제", description = "Blog 게시글을 사용자 즐겨찾기 목록에 추가된 항목을 삭제 합니다.")
-    public ResponseEntity<String> removeBookmark(@Valid @RequestBody BookmarkRequest bookmarkRequest,
-                                                 @PathVariable final Long blogId) {
-        blogService.removeBookmark(bookmarkRequest, blogId);
+    public ResponseEntity<String> removeBookmark(@PathVariable final Long blogId, @Parameter(hidden = true) @CurrentUser User user) {
+        blogService.removeBookmark(user, blogId);
         return ResponseEntity.ok().body("성공적으로 북마크 해제 하였습니다.");
     }
 

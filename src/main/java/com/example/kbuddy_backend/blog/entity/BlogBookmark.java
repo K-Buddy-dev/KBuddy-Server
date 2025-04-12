@@ -1,5 +1,6 @@
 package com.example.kbuddy_backend.blog.entity;
 
+import com.example.kbuddy_backend.user.entity.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -22,11 +23,11 @@ public class BlogBookmark {
     private Blog blog;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "blog_collection_id")
-    private BlogCollection blogCollection;
+    @JoinColumn(name = "user_id")
+    private User user;
 
-    public BlogBookmark(Blog blog, BlogCollection blogCollection) {
-        this.blogCollection = blogCollection;
+    public BlogBookmark(Blog blog, User user) {
         this.blog = blog;
+        this.user = user;
     }
 } 

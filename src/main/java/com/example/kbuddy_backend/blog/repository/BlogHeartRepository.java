@@ -12,4 +12,6 @@ public interface BlogHeartRepository extends JpaRepository<BlogHeart, Long> {
 
     Optional<BlogHeart> findByBlogCommentIdAndUserId(Long blogCommentId, Long userId);
     Optional<BlogHeart> findByBlogIdAndUserId(Long blogId, Long userId);
+
+    boolean existsByBlogIdAndUserId(Long blogId, Long userId);
 } 
