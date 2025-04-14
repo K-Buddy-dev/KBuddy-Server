@@ -50,8 +50,9 @@ public class BlogController {
                                                       @RequestParam(value = "id", required = false) Long blogId,
                                                       @RequestParam(value = "keyword", defaultValue = "") String title,
                                                       @RequestParam(required = false, value = "sort") SortBy sortBy,
-                                                      @RequestParam(required = false, value = "categoryCode") Integer categoryCode) {
-        AllBlogResponse allBlogResponse = blogService.getAllBlog(pageSize, blogId, title, sortBy, categoryCode);
+                                                      @RequestParam(required = false, value = "categoryCode") Integer categoryCode,
+                                                      @Parameter(hidden = true) @CurrentUser User user) {
+        AllBlogResponse allBlogResponse = blogService.getAllBlog(pageSize, blogId, title, sortBy, categoryCode, user);
         return ResponseEntity.ok().body(allBlogResponse);
     }
 

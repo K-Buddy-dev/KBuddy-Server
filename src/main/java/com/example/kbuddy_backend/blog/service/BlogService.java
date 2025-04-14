@@ -111,13 +111,17 @@ public class BlogService {
         return uploadedImages;
     }
 
-    public AllBlogResponse getAllBlog(int pageSize, Long blogId, String title, SortBy sortBy, Integer categoryCode) {
+    public AllBlogResponse getAllBlog(int pageSize, Long blogId, String title, SortBy sortBy, Integer categoryCode, User currentUser) {
         List<Blog> allBlog = blogRepository.paginationNoOffset(blogId, title, pageSize, sortBy, categoryCode, BlogStatus.PUBLISHED);
         List<BlogPaginationResponse> blogPaginationResponseList = allBlog.stream()
-                .map(blog -> BlogPaginationResponse.of(blog.getId(), blog.getWriter().getId(), blog.getCategoryCode(),
-                        blog.getTitle(), blog.getDescription(), blog.getViewCount(), blog.getHeartCount(),
-                        blog.getCommentCount(), blog.getCreatedDate(),
-                        blog.getLastModifiedDate(), blog.getStatus()))
+                .map(blog -> {
+                    boolean isBookmarked = currentUser != null && blogBookmarkRepository.existsByBlogIdAndUserId(blog.getId(), currentUser.getId());
+                    boolean isHearted = currentUser != null && blogHeartRepository.existsByBlogIdAndUserId(blog.getId(), currentUser.getId());
+                    return BlogPaginationResponse.of(blog.getId(), blog.getWriter().getId(), blog.getCategoryCode(),
+                            blog.getTitle(), blog.getDescription(), blog.getViewCount(), blog.getHeartCount(),
+                            blog.getCommentCount(), blog.getCreatedDate(),
+                            blog.getLastModifiedDate(), blog.getStatus(), isBookmarked, isHearted);
+                })
                 .toList();
 
         Long nextId = getNextId(blogPaginationResponseList);
