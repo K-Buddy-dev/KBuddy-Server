@@ -110,13 +110,17 @@ public class QnaService {
         return uploadedImages;
     }
 
-    public AllQnaResponse getAllQna(int pageSize, Long qnaId, String title, SortBy sortBy, Integer categoryCode) {
+    public AllQnaResponse getAllQna(int pageSize, Long qnaId, String title, SortBy sortBy, Integer categoryCode, User currentUser) {
         List<Qna> allQna = qnaRepository.paginationNoOffset(qnaId, title, pageSize, sortBy, categoryCode, QnaStatus.PUBLISHED);
         List<QnaPaginationResponse> qnaPaginationResponseList = allQna.stream()
-                .map(qna -> QnaPaginationResponse.of(qna.getId(), qna.getWriter().getId(), qna.getCategoryCode(),
-                        qna.getTitle(), qna.getDescription(), qna.getViewCount(), qna.getHeartCount(),
-                        qna.getCommentCount(), qna.getCreatedDate(),
-                        qna.getLastModifiedDate(), qna.getStatus()))
+                .map(qna -> {
+                    boolean isBookmarked = currentUser != null && qnaBookmarkRepository.existsByQnaIdAndUserId(qna.getId(), currentUser.getId());
+                    boolean isHearted = currentUser != null && qnaHeartRepository.existsByQnaIdAndUserId(qna.getId(), currentUser.getId());
+                    return QnaPaginationResponse.of(qna.getId(), qna.getWriter().getId(), qna.getCategoryCode(),
+                            qna.getTitle(), qna.getDescription(), qna.getViewCount(), qna.getHeartCount(),
+                            qna.getCommentCount(), qna.getCreatedDate(),
+                            qna.getLastModifiedDate(), qna.getStatus(), isBookmarked, isHearted);
+                })
                 .toList();
 
         Long nextId = getNextId(qnaPaginationResponseList);
@@ -292,19 +296,25 @@ public class QnaService {
 
         List<Qna> draftQnas = qnaRepository.findByWriterAndStatus(currentUser, QnaStatus.DRAFT);
         return draftQnas.stream()
-                .map(qna -> QnaPaginationResponse.of(
-                        qna.getId(),
-                        qna.getWriter().getId(),
-                        qna.getCategoryCode(),
-                        qna.getTitle(),
-                        qna.getDescription(),
-                        qna.getViewCount(),
-                        qna.getHeartCount(),
-                        qna.getCommentCount(),
-                        qna.getCreatedDate(),
-                        qna.getLastModifiedDate(),
-                        qna.getStatus()
-                ))
+                .map(qna -> {
+                    boolean isBookmarked = qnaBookmarkRepository.existsByQnaIdAndUserId(qna.getId(), currentUser.getId());
+                    boolean isHearted = qnaHeartRepository.existsByQnaIdAndUserId(qna.getId(), currentUser.getId());
+                    return QnaPaginationResponse.of(
+                            qna.getId(),
+                            qna.getWriter().getId(),
+                            qna.getCategoryCode(),
+                            qna.getTitle(),
+                            qna.getDescription(),
+                            qna.getViewCount(),
+                            qna.getHeartCount(),
+                            qna.getCommentCount(),
+                            qna.getCreatedDate(),
+                            qna.getLastModifiedDate(),
+                            qna.getStatus(),
+                            isBookmarked,
+                            isHearted
+                    );
+                })
                 .collect(Collectors.toList()); // Collect results into a List
     }
 

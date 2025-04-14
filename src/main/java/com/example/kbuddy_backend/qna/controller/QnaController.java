@@ -58,8 +58,9 @@ public class QnaController {
                                                     @RequestParam(value = "id", required = false) Long qnaId,
                                                     @RequestParam(value = "keyword", defaultValue = "") String title,
                                                     @RequestParam(required = false, value = "sort") SortBy sortBy,
-                                                    @RequestParam(required = false, value = "categoryCode") Integer categoryCode) {
-        AllQnaResponse allQnaResponse = qnaService.getAllQna(pageSize, qnaId, title, sortBy, categoryCode);
+                                                    @RequestParam(required = false, value = "categoryCode") Integer categoryCode,
+                                                    @Parameter(hidden = true) @CurrentUser User user) {
+        AllQnaResponse allQnaResponse = qnaService.getAllQna(pageSize, qnaId, title, sortBy, categoryCode, user);
         return ResponseEntity.ok().body(allQnaResponse);
     }
 
