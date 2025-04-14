@@ -9,12 +9,12 @@ import java.time.LocalDateTime;
 public record QnaPaginationResponse(Long id, Long writerId, int categoryId, String title, String description,
                                     int viewCount, int heartCount,
                                     int commentCount, LocalDateTime createdAt, LocalDateTime modifiedAt,
-                                    QnaStatus status) {
+                                    QnaStatus status, boolean isBookmarked, boolean isHearted) {
     public static QnaPaginationResponse of(Long id, Long writerId, int categoryId, String title, String description,
                                            int viewCount, int heartCount,
                                            int commentCount, LocalDateTime createdAt, LocalDateTime modifiedAt,
-                                           QnaStatus status) {
+                                           QnaStatus status, boolean isBookmarked, boolean isHearted) {
         return new QnaPaginationResponse(id, writerId, categoryId, title, description, viewCount, heartCount,
-                commentCount, createdAt, modifiedAt, status);
+                commentCount, createdAt, modifiedAt, status, isBookmarked, isHearted);
     }
 }
