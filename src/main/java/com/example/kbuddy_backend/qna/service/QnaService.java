@@ -56,6 +56,15 @@ public class QnaService {
             throw new BadRequestException("Q&A 게시글에는 이미지를 최대 " + MAX_QNA_IMAGES + "개까지 첨부할 수 있습니다.");
         }
 
+        if(qnaSaveRequest.status() == QnaStatus.PUBLISHED) {
+            if (Objects.equals(qnaSaveRequest.title(), "")) {
+                throw new BadRequestException("제목을 입력해주세요.");
+            }
+            if (Objects.equals(qnaSaveRequest.description(), "")) {
+                throw new BadRequestException("내용을 입력해주세요.");
+            }
+        }
+
         String hashTag = "";
         if (qnaSaveRequest.hashtags() != null && !qnaSaveRequest.hashtags().isEmpty()) {
             hashTag = String.join(",", qnaSaveRequest.hashtags());

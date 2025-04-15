@@ -58,6 +58,15 @@ public class BlogService {
             throw new BadRequestException("블로그 게시글에는 이미지를 최대 " + MAX_BLOG_IMAGES + "개까지 첨부할 수 있습니다.");
         }
 
+        if(blogSaveRequest.status() == BlogStatus.PUBLISHED) {
+            if (Objects.equals(blogSaveRequest.title(), "")) {
+                throw new BadRequestException("제목을 입력해주세요.");
+            }
+            if (Objects.equals(blogSaveRequest.description(), "")) {
+                throw new BadRequestException("내용을 입력해주세요.");
+            }
+        }
+
         String hashTag = "";
         if (blogSaveRequest.hashtags() != null && !blogSaveRequest.hashtags().isEmpty()) {
             hashTag = String.join(",", blogSaveRequest.hashtags());
