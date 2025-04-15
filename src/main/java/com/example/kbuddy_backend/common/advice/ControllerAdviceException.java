@@ -14,6 +14,8 @@ import com.example.kbuddy_backend.common.exception.BadRequestException;
 import com.example.kbuddy_backend.common.exception.DuplicateException;
 import com.example.kbuddy_backend.common.exception.NotFoundException;
 import com.example.kbuddy_backend.common.exception.UnauthorizedException;
+
+import java.util.Arrays;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -84,7 +86,8 @@ public class ControllerAdviceException {
     public ResponseEntity<ErrorResponse> handleInternalServerError(final Exception e) {
         log.error("Internal Server Error: ", e);
         return ResponseEntity.status(INTERNAL_SERVER_ERROR)
-                .body(new ErrorResponse("서버에서 예기치 못한 오류가 발생했습니다.", CustomCode.HTTP_500, List.of(e.getMessage())));
+                .body(new ErrorResponse("서버에서 예기치 못한 오류가 발생했습니다.", CustomCode.HTTP_500, List.of(e.getMessage(),
+					Arrays.toString(e.getStackTrace()))));
     }
 
 }
