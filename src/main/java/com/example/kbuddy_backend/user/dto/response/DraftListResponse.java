@@ -5,13 +5,13 @@ import com.example.kbuddy_backend.qna.constant.QnaStatus;
 import java.time.LocalDateTime;
 import java.util.List;
 
-public record DraftListResponse(Long id, Long writerId, Object categoryId, String title, String description, List<ImageFileDto> images,
+public record DraftListResponse(Long id, Long writerId, String type, Object categoryId, String title, String description, List<ImageFileDto> images,
                        LocalDateTime createdAt, LocalDateTime modifiedAt,
                                 String status) {
-    public static DraftListResponse of(Long id, Long writerId, Object categoryId, String title, String description, List<ImageFileDto> images,
+    public static DraftListResponse of(Long id, Long writerId,String type, Object categoryId, String title, String description, List<ImageFileDto> images,
                                                                                       LocalDateTime createdAt, LocalDateTime modifiedAt,
                                                                                        String status) {
-        return new DraftListResponse(id, writerId, categoryId, title, description, images, createdAt, modifiedAt, status);
+        return new DraftListResponse(id, writerId,type, categoryId, title, description, images, createdAt, modifiedAt, status);
     }
 
 }

@@ -32,6 +32,8 @@ public class UserService {
     private final UserRepository userRepository;
     private final QnaRepository qnaRepository;
     private final BlogRepository blogRepository;
+    private final String QnaType = "Q&A";
+    private final String BlogType = "Blog";
 
     public UserResponse getUser(User user) {
         User findUser = userRepository.findById(user.getId())
@@ -55,7 +57,8 @@ public class UserService {
         List<DraftListResponse> qnaDrafts = draftQnas.stream()
                 .map(qna -> DraftListResponse.of(
                         qna.getId(),
-                        qna.getWriter().getId(), // 타입 구분
+                        qna.getWriter().getId(),
+                        QnaType,
                         qna.getCategoryCode(),
                         qna.getTitle(),
                         qna.getDescription(),
@@ -78,7 +81,8 @@ public class UserService {
         List<DraftListResponse> blogDrafts = draftBlogs.stream()
                 .map(blog -> DraftListResponse.of(
                         blog.getId(),
-                        blog.getWriter().getId(), // 타입 구분
+                        blog.getWriter().getId(),
+                        BlogType,
                         blog.getCategoryCode(),
                         blog.getTitle(),
                         blog.getDescription(),
