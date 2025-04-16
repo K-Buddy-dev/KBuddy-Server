@@ -347,30 +347,4 @@ public class BlogService {
     public Blog findBlogById(Long blogId) {
         return blogRepository.findById(blogId).orElseThrow(BlogNotFoundException::new);
     }
-
-    public List<BlogPaginationResponse> getMyDrafts(User currentUser) {
-
-        List<Blog> draftsBlogs = blogRepository.findByWriterAndStatus(currentUser, BlogStatus.DRAFT);
-        return draftsBlogs.stream()
-                .map(blog -> {
-                    boolean isBookmarked = blogBookmarkRepository.existsByBlogIdAndUserId(blog.getId(), currentUser.getId());
-                    boolean isHearted = blogHeartRepository.existsByBlogIdAndUserId(blog.getId(), currentUser.getId());
-                    return BlogPaginationResponse.of(
-                            blog.getId(),
-                            blog.getWriter().getId(),
-                            blog.getCategoryCode(),
-                            blog.getTitle(),
-                            blog.getDescription(),
-                            blog.getViewCount(),
-                            blog.getHeartCount(),
-                            blog.getCommentCount(),
-                            blog.getCreatedDate(),
-                            blog.getLastModifiedDate(),
-                            blog.getStatus(),
-                            isBookmarked,
-                            isHearted
-                    );
-                })
-                .collect(Collectors.toList()); // 반환값을 리스트로 변환
-    }
 }

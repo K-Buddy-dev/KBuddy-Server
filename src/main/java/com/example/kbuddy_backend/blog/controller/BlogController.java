@@ -168,13 +168,4 @@ public class BlogController {
         return ResponseEntity.noContent().build(); // 204 No Content 반환
     }
 
-    // 임시 저장 게시글 조회 API
-    @GetMapping("/drafts")
-    @Operation(summary = "내 임시 저장 블로그 목록 조회", description = "현재 로그인한 사용자가 임시 저장한 blog 게시글 전체 목록을 조회합니다.")
-    public ResponseEntity<List<BlogPaginationResponse>> getMyDrafts(
-            @Parameter(hidden = true) @CurrentUser User user) {
-        List<BlogPaginationResponse> drafts = blogService.getMyDrafts(user);
-        return ResponseEntity.ok(drafts);
-    }
-
 } 
