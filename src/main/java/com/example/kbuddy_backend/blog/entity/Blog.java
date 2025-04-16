@@ -1,6 +1,8 @@
 package com.example.kbuddy_backend.blog.entity;
 
+import com.example.kbuddy_backend.blog.constant.BlogStatus;
 import com.example.kbuddy_backend.common.entity.BaseTimeEntity;
+import com.example.kbuddy_backend.qna.constant.QnaStatus;
 import com.example.kbuddy_backend.user.entity.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -16,7 +18,6 @@ import java.util.List;
 @Table(name = "blog")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Blog extends BaseTimeEntity {
-    //todo: hibernate validation 어노테이션으로 유효성 검사하기
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -27,73 +28,97 @@ public class Blog extends BaseTimeEntity {
     @JoinColumn(name = "user_id")
     private User writer;
 
-    @OneToMany(mappedBy = "blog", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "blog", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<BlogHeart> blogHearts = new ArrayList<>();
+
+    @OneToMany(mappedBy = "blog", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<BlogComment> comments = new ArrayList<>();
 
     @OneToMany(mappedBy = "blog", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<BlogHeart> hearts = new ArrayList<>();
+    private List<BlogImage> imageUrls = new ArrayList<>();
+
+    private String hashtag;
+
+    @ElementCollection
+    @CollectionTable(
+            name = "blog_categories", // 생성될 테이블 이름
+            joinColumns = @JoinColumn(name = "blog_id") // 외래 키 칼럼 이름
+    )
+    @Column(name = "category_code") // 카테고리 코드가 저장될 칼럼 이름
+    private List<Integer> categoryCode = new ArrayList<>();
 
     @Enumerated(EnumType.STRING)
-    private Category category;
+    @Column(nullable = false)
+    private BlogStatus status = BlogStatus.DRAFT;
 
     private String title;
-    private String content;
+    private String description;
+
     private int heartCount;
     private int viewCount;
     private int reportCount;
 
-    @ElementCollection
-    @CollectionTable(
-        name = "blog_images",
-        joinColumns = @JoinColumn(name = "blog_id")
-    )
-    @Column(name = "image_url")
-    private List<String> imageUrls = new ArrayList<>();
-
     @Builder
-    public Blog(User writer, String title, String content, Category category, List<String> imageUrls) {
+    public Blog(User writer, String title, String description, String hashtag, List<Integer> category,BlogStatus status) {
         this.writer = writer;
         this.title = title;
-        this.content = content;
-        this.category = category;
-        if (imageUrls != null) {
-            this.imageUrls = imageUrls;
+        this.description = description;
+        this.hashtag = hashtag;
+        this.categoryCode = category;
+        this.status = (status != null) ? status : BlogStatus.DRAFT;
+    }
+
+    public void update(String title, String description, String hashtag, List<Integer> category, BlogStatus status) {
+        if (title != null && !title.isEmpty()) {
+            this.title = title;
+        }
+        if (description != null && !description.isEmpty()) {
+            this.description = description;
+        }
+        if (hashtag != null && !hashtag.isEmpty()) {
+            this.hashtag = hashtag;
+        }
+        if (category != null) {
+            this.categoryCode = category;
+        }
+
+        if (status != null) {
+            this.status = status;
         }
     }
 
-    public void update(String title, String content, Category category, List<String> imageUrls) {
-        this.title = title;
-        this.content = content;
-        this.category = category;
-        if (imageUrls != null) {
-            this.imageUrls.clear();
-            this.imageUrls.addAll(imageUrls);
-        }
+    public void addImage(BlogImage blogImage){
+        blogImage.setBlog(this);
+        imageUrls.add(blogImage);
     }
+
+    public void deleteImage(Long imageId){
+        imageUrls.removeIf(image -> image.getId().equals(imageId));
+    }
+
+    public void addComment(BlogComment blogComment){comments.add(blogComment);}
 
     public void plusHeart(BlogHeart blogHeart) {
         this.heartCount += 1;
-        this.hearts.add(blogHeart);
-        blogHeart.setBlog(this);
+        this.blogHearts.add(blogHeart);
     }
 
     public void minusHeart(BlogHeart blogHeart) {
         if (this.heartCount > 0) {
             this.heartCount -= 1;
         }
-        this.hearts.remove(blogHeart);
+        this.blogHearts.remove(blogHeart);
     }
 
     public void plusViewCount() {
         this.viewCount += 1;
     }
 
+    public int getCommentCount() {
+        return comments.size();
+    }
+
     public void plusReportCount() {
         this.reportCount += 1;
     }
-
-    public void addComment(BlogComment comment) {
-        this.comments.add(comment);
-        comment.setBlog(this);
-    }
-} 
+}

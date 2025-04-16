@@ -22,83 +22,56 @@ public class BlogComment extends BaseTimeEntity {
     @Column(name = "comment_id")
     private Long id;
 
+    private String content;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "writer_id")
+    private User writer;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "blog_id")
     private Blog blog;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
-    private User writer;
+    @OneToMany(mappedBy = "blogComment")
+    private List<BlogHeart> blogHearts = new ArrayList<>();
 
+    //대댓글
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_id")
     private BlogComment parent;
 
-    @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL)
-    private List<BlogComment> replies = new ArrayList<>();
+    @OneToMany(mappedBy = "parent")
+    private List<BlogComment> children = new ArrayList<>();
 
-    @OneToMany(mappedBy = "comment", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<BlogCommentHeart> hearts = new ArrayList<>();
-
-    private String content;
     private int heartCount;
-    private boolean isReply;
-    private boolean deleted = false;
-    private static final String DELETED_COMMENT_CONTENT = "삭제된 댓글입니다.";
-
-    @Builder
-    public BlogComment(Blog blog, User writer, BlogComment parent, String content) {
-        this.blog = blog;
-        this.writer = writer;
-        this.parent = parent;
-        this.content = content;
-        this.isReply = parent != null;
-        this.heartCount = 0;
-        this.deleted = false;
-    }
-
-    public void plusHeart(BlogCommentHeart heart) {
-        this.heartCount += 1;
-        this.hearts.add(heart);
-    }
-
-    public void minusHeart(BlogCommentHeart heart) {
-        if (this.heartCount > 0) {
-            this.heartCount -= 1;
-        }
-        this.hearts.remove(heart);
-    }
-
-    public void addReply(BlogComment reply) {
-        this.replies.add(reply);
-    }
-
-    public void delete() {
-        if (replies.isEmpty()) {
-            // 대댓글이 없는 경우 실제 삭제를 위해 연관관계 제거
-            if (parent != null) {
-                parent.getReplies().remove(this);
-            }
-            blog.getComments().remove(this);
-        } else {
-            // 대댓글이 있는 경우 논리적 삭제
-            this.deleted = true;
-            this.content = DELETED_COMMENT_CONTENT;
-        }
-    }
-
-    public boolean isDeleted() {
-        return deleted;
-    }
 
     public void setBlog(Blog blog) {
         this.blog = blog;
     }
 
-    public void updateContent(String content) {
-        if (this.deleted) {
-            throw new IllegalStateException("삭제된 댓글은 수정할 수 없습니다.");
-        }
+    @Builder
+    public BlogComment(User writer, Blog blog, String content) {
         this.content = content;
+        this.writer = writer;
+        this.blog = blog;
+    }
+
+    public void plusHeart(BlogHeart blogHeart) {
+        this.heartCount += 1;
+        this.blogHearts.add(blogHeart);
+    }
+
+    public void minusHeart(BlogHeart blogHeart) {
+        if (this.heartCount > 0) {
+            this.heartCount -= 1;
+        }
+        this.blogHearts.remove(blogHeart);
+    }
+
+    public void updateContent(String content) { this.content = content; }
+
+    public void addBlog(Blog blog) {
+        this.blog = blog;
+        blog.addComment(this);
     }
 }

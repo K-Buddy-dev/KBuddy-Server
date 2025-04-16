@@ -6,6 +6,12 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.Optional;
 
 public interface BlogHeartRepository extends JpaRepository<BlogHeart, Long> {
-    Optional<BlogHeart> findByBlogIdAndUserId(Long blogId, Long userId);
     void deleteByBlogIdAndUserId(Long blogId, Long userId);
+
+    void deleteByBlogCommentIdAndUserId(Long blogCommentId, Long userId);
+
+    Optional<BlogHeart> findByBlogCommentIdAndUserId(Long blogCommentId, Long userId);
+    Optional<BlogHeart> findByBlogIdAndUserId(Long blogId, Long userId);
+
+    boolean existsByBlogIdAndUserId(Long blogId, Long userId);
 } 

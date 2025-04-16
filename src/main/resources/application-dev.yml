@@ -1,4 +1,9 @@
+
 spring:
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 50MB
   config:
     activate:
       on-profile: dev
@@ -8,8 +13,8 @@ spring:
     resources:
       add-mappings: false
   datasource:
-#    url: jdbc:h2:mem:test;
-    url: jdbc:h2:~/data/testdb
+    url: jdbc:h2:mem:test;
+    #    url: jdbc:h2:~/data/testdb
     driver-class-name: org.h2.Driver
     username: root
   h2:
@@ -84,3 +89,6 @@ management:
     web:
       exposure:
         include: "*" # 모든 엔드포인트 노출 -> 추후 변경
+
+server:
+  port: 8080

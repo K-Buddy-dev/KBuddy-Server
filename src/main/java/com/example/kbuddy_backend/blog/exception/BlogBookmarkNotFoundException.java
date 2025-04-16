@@ -1,7 +1,9 @@
 package com.example.kbuddy_backend.blog.exception;
 
-public class BlogBookmarkNotFoundException extends RuntimeException {
+import com.example.kbuddy_backend.common.exception.NotFoundException;
+
+public class BlogBookmarkNotFoundException extends NotFoundException {
     public BlogBookmarkNotFoundException() {
-        super("북마크를 찾을 수 없습니다.");
+        super("블로그 북마크를 찾을 수 없습니다.");
     }
 } 

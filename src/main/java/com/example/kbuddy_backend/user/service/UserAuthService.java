@@ -44,13 +44,11 @@ public class UserAuthService {
                 registerRequest.email()).ifPresent(user -> {
             throw new DuplicateUserException();
         });
-
         final String password = passwordEncoder.encode(registerRequest.password());
         final User newUser = UserConverter.fromRegisterRequest(registerRequest, password);
 
         newUser.addAuthority(new Authority(NORMAL_USER));
         User saveUser = userRepository.save(newUser);
-
         UsernamePasswordAuthenticationToken authenticationToken = getUsernamePasswordAuthenticationToken(
                 saveUser, password);
 

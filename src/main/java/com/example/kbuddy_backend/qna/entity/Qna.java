@@ -1,6 +1,7 @@
 package com.example.kbuddy_backend.qna.entity;
 
 import com.example.kbuddy_backend.common.entity.BaseTimeEntity;
+import com.example.kbuddy_backend.qna.constant.QnaStatus;
 import com.example.kbuddy_backend.user.entity.User;
 
 import jakarta.persistence.CascadeType;
@@ -11,13 +12,19 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
+import jdk.jfr.Category;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -48,9 +55,7 @@ public class Qna extends BaseTimeEntity {
 
     private String hashtag;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "category_id")
-    private QnaCategory category;
+    private int categoryCode;
 
     private String title;
     private String description;
@@ -58,32 +63,49 @@ public class Qna extends BaseTimeEntity {
     private int heartCount;
     private int viewCount;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private QnaStatus status = QnaStatus.DRAFT;
+
     @Builder
-    public Qna(User writer, String title, String description, String hashtag, QnaCategory category) {
+    public Qna(User writer, String title, String description, String hashtag, int category, QnaStatus status) {
         this.writer = writer;
         this.title = title;
         this.hashtag = hashtag;
-        this.category = category;
+        this.categoryCode = category;
         this.description = description;
+        this.status = (status != null) ? status : QnaStatus.DRAFT;
     }
 
-    public void update(String title, String description, String hashtag, QnaCategory category) {
-        this.title = title;
-        this.description = description;
-        this.hashtag = hashtag;
-        this.category = category;
+    public void update(String title, String description, String hashtag, Integer category, QnaStatus status) {
+
+        if (title != null && !title.isEmpty()) {
+            this.title = title;
+        }
+        if (description != null && !description.isEmpty()) {
+            this.description = description;
+        }
+
+        if (hashtag != null && !hashtag.isEmpty()) {
+            this.hashtag = hashtag;
+        }
+      
+        if (category != null) {
+            this.categoryCode = category;
+        }
+
+        if (status != null) {
+            this.status = status;
+        }
     }
 
     public void addImage(QnaImage qnaImage) {
+        qnaImage.setQna(this);
         imageUrls.add(qnaImage);
     }
 
-    public void deleteImage(String filePath) {
-        QnaImage qnaImage = imageUrls.stream()
-                .filter(image -> image.getFilePath().equals(filePath))
-                .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("해당 이미지가 없습니다."));
-        imageUrls.remove(qnaImage);
+    public void deleteImage(Long imageId) {
+        imageUrls.removeIf(image -> image.getId().equals(imageId));
     }
 
     public void addComment(QnaComment qnaComment) {
@@ -108,5 +130,11 @@ public class Qna extends BaseTimeEntity {
 
     public int getCommentCount() {
         return comments.size();
+    }
+
+    public void setStatus(QnaStatus status) {
+        if (status != null) {
+            this.status = status;
+        }
     }
 }

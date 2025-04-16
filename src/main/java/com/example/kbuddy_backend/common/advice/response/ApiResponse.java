@@ -1,6 +1,5 @@
 package com.example.kbuddy_backend.common.advice.response;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -51,7 +50,7 @@ public class ApiResponse<T> {
         return new ApiResponse<>(204,path,data, CustomCode.HTTP_204);
     }
 
-    public static ApiResponse<?> error(String message, String path, int status, String code){
+    public static ApiResponse<?>  error(String message, String path, int status, String code){
         return new ApiResponse<>(status,path,message,code);
     }
 
