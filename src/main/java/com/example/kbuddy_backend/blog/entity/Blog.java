@@ -118,6 +118,12 @@ public class Blog extends BaseTimeEntity {
         return comments.size();
     }
 
+    public void setStatus(BlogStatus status) {
+        if (status != null) {
+            this.status = status;
+        }
+    }
+
     public void plusReportCount() {
         this.reportCount += 1;
     }
