@@ -26,6 +26,7 @@ import com.example.kbuddy_backend.user.entity.User;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Objects;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -345,5 +346,31 @@ public class BlogService {
 
     public Blog findBlogById(Long blogId) {
         return blogRepository.findById(blogId).orElseThrow(BlogNotFoundException::new);
+    }
+
+    public List<BlogPaginationResponse> getMyDrafts(User currentUser) {
+
+        List<Blog> draftsBlogs = blogRepository.findByWriterAndStatus(currentUser, BlogStatus.DRAFT);
+        return draftsBlogs.stream()
+                .map(blog -> {
+                    boolean isBookmarked = blogBookmarkRepository.existsByBlogIdAndUserId(blog.getId(), currentUser.getId());
+                    boolean isHearted = blogHeartRepository.existsByBlogIdAndUserId(blog.getId(), currentUser.getId());
+                    return BlogPaginationResponse.of(
+                            blog.getId(),
+                            blog.getWriter().getId(),
+                            blog.getCategoryCode(),
+                            blog.getTitle(),
+                            blog.getDescription(),
+                            blog.getViewCount(),
+                            blog.getHeartCount(),
+                            blog.getCommentCount(),
+                            blog.getCreatedDate(),
+                            blog.getLastModifiedDate(),
+                            blog.getStatus(),
+                            isBookmarked,
+                            isHearted
+                    );
+                })
+                .collect(Collectors.toList()); // 반환값을 리스트로 변환
     }
 }
