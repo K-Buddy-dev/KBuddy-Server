@@ -11,5 +11,6 @@ import java.util.List;
 
 public interface BlogRepository extends JpaRepository<Blog, Long>, BlogRepositoryCustom {
 
+    // 작성자의 모든 블로그와 그 상태(임시저장 여부)를 조회합니다.(no pagination)
     List<Blog> findByWriterAndStatus(User user, BlogStatus blogStatus);
 }
