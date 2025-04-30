@@ -4,5 +4,6 @@ public enum SortBy {
     VIEW_COUNT,
     HEART_COUNT,
     COMMENT_COUNT,
-    OLDESET
+    LATEST,
+    OLDEST
 }
