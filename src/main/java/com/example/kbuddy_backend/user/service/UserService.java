@@ -68,8 +68,7 @@ public class UserService {
             }
         }
         managedUser.updateProfile(bio, newProfileImageUrl);
-        User user = userRepository.findById(currentUser.getId()).orElseThrow(UserNotFoundException::new);
-        return UserProfileResponse.of(user.getBio(), user.getUsername(), user.getProfileImageUrl());
+        return UserProfileResponse.of(managedUser.getBio(), managedUser.getUsername(), managedUser.getProfileImageUrl());
     }
 
     public List<DraftListResponse> getMyDrafts(User user) {
