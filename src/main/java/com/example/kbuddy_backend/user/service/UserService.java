@@ -2,16 +2,12 @@ package com.example.kbuddy_backend.user.service;
 
 import com.example.kbuddy_backend.blog.constant.BlogStatus;
 import com.example.kbuddy_backend.blog.entity.Blog;
-import com.example.kbuddy_backend.blog.entity.BlogImage;
 import com.example.kbuddy_backend.blog.repository.BlogRepository;
 import com.example.kbuddy_backend.common.dto.ImageFileDto;
 import com.example.kbuddy_backend.qna.constant.QnaStatus;
-import com.example.kbuddy_backend.qna.dto.response.QnaPaginationResponse;
 import com.example.kbuddy_backend.qna.entity.Qna;
 import com.example.kbuddy_backend.qna.repository.QnaRepository;
-import com.example.kbuddy_backend.user.dto.request.UserBioRequest;
 import com.example.kbuddy_backend.user.dto.response.DraftListResponse;
-import com.example.kbuddy_backend.user.dto.response.UserAuthorityResponse;
 import com.example.kbuddy_backend.user.dto.response.UserProfileResponse;
 import com.example.kbuddy_backend.user.dto.response.UserResponse;
 import com.example.kbuddy_backend.user.entity.User;
