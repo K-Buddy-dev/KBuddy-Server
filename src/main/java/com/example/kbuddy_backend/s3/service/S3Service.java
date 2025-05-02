@@ -58,7 +58,12 @@ public class S3Service {
     }
 
     public void deleteFile(String objectName) {
-        amazonS3.deleteObject(bucketName, objectName);
+        try {
+            amazonS3.deleteObject(bucketName, objectName);
+        } catch (Exception e) {
+            log.error("s3에서 file 삭제중 에러 발생", e);
+            throw new RuntimeException(e.getMessage());
+        }
     }
 
     private ObjectMetadata setMetadata(MultipartFile multipartFile) {
