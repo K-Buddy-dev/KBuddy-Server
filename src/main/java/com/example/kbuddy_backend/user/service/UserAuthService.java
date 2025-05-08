@@ -115,4 +115,11 @@ public class UserAuthService {
                 .collect(Collectors.toList());
         return new UsernamePasswordAuthenticationToken(saveUser.getId(), password, grantedAuthorities);
     }
+
+    // //Redis에 저장된 RefreshToken 삭제로직 필요
+    // public void logout(User user) {
+    //
+    //     //쿠키에 저장된 refresh token 만료
+    //
+    // }
 }

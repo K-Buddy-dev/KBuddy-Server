@@ -171,4 +171,19 @@ public class UserAuthController {
         response.addCookie(refreshTokenCookie);
     }
 
+    //로그아웃
+    @Operation(summary = "로그아웃", description = "로그아웃을 합니다.")
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(@Parameter(hidden = true) @CurrentUser User user, HttpServletResponse response) {
+        //쿠키 삭제
+        Cookie refreshTokenCookie = new Cookie("refreshToken", null);
+        refreshTokenCookie.setPath("/");
+        refreshTokenCookie.setHttpOnly(true);
+        refreshTokenCookie.setMaxAge(0);
+        refreshTokenCookie.setSecure(true);
+        response.addCookie(refreshTokenCookie); // 응답에 쿠키 포함!
+
+        return ResponseEntity.noContent().build();
+    }
+
 }

@@ -68,8 +68,13 @@ public class User extends BaseTimeEntity {
         authority.setUser(this);
     }
 
-    public void updateBio(String bio) {
-        this.bio = bio;
+    public void updateProfile(String bio, String profileImageUrl) {
+        if (bio != null) {
+            this.bio = bio;
+        }
+        if (profileImageUrl != null) {
+            this.profileImageUrl = profileImageUrl;
+        }
     }
 
     public void resetPassword(String password) {

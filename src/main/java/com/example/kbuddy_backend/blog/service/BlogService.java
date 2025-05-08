@@ -26,6 +26,7 @@ import com.example.kbuddy_backend.user.entity.User;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Objects;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -133,16 +134,19 @@ public class BlogService {
                 })
                 .toList();
 
-        Long nextId = getNextId(blogPaginationResponseList);
+        Long nextId = getNextId(blogPaginationResponseList, pageSize);
 
         return AllBlogResponse.of(nextId, blogPaginationResponseList);
     }
 
-    private Long getNextId(List<BlogPaginationResponse> responses) {
+    private Long getNextId(List<BlogPaginationResponse> responses, int pageSize) {
+        if (responses.isEmpty() || responses.size() < pageSize) {
+            return -1L;
+        }
         return responses.stream()
                 .map(BlogPaginationResponse::id)
                 .reduce((first, second) -> second) // 마지막 ID를 반환
-                .orElse(-1L); // 리스트가 비어있으면 -1 반환
+                .orElse(-1L); //리스트가 비어있으면 -1 반환
     }
 
     // 특정 블로그를 조회하고 조회수를 증가
