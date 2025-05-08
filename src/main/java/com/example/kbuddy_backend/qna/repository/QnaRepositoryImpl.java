@@ -65,7 +65,9 @@ public class QnaRepositoryImpl implements QnaRepositoryCustom {
             return qna.heartCount.desc();
         } else if (sortBy == SortBy.COMMENT_COUNT) {
             return qna.comments.size().desc();
-        } else {
+        } else if (sortBy == SortBy.OLDEST){
+            return qna.id.asc();
+        } else { //Latest
             return qna.id.desc();
         }
     }

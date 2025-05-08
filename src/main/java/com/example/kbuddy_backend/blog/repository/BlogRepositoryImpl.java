@@ -22,7 +22,7 @@ public class BlogRepositoryImpl implements BlogRepositoryCustom {
     public List<Blog> paginationNoOffset(Long blogId, String title, int pageSize, SortBy sortBy, Integer categoryCode, BlogStatus status) {
         return jpaQueryFactory.selectFrom(blog)
                 .where(
-                        ltBlogId(blogId), 
+                        ltBlogId(blogId),
                         titleOrDescriptionContains(title),
                         eqCategoryCode(categoryCode),
                         eqStatus(status) // <-- 수정된 부분
@@ -32,8 +32,7 @@ public class BlogRepositoryImpl implements BlogRepositoryCustom {
                 .fetch();
     }
 
-
-    private BooleanExpression ltBlogId(Long blogId) {
+        private BooleanExpression ltBlogId(Long blogId) {
         if (blogId == null) {
             return null;
         }

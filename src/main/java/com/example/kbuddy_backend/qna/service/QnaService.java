@@ -132,12 +132,15 @@ public class QnaService {
                 })
                 .toList();
 
-        Long nextId = getNextId(qnaPaginationResponseList);
+        Long nextId = getNextId(qnaPaginationResponseList,pageSize);
 
         return AllQnaResponse.of(nextId, qnaPaginationResponseList);
     }
 
-    private Long getNextId(List<QnaPaginationResponse> responses) {
+    private Long getNextId(List<QnaPaginationResponse> responses, int pageSize) {
+        if (responses.isEmpty() || responses.size() < pageSize) {
+            return -1L;
+        }
         return responses.stream()
                 .map(QnaPaginationResponse::id)
                 .reduce((first, second) -> second) // 마지막 ID를 반환
