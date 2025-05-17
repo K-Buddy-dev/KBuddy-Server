@@ -23,14 +23,14 @@ public class FCMController {
     public String sendNotification(
             @Parameter(description = "FCM 디바이스 토큰", required = true)
             @RequestParam String token,
-            
+
             @Parameter(description = "알림 제목", required = true)
             @RequestParam String title,
-            
+
             @Parameter(description = "알림 내용", required = true)
             @RequestParam String body
     ) {
         fcmService.sendNotification(token, title, body);
         return "알림이 성공적으로 전송되었습니다.";
     }
-} 
+}
