@@ -124,7 +124,7 @@ public class QnaController {
                                                    @PathVariable Long commentId,
                                                    @Valid @RequestBody QnaCommentSaveRequest qnaCommentSaveRequest,
                                                    @Parameter(hidden = true) @CurrentUser User user) {
-        qnaCommentService.updateQnaComment(qnaId, commentId, qnaCommentSaveRequest, user);
+        qnaCommentService.updateQnaComment(commentId, qnaCommentSaveRequest, user);
         //todo: 응답
         return ResponseEntity.noContent().build();
     }

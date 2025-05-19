@@ -36,6 +36,8 @@ import com.example.kbuddy_backend.blog.dto.response.BlogPaginationResponse;
 
 import java.util.List;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 @Service
 @Transactional(readOnly = true)
@@ -247,26 +249,64 @@ public class BlogService {
     private BlogResponse createBlogResponseDto(Blog blog, User currentUser) {
         List<ImageFileDto> images = blog.getImageUrls()
                 .stream()
-                .map(blogImage -> new ImageFileDto(blogImage.getId(),blogImage.getFileType(), blogImage.getFilePath(),
+                .map(blogImage -> ImageFileDto.of(
+                        blogImage.getId(),
+                        blogImage.getFileType(),
+                        blogImage.getFilePath(),
                         blogImage.getImageUrl()
                 ))
                 .toList();
-        // 북마크, 좋아요된 게시글인지 여부
+
         boolean isBookmarked = blogBookmarkRepository.existsByBlogIdAndUserId(blog.getId(), currentUser.getId());
         boolean isHearted = blogHeartRepository.existsByBlogIdAndUserId(blog.getId(), currentUser.getId());
+
         List<BlogCommentResponse> comments = blog.getComments()
                 .stream()
-                .map(blogComment ->
-                        BlogCommentResponse.of(blogComment.getId(), blogComment.getBlog().getId(),
-                                blogComment.getWriter().getId(),
-                                blogComment.getContent(), blogComment.getCreatedDate(),
-                                blogComment.getLastModifiedDate()))
-                .sorted(Comparator.comparing(BlogCommentResponse::createdAt)) // 만들어진 시간으로 오름차순 반환
+                .filter(comment -> !comment.isReply())
+                .map(comment -> {
+                    List<BlogCommentResponse> replies = comment.getChildren()
+                            .stream()
+                            .map(reply -> BlogCommentResponse.of(
+                                    reply.getId(),
+                                    reply.getBlog().getId(),
+                                    reply.getWriter().getId(),
+                                    reply.getContent(),
+                                    reply.getCreatedDate(),
+                                    reply.getLastModifiedDate(),
+                                    List.of()
+                            ))
+                            .toList();
+
+                    return BlogCommentResponse.of(
+                            comment.getId(),
+                            comment.getBlog().getId(),
+                            comment.getWriter().getId(),
+                            comment.getContent(),
+                            comment.getCreatedDate(),
+                            comment.getLastModifiedDate(),
+                            replies
+                    );
+                })
+                .sorted(Comparator.comparing(BlogCommentResponse::createdAt))
                 .toList();
 
-        return BlogResponse.of(blog.getId(), blog.getWriter().getId(), blog.getCategoryCode(), blog.getTitle(),
-                blog.getDescription(), blog.getViewCount(), blog.getCreatedDate(), blog.getLastModifiedDate(),
-                images, comments, blog.getHeartCount(), blog.getCommentCount(), isBookmarked, isHearted, blog.getStatus());
+        return BlogResponse.of(
+                blog.getId(),
+                blog.getWriter().getId(),
+                blog.getCategoryCode(),
+                blog.getTitle(),
+                blog.getDescription(),
+                blog.getViewCount(),
+                blog.getCreatedDate(),
+                blog.getLastModifiedDate(),
+                images,
+                comments,
+                blog.getHeartCount(),
+                blog.getCommentCount(),
+                isBookmarked,
+                isHearted,
+                blog.getStatus()
+        );
     }
 
     private void saveImageFiles(List<ImageFileDto> imageFiles, Blog blog) {
@@ -349,5 +389,10 @@ public class BlogService {
 
     public Blog findBlogById(Long blogId) {
         return blogRepository.findById(blogId).orElseThrow(BlogNotFoundException::new);
+    }
+
+    public Page<BlogResponse> findBlogs(Pageable pageable, User currentUser) {
+        return blogRepository.findAll(pageable)
+                .map(blog -> createBlogResponseDto(blog, currentUser));
     }
 }

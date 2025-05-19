@@ -10,4 +10,8 @@ public interface BlogCommentRepository extends JpaRepository<BlogComment, Long> 
     Optional<BlogComment> findByIdAndWriterId(Long commentId, Long userId);
 
     List<BlogComment> findAllByBlogIdOrderByCreatedDateAsc(Long blogId);
+
+    List<BlogComment> findByBlogIdAndParentIsNullOrderByCreatedDateDesc(Long blogId);
+
+    List<BlogComment> findByParentIdOrderByCreatedDateDesc(Long parentId);
 } 

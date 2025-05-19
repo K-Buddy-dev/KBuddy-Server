@@ -241,9 +241,31 @@ public class QnaService {
 
         List<QnaCommentResponse> comments = qna.getComments()
                 .stream()
-                .map(qnaComment -> QnaCommentResponse.of(qnaComment.getId(), qnaComment.getQna().getId(),
-                        qnaComment.getWriter().getId(), qnaComment.getContent(), qnaComment.getCreatedDate(),
-                        qnaComment.getLastModifiedDate()))
+                .filter(comment -> !comment.isReply())
+                .map(comment -> {
+                    List<QnaCommentResponse> replies = comment.getChildren()
+                            .stream()
+                            .map(reply -> QnaCommentResponse.of(
+                                    reply.getId(),
+                                    reply.getQna().getId(),
+                                    reply.getWriter().getId(),
+                                    reply.getContent(),
+                                    reply.getCreatedDate(),
+                                    reply.getLastModifiedDate(),
+                                    List.of()
+                            ))
+                            .toList();
+
+                    return QnaCommentResponse.of(
+                            comment.getId(),
+                            comment.getQna().getId(),
+                            comment.getWriter().getId(),
+                            comment.getContent(),
+                            comment.getCreatedDate(),
+                            comment.getLastModifiedDate(),
+                            replies
+                    );
+                })
                 .sorted(Comparator.comparing(QnaCommentResponse::createdAt))
                 .toList();
 

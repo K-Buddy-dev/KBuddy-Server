@@ -1,6 +1,7 @@
 package com.example.kbuddy_backend.blog.service;
 
 import com.example.kbuddy_backend.blog.dto.request.BlogCommentSaveRequest;
+import com.example.kbuddy_backend.blog.dto.response.BlogCommentResponse;
 import com.example.kbuddy_backend.blog.entity.Blog;
 import com.example.kbuddy_backend.blog.entity.BlogComment;
 import com.example.kbuddy_backend.blog.entity.BlogHeart;
@@ -10,7 +11,9 @@ import com.example.kbuddy_backend.blog.exception.NotWriterException;
 import com.example.kbuddy_backend.blog.repository.BlogCommentRepository;
 import com.example.kbuddy_backend.blog.repository.BlogHeartRepository;
 import com.example.kbuddy_backend.user.entity.User;
+import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,14 +29,45 @@ public class BlogCommentService {
     private final BlogService blogService;
 
     @Transactional
-    public void saveBlogComment(Long qnaId, BlogCommentSaveRequest blogCommentSaveRequest, User user) {
-        final Blog blog = blogService.findBlogById(qnaId);
+    public void saveBlogComment(Long blogId, BlogCommentSaveRequest request, User user) {
+        Blog blog = blogService.findBlogById(blogId);
         BlogComment blogComment = BlogComment.builder()
-                .content(blogCommentSaveRequest.content())
+                .content(request.content())
                 .blog(blog)
                 .writer(user)
                 .build();
         blogCommentRepository.save(blogComment);
+    }
+
+    @Transactional
+    public void updateBlogComment(Long commentId, BlogCommentSaveRequest request, User user) {
+        BlogComment comment = findBlogCommentById(commentId);
+        if (!Objects.equals(comment.getWriter().getId(), user.getId())) {
+            throw new NotWriterException();
+        }
+        comment.updateContent(request.content());
+    }
+
+
+    @Transactional
+    public void deleteBlogComment( Long commentId, User user) {
+        BlogComment comment = findBlogCommentById(commentId);
+        if (!Objects.equals(comment.getWriter().getId(), user.getId())) {
+            throw new NotWriterException();
+        }
+        blogCommentRepository.delete(comment);
+    }
+
+    @Transactional
+    public void deleteBlogCommentReply(Long commentId, User user) {
+        BlogComment reply = findBlogCommentById(commentId);
+        if (!Objects.equals(reply.getWriter().getId(), user.getId())) {
+            throw new NotWriterException();
+        }
+        if (!reply.isReply()) {
+            throw new IllegalArgumentException("대댓글만 삭제할 수 있습니다.");
+        }
+        blogCommentRepository.delete(reply);
     }
 
     @Transactional
@@ -51,28 +85,28 @@ public class BlogCommentService {
     @Transactional
     public void minusHeart(Long commentId, User user) {
         BlogComment blogComment = findBlogCommentById(commentId);
-        BlogHeart byBlogIdAndUserId = blogHeartRepository.findByBlogCommentIdAndUserId(commentId, user.getId()).orElseThrow(BlogCommentNotFoundException::new);
+        BlogHeart byBlogIdAndUserId = blogHeartRepository.findByBlogCommentIdAndUserId(commentId, user.getId())
+                .orElseThrow(BlogCommentNotFoundException::new);
         blogComment.minusHeart(byBlogIdAndUserId);
         blogHeartRepository.deleteByBlogCommentIdAndUserId(commentId, user.getId());
     }
 
     private BlogComment findBlogCommentById(Long commentId) {
         return blogCommentRepository.findById(commentId)
-            .orElseThrow(BlogCommentNotFoundException::new);
+                .orElseThrow(BlogCommentNotFoundException::new);
     }
 
-    // 블로그 댓글 수정 메소드 추가
-    @Transactional
-    public void updateBlogComment(Long blogId, Long commentId, BlogCommentSaveRequest blogCommentSaveRequest, User user) {
-        Blog blogById = blogService.findBlogById(blogId);
-        BlogComment blogComment = findBlogCommentById(commentId);
-        isBlogCommentWriter(user, blogById);
-        blogComment.updateContent(blogCommentSaveRequest.content());
+    public List<BlogCommentResponse> findBlogComments(Long blogId) {
+        List<BlogComment> comments = blogCommentRepository.findByBlogIdAndParentIsNullOrderByCreatedDateDesc(blogId);
+        return comments.stream()
+                .map(BlogCommentResponse::of)
+                .collect(Collectors.toList());
     }
 
-    private static void isBlogCommentWriter(User user, Blog blogById) {
-        if (!Objects.equals(blogById.getWriter().getId(), user.getId())) {
-            throw new NotWriterException();
-        }
+    public List<BlogCommentResponse> findBlogCommentReplies(Long parentId) {
+        List<BlogComment> replies = blogCommentRepository.findByParentIdOrderByCreatedDateDesc(parentId);
+        return replies.stream()
+                .map(BlogCommentResponse::of)
+                .collect(Collectors.toList());
     }
 }

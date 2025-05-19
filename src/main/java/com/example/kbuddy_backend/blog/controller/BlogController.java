@@ -5,7 +5,6 @@ import com.example.kbuddy_backend.blog.dto.request.BlogReportRequest;
 import com.example.kbuddy_backend.blog.dto.request.BlogSaveRequest;
 import com.example.kbuddy_backend.blog.dto.request.BlogUpdateRequest;
 import com.example.kbuddy_backend.blog.dto.response.AllBlogResponse;
-import com.example.kbuddy_backend.blog.dto.response.BlogPaginationResponse;
 import com.example.kbuddy_backend.blog.dto.response.BlogResponse;
 import com.example.kbuddy_backend.blog.service.BlogCommentService;
 import com.example.kbuddy_backend.blog.service.BlogService;
@@ -167,5 +166,4 @@ public class BlogController {
         blogService.reportBlog(blogId, request, user);
         return ResponseEntity.noContent().build(); // 204 No Content 반환
     }
-
 } 

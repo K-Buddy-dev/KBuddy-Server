@@ -29,6 +29,7 @@ public class QnaComment extends BaseTimeEntity {
     @Column(name = "comment_id")
     private Long id;
 
+    @Column(nullable = false)
     private String content;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -57,10 +58,12 @@ public class QnaComment extends BaseTimeEntity {
     }
 
     @Builder
-    public QnaComment(User writer, Qna qna, String content) {
+    public QnaComment(Long id, String content, User writer, Qna qna, QnaComment parent) {
+        this.id = id;
         this.content = content;
         this.writer = writer;
         this.qna = qna;
+        this.parent = parent;
     }
 
     public void plusHeart(QnaHeart qnaHeart) {
@@ -83,6 +86,10 @@ public class QnaComment extends BaseTimeEntity {
     public void addQna(Qna qna) {
         this.qna = qna;
         qna.addComment(this);
+    }
+
+    public boolean isReply() {
+        return parent != null;
     }
 
 }

@@ -9,4 +9,10 @@ public interface QnaCommentRepository extends JpaRepository<QnaComment, Long>{
     Optional<QnaComment> findByIdAndWriterId(Long commentId, Long userId);
 
     List<QnaComment> findAllByQnaIdOrderByCreatedDateAsc(Long qnaId);
+
+    List<QnaComment> findByQnaIdAndParentIsNullOrderByCreatedDateDesc(Long qnaId);
+
+    List<QnaComment> findByParentIdOrderByCreatedDateDesc(Long parentId);
+
+	List<QnaComment> findCommentsWithWriterAndChildren(Long qnaId);
 }
