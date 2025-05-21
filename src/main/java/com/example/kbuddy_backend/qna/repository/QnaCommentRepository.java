@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface QnaCommentRepository extends JpaRepository<QnaComment, Long>{
+public interface QnaCommentRepository extends JpaRepository<QnaComment, Long>, QnaCommentRepositoryCustom{
     Optional<QnaComment> findByIdAndWriterId(Long commentId, Long userId);
 
     List<QnaComment> findAllByQnaIdOrderByCreatedDateAsc(Long qnaId);

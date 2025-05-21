@@ -1,6 +1,4 @@
-package com.example.kbuddy_backend.blog.exception;
-
-import com.example.kbuddy_backend.common.exception.BadRequestException;
+package com.example.kbuddy_backend.common.exception;
 
 public class MaximumReplyDepthExceededException extends BadRequestException {
     public MaximumReplyDepthExceededException() {

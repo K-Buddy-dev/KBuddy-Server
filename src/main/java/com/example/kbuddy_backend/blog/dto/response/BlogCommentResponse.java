@@ -10,11 +10,15 @@ public record BlogCommentResponse(
         String description,
         LocalDateTime createdAt,
         LocalDateTime modifiedAt,
-        List<BlogCommentResponse> replies
+        List<BlogCommentResponse> replies,
+        int heartCount,
+        boolean isHearted
 ) {
     public static BlogCommentResponse of(Long id, Long blogId, Long writerId, String description,
                                        LocalDateTime createdAt, LocalDateTime modifiedAt,
-                                       List<BlogCommentResponse> replies) {
-        return new BlogCommentResponse(id, blogId, writerId, description, createdAt, modifiedAt, replies);
+                                       List<BlogCommentResponse> replies,
+                                       int heartCount,
+                                       boolean isHearted) {
+        return new BlogCommentResponse(id, blogId, writerId, description, createdAt, modifiedAt, replies, heartCount, isHearted);
     }
 }

@@ -12,6 +12,7 @@ import com.example.kbuddy_backend.blog.entity.BlogHeart;
 import com.example.kbuddy_backend.blog.entity.BlogBookmark;
 import com.example.kbuddy_backend.blog.entity.BlogImage;
 import com.example.kbuddy_backend.blog.entity.BlogReport;
+import com.example.kbuddy_backend.blog.entity.BlogComment;
 import com.example.kbuddy_backend.blog.exception.*;
 import com.example.kbuddy_backend.blog.repository.*;
 import com.example.kbuddy_backend.common.constant.ImageFileType;
@@ -39,6 +40,9 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.Map;
+import java.util.Set;
+
 @Service
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
@@ -51,6 +55,7 @@ public class BlogService {
     private final BlogBookmarkRepository blogBookmarkRepository;
     private final BlogImageRepository blogImageRepository;
     private final BlogReportRepository blogReportRepository;
+    private final BlogCommentRepository blogCommentRepository;
     private final S3Service s3Service;
 
     // 새로운 블로그를 저장
@@ -260,9 +265,27 @@ public class BlogService {
         boolean isBookmarked = blogBookmarkRepository.existsByBlogIdAndUserId(blog.getId(), currentUser.getId());
         boolean isHearted = blogHeartRepository.existsByBlogIdAndUserId(blog.getId(), currentUser.getId());
 
-        List<BlogCommentResponse> comments = blog.getComments()
-                .stream()
-                .filter(comment -> !comment.isReply())
+        List<BlogComment> comments = blogCommentRepository.findCommentsWithWriterAndChildren(blog.getId());
+        
+        // 모든 댓글과 답글의 ID 수집
+        List<Long> allCommentIds = comments.stream()
+                .flatMap(comment -> {
+                    List<Long> ids = new ArrayList<>();
+                    ids.add(comment.getId());
+                    ids.addAll(comment.getChildren().stream()
+                            .map(BlogComment::getId)
+                            .toList());
+                    return ids.stream();
+                })
+                .toList();
+
+        // 좋아요 수 조회
+        Map<Long, Long> heartCounts = blogCommentRepository.findCommentHeartCounts(allCommentIds);
+        
+        // 사용자가 좋아요한 댓글 ID 조회
+        Set<Long> heartedCommentIds = blogCommentRepository.findHeartedCommentIds(allCommentIds, currentUser.getId());
+
+        List<BlogCommentResponse> commentResponses = comments.stream()
                 .map(comment -> {
                     List<BlogCommentResponse> replies = comment.getChildren()
                             .stream()
@@ -273,8 +296,11 @@ public class BlogService {
                                     reply.getContent(),
                                     reply.getCreatedDate(),
                                     reply.getLastModifiedDate(),
-                                    List.of()
+                                    List.of(),
+                                    heartCounts.getOrDefault(reply.getId(), 0L).intValue(),
+                                    heartedCommentIds.contains(reply.getId())
                             ))
+                            .sorted(Comparator.comparing(BlogCommentResponse::createdAt))
                             .toList();
 
                     return BlogCommentResponse.of(
@@ -284,7 +310,9 @@ public class BlogService {
                             comment.getContent(),
                             comment.getCreatedDate(),
                             comment.getLastModifiedDate(),
-                            replies
+                            replies,
+                            heartCounts.getOrDefault(comment.getId(), 0L).intValue(),
+                            heartedCommentIds.contains(comment.getId())
                     );
                 })
                 .sorted(Comparator.comparing(BlogCommentResponse::createdAt))
@@ -300,7 +328,7 @@ public class BlogService {
                 blog.getCreatedDate(),
                 blog.getLastModifiedDate(),
                 images,
-                comments,
+                commentResponses,
                 blog.getHeartCount(),
                 blog.getCommentCount(),
                 isBookmarked,

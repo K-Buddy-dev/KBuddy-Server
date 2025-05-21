@@ -1,6 +1,6 @@
 package com.example.kbuddy_backend.blog.entity;
 
-import com.example.kbuddy_backend.blog.exception.MaximumReplyDepthExceededException;
+import com.example.kbuddy_backend.common.exception.MaximumReplyDepthExceededException;
 import com.example.kbuddy_backend.common.entity.BaseTimeEntity;
 import com.example.kbuddy_backend.user.entity.User;
 import jakarta.persistence.*;
@@ -46,11 +46,10 @@ public class BlogComment extends BaseTimeEntity {
     private List<BlogComment> children = new ArrayList<>();
 
     @Builder
-    public BlogComment(String content, Blog blog, User writer, BlogComment parent) {
+    public BlogComment(String content, Blog blog, User writer) {
         this.content = content;
         this.blog = blog;
         this.writer = writer;
-        this.parent = parent;
     }
 
     public void updateContent(String content) {

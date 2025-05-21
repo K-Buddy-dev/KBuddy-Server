@@ -14,6 +14,7 @@ import com.example.kbuddy_backend.qna.entity.Qna;
 import com.example.kbuddy_backend.qna.entity.QnaBookmark;
 import com.example.kbuddy_backend.qna.entity.QnaHeart;
 import com.example.kbuddy_backend.qna.entity.QnaImage;
+import com.example.kbuddy_backend.qna.entity.QnaComment;
 import com.example.kbuddy_backend.qna.exception.*;
 import com.example.kbuddy_backend.qna.repository.*;
 import com.example.kbuddy_backend.s3.dto.response.S3Response;
@@ -32,7 +33,9 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.example.kbuddy_backend.common.exception.BadRequestException;
@@ -49,6 +52,7 @@ public class QnaService {
     private final QnaBookmarkRepository qnaBookmarkRepository;
     private final QnaImageRepository qnaImageRepository;
     private final S3Service s3Service;
+    private final QnaCommentRepository qnaCommentRepository;
 
     @Transactional
     public QnaResponse saveQna(QnaSaveRequest qnaSaveRequest, List<MultipartFile> imageFiles, User user) {
@@ -239,9 +243,27 @@ public class QnaService {
         boolean isBookmarked = qnaBookmarkRepository.existsByQnaIdAndUserId(qna.getId(), currentUser.getId());
         boolean isHearted = qnaHeartRepository.existsByQnaIdAndUserId(qna.getId(), currentUser.getId());
 
-        List<QnaCommentResponse> comments = qna.getComments()
-                .stream()
-                .filter(comment -> !comment.isReply())
+        List<QnaComment> comments = qnaCommentRepository.findCommentsWithWriterAndChildren(qna.getId());
+        
+        // 모든 댓글과 답글의 ID 수집
+        List<Long> allCommentIds = comments.stream()
+                .flatMap(comment -> {
+                    List<Long> ids = new ArrayList<>();
+                    ids.add(comment.getId());
+                    ids.addAll(comment.getChildren().stream()
+                            .map(QnaComment::getId)
+                            .toList());
+                    return ids.stream();
+                })
+                .toList();
+
+        // 좋아요 수 조회
+        Map<Long, Long> heartCounts = qnaCommentRepository.findCommentHeartCounts(allCommentIds);
+        
+        // 사용자가 좋아요한 댓글 ID 조회
+        Set<Long> heartedCommentIds = qnaCommentRepository.findHeartedCommentIds(allCommentIds, currentUser.getId());
+
+        List<QnaCommentResponse> commentResponses = comments.stream()
                 .map(comment -> {
                     List<QnaCommentResponse> replies = comment.getChildren()
                             .stream()
@@ -252,8 +274,11 @@ public class QnaService {
                                     reply.getContent(),
                                     reply.getCreatedDate(),
                                     reply.getLastModifiedDate(),
-                                    List.of()
+                                    List.of(),
+                                    heartCounts.getOrDefault(reply.getId(), 0L).intValue(),
+                                    heartedCommentIds.contains(reply.getId())
                             ))
+                            .sorted(Comparator.comparing(QnaCommentResponse::createdAt))
                             .toList();
 
                     return QnaCommentResponse.of(
@@ -263,7 +288,9 @@ public class QnaService {
                             comment.getContent(),
                             comment.getCreatedDate(),
                             comment.getLastModifiedDate(),
-                            replies
+                            replies,
+                            heartCounts.getOrDefault(comment.getId(), 0L).intValue(),
+                            heartedCommentIds.contains(comment.getId())
                     );
                 })
                 .sorted(Comparator.comparing(QnaCommentResponse::createdAt))
@@ -271,7 +298,7 @@ public class QnaService {
 
         return QnaResponse.of(qna.getId(), qna.getWriter().getId(), qna.getCategoryCode(), qna.getTitle(),
                 qna.getDescription(), qna.getViewCount(), qna.getCreatedDate(), qna.getLastModifiedDate(),
-                images, comments, qna.getHeartCount(), qna.getCommentCount(), isBookmarked, isHearted,
+                images, commentResponses, qna.getHeartCount(), qna.getCommentCount(), isBookmarked, isHearted,
                 qna.getStatus());
     }
 
@@ -325,31 +352,4 @@ public class QnaService {
     public Qna findQnaById(Long qnaId) {
         return qnaRepository.findById(qnaId).orElseThrow(QnaNotFoundException::new);
     }
-
-    public List<QnaPaginationResponse> getMyDrafts(User currentUser) {
-
-        List<Qna> draftQnas = qnaRepository.findByWriterAndStatus(currentUser, QnaStatus.DRAFT);
-        return draftQnas.stream()
-                .map(qna -> {
-                    boolean isBookmarked = qnaBookmarkRepository.existsByQnaIdAndUserId(qna.getId(), currentUser.getId());
-                    boolean isHearted = qnaHeartRepository.existsByQnaIdAndUserId(qna.getId(), currentUser.getId());
-                    return QnaPaginationResponse.of(
-                            qna.getId(),
-                            qna.getWriter().getId(),
-                            qna.getCategoryCode(),
-                            qna.getTitle(),
-                            qna.getDescription(),
-                            qna.getViewCount(),
-                            qna.getHeartCount(),
-                            qna.getCommentCount(),
-                            qna.getCreatedDate(),
-                            qna.getLastModifiedDate(),
-                            qna.getStatus(),
-                            isBookmarked,
-                            isHearted
-                    );
-                })
-                .collect(Collectors.toList()); // Collect results into a List
-    }
-
 }
