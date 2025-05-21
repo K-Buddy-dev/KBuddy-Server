@@ -6,7 +6,9 @@ import java.util.List;
 public record BlogCommentResponse(
         Long id,
         Long blogId,
-        Long writerId,
+        String writerUuid,
+        String writerName,
+        String writerProfileImageUrl,
         String description,
         LocalDateTime createdAt,
         LocalDateTime modifiedAt,
@@ -14,11 +16,31 @@ public record BlogCommentResponse(
         int heartCount,
         boolean isHearted
 ) {
-    public static BlogCommentResponse of(Long id, Long blogId, Long writerId, String description,
-                                       LocalDateTime createdAt, LocalDateTime modifiedAt,
-                                       List<BlogCommentResponse> replies,
-                                       int heartCount,
-                                       boolean isHearted) {
-        return new BlogCommentResponse(id, blogId, writerId, description, createdAt, modifiedAt, replies, heartCount, isHearted);
+    public static BlogCommentResponse of(
+            Long id,
+            Long blogId,
+            String writerUuid,
+            String writerName,
+            String writerProfileImageUrl,
+            String description,
+            LocalDateTime createdAt,
+            LocalDateTime modifiedAt,
+            List<BlogCommentResponse> replies,
+            int heartCount,
+            boolean isHearted
+    ) {
+        return new BlogCommentResponse(
+                id,
+                blogId,
+                writerUuid,
+                writerName,
+                writerProfileImageUrl,
+                description,
+                createdAt,
+                modifiedAt,
+                replies,
+                heartCount,
+                isHearted
+        );
     }
 }

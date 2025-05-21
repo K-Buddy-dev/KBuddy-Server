@@ -134,10 +134,27 @@ public class BlogService {
                 .map(blog -> {
                     boolean isBookmarked = currentUser != null && blogBookmarkRepository.existsByBlogIdAndUserId(blog.getId(), currentUser.getId());
                     boolean isHearted = currentUser != null && blogHeartRepository.existsByBlogIdAndUserId(blog.getId(), currentUser.getId());
-                    return BlogPaginationResponse.of(blog.getId(), blog.getWriter().getId(), blog.getCategoryCode(),
-                            blog.getTitle(), blog.getDescription(), blog.getViewCount(), blog.getHeartCount(),
-                            blog.getCommentCount(), blog.getCreatedDate(),
-                            blog.getLastModifiedDate(), blog.getStatus(), isBookmarked, isHearted);
+                    String thumbnailImageUrl = blog.getImageUrls() != null && !blog.getImageUrls().isEmpty()
+                            ? blog.getImageUrls().get(0).getImageUrl()
+                            : "";
+                    return BlogPaginationResponse.of(
+                            blog.getId(),
+                            blog.getWriter().getUuid().toString(),
+                            blog.getWriter().getUsername(),
+                            blog.getWriter().getProfileImageUrl() != null ? blog.getWriter().getProfileImageUrl() : "",
+                            blog.getCategoryCode(),
+                            blog.getTitle(),
+                            blog.getDescription(),
+                            blog.getViewCount(),
+                            blog.getHeartCount(),
+                            blog.getCommentCount(),
+                            blog.getCreatedDate(),
+                            blog.getLastModifiedDate(),
+                            blog.getStatus(),
+                            isBookmarked,
+                            isHearted,
+                            thumbnailImageUrl
+                    );
                 })
                 .toList();
 
@@ -292,7 +309,9 @@ public class BlogService {
                             .map(reply -> BlogCommentResponse.of(
                                     reply.getId(),
                                     reply.getBlog().getId(),
-                                    reply.getWriter().getId(),
+                                    reply.getWriter().getUuid().toString(),
+                                    reply.getWriter().getUsername(),
+                                    reply.getWriter().getProfileImageUrl() != null ? reply.getWriter().getProfileImageUrl() : "",
                                     reply.getContent(),
                                     reply.getCreatedDate(),
                                     reply.getLastModifiedDate(),
@@ -306,7 +325,9 @@ public class BlogService {
                     return BlogCommentResponse.of(
                             comment.getId(),
                             comment.getBlog().getId(),
-                            comment.getWriter().getId(),
+                            comment.getWriter().getUuid().toString(),
+                            comment.getWriter().getUsername(),
+                            comment.getWriter().getProfileImageUrl() != null ? comment.getWriter().getProfileImageUrl() : "",
                             comment.getContent(),
                             comment.getCreatedDate(),
                             comment.getLastModifiedDate(),
@@ -320,7 +341,9 @@ public class BlogService {
 
         return BlogResponse.of(
                 blog.getId(),
-                blog.getWriter().getId(),
+                blog.getWriter().getUuid().toString(),
+                blog.getWriter().getUsername(),
+                blog.getWriter().getProfileImageUrl() != null ? blog.getWriter().getProfileImageUrl() : "",
                 blog.getCategoryCode(),
                 blog.getTitle(),
                 blog.getDescription(),

@@ -8,7 +8,9 @@ import java.util.List;
 
 public record BlogResponse(
         Long id,
-        Long writerId,
+        String writerUuid,
+        String writerName,
+        String writerProfileImageUrl,
         List<Integer> categoryId,
         String title,
         String description,
@@ -23,12 +25,43 @@ public record BlogResponse(
         boolean isHearted,
         BlogStatus status
 ) {
-    public static BlogResponse of(Long id, Long writerId, List<Integer> categoryId, String title, String description, 
-                                int viewCount, LocalDateTime createdAt, LocalDateTime modifiedAt,
-                                List<ImageFileDto> images, List<BlogCommentResponse> comments, 
-                                int heartCount, int commentCount, boolean isBookmarked, boolean isHearted, 
-                                BlogStatus status) {
-        return new BlogResponse(id, writerId, categoryId, title, description, viewCount, createdAt, modifiedAt,
-                images, comments, heartCount, commentCount, isBookmarked, isHearted, status);
+    public static BlogResponse of(
+            Long id,
+            String writerUuid,
+            String writerName,
+            String writerProfileImageUrl,
+            List<Integer> categoryId,
+            String title,
+            String description,
+            int viewCount,
+            LocalDateTime createdAt,
+            LocalDateTime modifiedAt,
+            List<ImageFileDto> images,
+            List<BlogCommentResponse> comments,
+            int heartCount,
+            int commentCount,
+            boolean isBookmarked,
+            boolean isHearted,
+            BlogStatus status
+    ) {
+        return new BlogResponse(
+                id,
+                writerUuid,
+                writerName,
+                writerProfileImageUrl,
+                categoryId,
+                title,
+                description,
+                viewCount,
+                createdAt,
+                modifiedAt,
+                images,
+                comments,
+                heartCount,
+                commentCount,
+                isBookmarked,
+                isHearted,
+                status
+        );
     }
 }

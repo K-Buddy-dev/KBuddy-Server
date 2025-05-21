@@ -129,10 +129,27 @@ public class QnaService {
                 .map(qna -> {
                     boolean isBookmarked = currentUser != null && qnaBookmarkRepository.existsByQnaIdAndUserId(qna.getId(), currentUser.getId());
                     boolean isHearted = currentUser != null && qnaHeartRepository.existsByQnaIdAndUserId(qna.getId(), currentUser.getId());
-                    return QnaPaginationResponse.of(qna.getId(), qna.getWriter().getId(), qna.getCategoryCode(),
-                            qna.getTitle(), qna.getDescription(), qna.getViewCount(), qna.getHeartCount(),
-                            qna.getCommentCount(), qna.getCreatedDate(),
-                            qna.getLastModifiedDate(), qna.getStatus(), isBookmarked, isHearted);
+                    String thumbnailImageUrl = qna.getImageUrls() != null && !qna.getImageUrls().isEmpty()
+                            ? qna.getImageUrls().get(0).getImageUrl()
+                            : "";
+                    return QnaPaginationResponse.of(
+                            qna.getId(),
+                            qna.getWriter().getUuid().toString(),
+                            qna.getWriter().getUsername(),
+                            qna.getWriter().getProfileImageUrl() != null ? qna.getWriter().getProfileImageUrl() : "",
+                            qna.getCategoryCode(),
+                            qna.getTitle(),
+                            qna.getDescription(),
+                            qna.getViewCount(),
+                            qna.getHeartCount(),
+                            qna.getCommentCount(),
+                            qna.getCreatedDate(),
+                            qna.getLastModifiedDate(),
+                            qna.getStatus(),
+                            isBookmarked,
+                            isHearted,
+                            thumbnailImageUrl
+                    );
                 })
                 .toList();
 
@@ -236,7 +253,7 @@ public class QnaService {
     private QnaResponse createQnaResponseDto(Qna qna, User currentUser) {
         List<ImageFileDto> images = qna.getImageUrls()
                 .stream()
-                .map(qnaImage -> new ImageFileDto(qnaImage.getId(), qnaImage.getFileType(), qnaImage.getFilePath(),
+                .map(qnaImage -> ImageFileDto.of(qnaImage.getId(), qnaImage.getFileType(), qnaImage.getFilePath(),
                         qnaImage.getImageUrl()))
                 .toList();
 
@@ -270,7 +287,9 @@ public class QnaService {
                             .map(reply -> QnaCommentResponse.of(
                                     reply.getId(),
                                     reply.getQna().getId(),
-                                    reply.getWriter().getId(),
+                                    reply.getWriter().getUuid().toString(),
+                                    reply.getWriter().getUsername(),
+                                    reply.getWriter().getProfileImageUrl() != null ? reply.getWriter().getProfileImageUrl() : "",
                                     reply.getContent(),
                                     reply.getCreatedDate(),
                                     reply.getLastModifiedDate(),
@@ -284,7 +303,9 @@ public class QnaService {
                     return QnaCommentResponse.of(
                             comment.getId(),
                             comment.getQna().getId(),
-                            comment.getWriter().getId(),
+                            comment.getWriter().getUuid().toString(),
+                            comment.getWriter().getUsername(),
+                            comment.getWriter().getProfileImageUrl() != null ? comment.getWriter().getProfileImageUrl() : "",
                             comment.getContent(),
                             comment.getCreatedDate(),
                             comment.getLastModifiedDate(),
@@ -296,10 +317,25 @@ public class QnaService {
                 .sorted(Comparator.comparing(QnaCommentResponse::createdAt))
                 .toList();
 
-        return QnaResponse.of(qna.getId(), qna.getWriter().getId(), qna.getCategoryCode(), qna.getTitle(),
-                qna.getDescription(), qna.getViewCount(), qna.getCreatedDate(), qna.getLastModifiedDate(),
-                images, commentResponses, qna.getHeartCount(), qna.getCommentCount(), isBookmarked, isHearted,
-                qna.getStatus());
+        return QnaResponse.of(
+                qna.getId(),
+                qna.getWriter().getUuid().toString(),
+                qna.getWriter().getUsername(),
+                qna.getWriter().getProfileImageUrl() != null ? qna.getWriter().getProfileImageUrl() : "",
+                qna.getCategoryCode(),
+                qna.getTitle(),
+                qna.getDescription(),
+                qna.getViewCount(),
+                qna.getCreatedDate(),
+                qna.getLastModifiedDate(),
+                images,
+                commentResponses,
+                qna.getHeartCount(),
+                qna.getCommentCount(),
+                isBookmarked,
+                isHearted,
+                qna.getStatus()
+        );
     }
 
     private void saveImageFiles(List<ImageFileDto> imageFiles, Qna qna) {
