@@ -25,7 +25,7 @@ public class FirebaseConfig {
     public FirebaseApp firebaseApp() throws IOException {
         if (FirebaseApp.getApps().isEmpty()) {
             // 환경 변수에서 Firebase 설정 정보를 가져와서 Map으로 구성
-            Map<String, Object> firebaseConfig = new HashMap<>();
+            Map<String, String> firebaseConfig = new HashMap<>();
             firebaseConfig.put("type", env.getProperty("FIREBASE_TYPE"));
             firebaseConfig.put("project_id", env.getProperty("FIREBASE_PROJECT_ID"));
             firebaseConfig.put("private_key_id", env.getProperty("FIREBASE_PRIVATE_KEY_ID"));
@@ -34,7 +34,7 @@ public class FirebaseConfig {
             String privateKey = env.getProperty("FIREBASE_PRIVATE_KEY");
             if (privateKey != null) {
                 // 개인 키에서 불필요한 이스케이프 문자 제거
-//                privateKey = privateKey.replace("\\n", "\n");
+                privateKey = privateKey.replace("\\n", "\n");
             }
             firebaseConfig.put("private_key", privateKey);
             
