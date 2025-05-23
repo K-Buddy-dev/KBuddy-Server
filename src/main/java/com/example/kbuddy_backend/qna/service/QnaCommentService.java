@@ -1,5 +1,6 @@
 package com.example.kbuddy_backend.qna.service;
 
+import com.example.kbuddy_backend.common.exception.MaximumReplyDepthExceededException;
 import com.example.kbuddy_backend.qna.dto.request.QnaCommentSaveRequest;
 import com.example.kbuddy_backend.qna.entity.Qna;
 import com.example.kbuddy_backend.qna.entity.QnaComment;
@@ -9,12 +10,10 @@ import com.example.kbuddy_backend.qna.exception.NotWriterException;
 import com.example.kbuddy_backend.qna.exception.QnaCommentNotFoundException;
 import com.example.kbuddy_backend.qna.repository.QnaCommentRepository;
 import com.example.kbuddy_backend.qna.repository.QnaHeartRepository;
-import com.example.kbuddy_backend.qna.repository.QnaRepository;
 import com.example.kbuddy_backend.user.entity.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.util.Objects;
 
 @Service
@@ -22,59 +21,77 @@ import java.util.Objects;
 @RequiredArgsConstructor
 public class QnaCommentService {
 
+	private final QnaCommentRepository qnaCommentRepository;
+	private final QnaHeartRepository qnaHeartRepository;
+	private final QnaService qnaService;
 
-    private final QnaCommentRepository qnaCommentRepository;
-    private final QnaHeartRepository qnaHeartRepository;
+	@Transactional
+	public void saveQnaComment(Long qnaId, QnaCommentSaveRequest request, User user) {
+		Qna qna = qnaService.findQnaById(qnaId);
 
-    private final QnaService qnaService;
+		QnaComment parent = null;
+		if (request.parentId() != null) {
+			parent = qnaCommentRepository.findById(request.parentId())
+				.orElseThrow(QnaCommentNotFoundException::new);
+			if (parent.isReply()) {
+				throw new MaximumReplyDepthExceededException();
+			}
+		}
 
-    @Transactional
-    public void saveQnaComment(Long qnaId,QnaCommentSaveRequest qnaCommentSaveRequest, User user) {
-        final Qna qna = qnaService.findQnaById(qnaId);
-        QnaComment qnaComment = QnaComment.builder()
-                .content(qnaCommentSaveRequest.content())
-                .qna(qna)
-                .writer(user)
-                .build();
-        qnaCommentRepository.save(qnaComment);
-    }
+		QnaComment qnaComment = QnaComment.builder()
+			.content(request.content())
+			.qna(qna)
+			.writer(user)
+			.build();
 
-    @Transactional
-    public void plusHeart(Long commentId, User user) {
-        qnaHeartRepository.findByQnaCommentIdAndUserId(commentId, user.getId())
-                .ifPresent(qnaHeart -> {
-                    throw new DuplicatedQnaCommentHeartException();
-                });
-        QnaComment qnaComment = findQnaCommentById(commentId);
-        QnaHeart qnaHeart = new QnaHeart(user, qnaComment);
-        qnaComment.plusHeart(qnaHeart);
-        qnaHeartRepository.save(qnaHeart);
-    }
+		if (parent != null) {
+			parent.addChild(qnaComment);
+		}
+		
+		qnaCommentRepository.save(qnaComment);
+	}
 
-    @Transactional
-    public void minusHeart(Long commentId, User user) {
-        QnaComment qnaComment = findQnaCommentById(commentId);
-        QnaHeart byQnaIdAndUserId = qnaHeartRepository.findByQnaCommentIdAndUserId(commentId, user.getId()).orElseThrow(QnaCommentNotFoundException::new);
-        qnaComment.minusHeart(byQnaIdAndUserId);
-        qnaHeartRepository.deleteByQnaCommentIdAndUserId(commentId, user.getId());
-    }
+	@Transactional
+	public void updateQnaComment(Long commentId, QnaCommentSaveRequest request, User user) {
+		QnaComment comment = findQnaCommentById(commentId);
+		if (!Objects.equals(comment.getWriter().getId(), user.getId())) {
+			throw new NotWriterException();
+		}
+		comment.updateContent(request.content());
+	}
 
-    private QnaComment findQnaCommentById(Long commentId) {
-        return qnaCommentRepository.findById(commentId)
-                .orElseThrow(QnaCommentNotFoundException::new);
-    }
+	@Transactional
+	public void deleteQnaComment(Long commentId, User user) {
+		QnaComment comment = findQnaCommentById(commentId);
+		if (!Objects.equals(comment.getWriter().getId(), user.getId())) {
+			throw new NotWriterException();
+		}
+		qnaCommentRepository.delete(comment);
+	}
 
-    @Transactional
-    public void updateQnaComment(Long qnaId, Long commentId, QnaCommentSaveRequest qnaCommentSaveRequest, User user) {
-        Qna qnaById = qnaService.findQnaById(qnaId);
-        QnaComment qnaComment = findQnaCommentById(commentId);
-        isQnaCommentWriter(user, qnaById);
-        qnaComment.updateContent(qnaCommentSaveRequest.content());
-    }
+	@Transactional
+	public void plusHeart(Long commentId, User user) {
+		qnaHeartRepository.findByQnaCommentIdAndUserId(commentId, user.getId())
+			.ifPresent(qnaHeart -> {
+				throw new DuplicatedQnaCommentHeartException();
+			});
+		QnaComment qnaComment = findQnaCommentById(commentId);
+		QnaHeart qnaHeart = new QnaHeart(user, qnaComment);
+		qnaComment.plusHeart(qnaHeart);
+		qnaHeartRepository.save(qnaHeart);
+	}
 
-    private static void isQnaCommentWriter(User user, Qna qnaById) {
-        if (!Objects.equals(qnaById.getWriter().getId(), user.getId())) {
-            throw new NotWriterException();
-        }
-    }
+	@Transactional
+	public void minusHeart(Long commentId, User user) {
+		QnaComment qnaComment = findQnaCommentById(commentId);
+		QnaHeart byQnaIdAndUserId = qnaHeartRepository.findByQnaCommentIdAndUserId(commentId, user.getId())
+			.orElseThrow(QnaCommentNotFoundException::new);
+		qnaComment.minusHeart(byQnaIdAndUserId);
+		qnaHeartRepository.deleteByQnaCommentIdAndUserId(commentId, user.getId());
+	}
+
+	private QnaComment findQnaCommentById(Long commentId) {
+		return qnaCommentRepository.findById(commentId)
+			.orElseThrow(QnaCommentNotFoundException::new);
+	}
 }

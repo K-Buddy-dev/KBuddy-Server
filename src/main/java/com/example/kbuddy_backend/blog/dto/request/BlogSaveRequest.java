@@ -12,12 +12,12 @@ public record BlogSaveRequest(
         @NotNull(message = "카테고리 ID는 필수입니다.")
         List<Integer> categoryId,
 
-        @Schema(description = "게시글 제목", example = "블로그 게시글 제목1", maxLength = 100, requiredMode = Schema.RequiredMode.REQUIRED)
+        @Schema(description = "게시글 제목", example = "블로그 게시글 제목", maxLength = 100, requiredMode = Schema.RequiredMode.REQUIRED)
         @NotNull(message = "제목 필드는 필수입니다.")
         @Size(max = 100, message = "제목은 최대 100자까지 입력 가능합니다.")
         String title,
 
-        @Schema(description = "게시글 내용", example = "블로그 게시글 내용1", requiredMode = Schema.RequiredMode.REQUIRED)
+        @Schema(description = "게시글 내용", example = "블로그 게시글 내용", requiredMode = Schema.RequiredMode.REQUIRED)
         @NotNull(message = "내용 필드는 필수입니다.")
         String description,
 

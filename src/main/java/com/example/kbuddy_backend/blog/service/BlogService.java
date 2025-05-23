@@ -12,6 +12,7 @@ import com.example.kbuddy_backend.blog.entity.BlogHeart;
 import com.example.kbuddy_backend.blog.entity.BlogBookmark;
 import com.example.kbuddy_backend.blog.entity.BlogImage;
 import com.example.kbuddy_backend.blog.entity.BlogReport;
+import com.example.kbuddy_backend.blog.entity.BlogComment;
 import com.example.kbuddy_backend.blog.exception.*;
 import com.example.kbuddy_backend.blog.repository.*;
 import com.example.kbuddy_backend.common.constant.ImageFileType;
@@ -36,6 +37,11 @@ import com.example.kbuddy_backend.blog.dto.response.BlogPaginationResponse;
 
 import java.util.List;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
+import java.util.Map;
+import java.util.Set;
 
 @Service
 @Transactional(readOnly = true)
@@ -49,6 +55,7 @@ public class BlogService {
     private final BlogBookmarkRepository blogBookmarkRepository;
     private final BlogImageRepository blogImageRepository;
     private final BlogReportRepository blogReportRepository;
+    private final BlogCommentRepository blogCommentRepository;
     private final S3Service s3Service;
 
     // 새로운 블로그를 저장
@@ -127,10 +134,27 @@ public class BlogService {
                 .map(blog -> {
                     boolean isBookmarked = currentUser != null && blogBookmarkRepository.existsByBlogIdAndUserId(blog.getId(), currentUser.getId());
                     boolean isHearted = currentUser != null && blogHeartRepository.existsByBlogIdAndUserId(blog.getId(), currentUser.getId());
-                    return BlogPaginationResponse.of(blog.getId(), blog.getWriter().getId(), blog.getCategoryCode(),
-                            blog.getTitle(), blog.getDescription(), blog.getViewCount(), blog.getHeartCount(),
-                            blog.getCommentCount(), blog.getCreatedDate(),
-                            blog.getLastModifiedDate(), blog.getStatus(), isBookmarked, isHearted);
+                    String thumbnailImageUrl = blog.getImageUrls() != null && !blog.getImageUrls().isEmpty()
+                            ? blog.getImageUrls().get(0).getImageUrl()
+                            : "";
+                    return BlogPaginationResponse.of(
+                            blog.getId(),
+                            blog.getWriter().getUuid().toString(),
+                            blog.getWriter().getUsername(),
+                            blog.getWriter().getProfileImageUrl() != null ? blog.getWriter().getProfileImageUrl() : "",
+                            blog.getCategoryCode(),
+                            blog.getTitle(),
+                            blog.getDescription(),
+                            blog.getViewCount(),
+                            blog.getHeartCount(),
+                            blog.getCommentCount(),
+                            blog.getCreatedDate(),
+                            blog.getLastModifiedDate(),
+                            blog.getStatus(),
+                            isBookmarked,
+                            isHearted,
+                            thumbnailImageUrl
+                    );
                 })
                 .toList();
 
@@ -247,26 +271,93 @@ public class BlogService {
     private BlogResponse createBlogResponseDto(Blog blog, User currentUser) {
         List<ImageFileDto> images = blog.getImageUrls()
                 .stream()
-                .map(blogImage -> new ImageFileDto(blogImage.getId(),blogImage.getFileType(), blogImage.getFilePath(),
+                .map(blogImage -> ImageFileDto.of(
+                        blogImage.getId(),
+                        blogImage.getFileType(),
+                        blogImage.getFilePath(),
                         blogImage.getImageUrl()
                 ))
                 .toList();
-        // 북마크, 좋아요된 게시글인지 여부
+
         boolean isBookmarked = blogBookmarkRepository.existsByBlogIdAndUserId(blog.getId(), currentUser.getId());
         boolean isHearted = blogHeartRepository.existsByBlogIdAndUserId(blog.getId(), currentUser.getId());
-        List<BlogCommentResponse> comments = blog.getComments()
-                .stream()
-                .map(blogComment ->
-                        BlogCommentResponse.of(blogComment.getId(), blogComment.getBlog().getId(),
-                                blogComment.getWriter().getId(),
-                                blogComment.getContent(), blogComment.getCreatedDate(),
-                                blogComment.getLastModifiedDate()))
-                .sorted(Comparator.comparing(BlogCommentResponse::createdAt)) // 만들어진 시간으로 오름차순 반환
+
+        List<BlogComment> comments = blogCommentRepository.findCommentsWithWriterAndChildren(blog.getId());
+        
+        // 모든 댓글과 답글의 ID 수집
+        List<Long> allCommentIds = comments.stream()
+                .flatMap(comment -> {
+                    List<Long> ids = new ArrayList<>();
+                    ids.add(comment.getId());
+                    ids.addAll(comment.getChildren().stream()
+                            .map(BlogComment::getId)
+                            .toList());
+                    return ids.stream();
+                })
                 .toList();
 
-        return BlogResponse.of(blog.getId(), blog.getWriter().getId(), blog.getCategoryCode(), blog.getTitle(),
-                blog.getDescription(), blog.getViewCount(), blog.getCreatedDate(), blog.getLastModifiedDate(),
-                images, comments, blog.getHeartCount(), blog.getCommentCount(), isBookmarked, isHearted, blog.getStatus());
+        // 좋아요 수 조회
+        Map<Long, Long> heartCounts = blogCommentRepository.findCommentHeartCounts(allCommentIds);
+        
+        // 사용자가 좋아요한 댓글 ID 조회
+        Set<Long> heartedCommentIds = blogCommentRepository.findHeartedCommentIds(allCommentIds, currentUser.getId());
+
+        List<BlogCommentResponse> commentResponses = comments.stream()
+                .map(comment -> {
+                    List<BlogCommentResponse> replies = comment.getChildren()
+                            .stream()
+                            .map(reply -> BlogCommentResponse.of(
+                                    reply.getId(),
+                                    reply.getBlog().getId(),
+                                    reply.getWriter().getUuid().toString(),
+                                    reply.getWriter().getUsername(),
+                                    reply.getWriter().getProfileImageUrl() != null ? reply.getWriter().getProfileImageUrl() : "",
+                                    reply.getContent(),
+                                    reply.getCreatedDate(),
+                                    reply.getLastModifiedDate(),
+                                    List.of(),
+                                    heartCounts.getOrDefault(reply.getId(), 0L).intValue(),
+                                    heartedCommentIds.contains(reply.getId())
+                            ))
+                            .sorted(Comparator.comparing(BlogCommentResponse::createdAt))
+                            .toList();
+
+                    return BlogCommentResponse.of(
+                            comment.getId(),
+                            comment.getBlog().getId(),
+                            comment.getWriter().getUuid().toString(),
+                            comment.getWriter().getUsername(),
+                            comment.getWriter().getProfileImageUrl() != null ? comment.getWriter().getProfileImageUrl() : "",
+                            comment.getContent(),
+                            comment.getCreatedDate(),
+                            comment.getLastModifiedDate(),
+                            replies,
+                            heartCounts.getOrDefault(comment.getId(), 0L).intValue(),
+                            heartedCommentIds.contains(comment.getId())
+                    );
+                })
+                .sorted(Comparator.comparing(BlogCommentResponse::createdAt))
+                .toList();
+
+        return BlogResponse.of(
+                blog.getId(),
+                blog.getWriter().getUuid().toString(),
+                blog.getWriter().getUsername(),
+                blog.getWriter().getProfileImageUrl() != null ? blog.getWriter().getProfileImageUrl() : "",
+                blog.getCategoryCode(),
+                blog.getTitle(),
+                blog.getDescription(),
+                blog.getViewCount(),
+                blog.getCreatedDate(),
+                blog.getLastModifiedDate(),
+                images,
+                commentResponses,
+                blog.getHeartCount(),
+                blog.getCommentCount(),
+                isBookmarked,
+                isHearted,
+                blog.getStatus()
+        );
     }
 
     private void saveImageFiles(List<ImageFileDto> imageFiles, Blog blog) {
@@ -349,5 +440,10 @@ public class BlogService {
 
     public Blog findBlogById(Long blogId) {
         return blogRepository.findById(blogId).orElseThrow(BlogNotFoundException::new);
+    }
+
+    public Page<BlogResponse> findBlogs(Pageable pageable, User currentUser) {
+        return blogRepository.findAll(pageable)
+                .map(blog -> createBlogResponseDto(blog, currentUser));
     }
 }

@@ -19,6 +19,7 @@ import com.example.kbuddy_backend.s3.dto.response.S3Response;
 import com.example.kbuddy_backend.common.exception.BadRequestException;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -122,7 +123,7 @@ public class UserService {
         List<DraftListResponse> allDrafts = new ArrayList<>();
         allDrafts.addAll(qnaDrafts);
         allDrafts.addAll(blogDrafts);
-
+        allDrafts.sort(Comparator.comparing(DraftListResponse::createdAt).reversed());
         return allDrafts;
     }
 }

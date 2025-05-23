@@ -104,4 +104,4 @@ public class BlogRepositoryImpl implements BlogRepositoryCustom {
             return blog.id.desc();
         }
     }
-} 
+}
