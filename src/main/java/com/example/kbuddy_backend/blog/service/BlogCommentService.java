@@ -6,12 +6,16 @@ import com.example.kbuddy_backend.blog.entity.BlogComment;
 import com.example.kbuddy_backend.blog.entity.BlogHeart;
 import com.example.kbuddy_backend.blog.exception.BlogCommentNotFoundException;
 import com.example.kbuddy_backend.blog.exception.DuplicatedBlogCommentHeartException;
+import com.example.kbuddy_backend.common.exception.MaximumReplyDepthExceededException;
 import com.example.kbuddy_backend.blog.exception.NotWriterException;
 import com.example.kbuddy_backend.blog.repository.BlogCommentRepository;
 import com.example.kbuddy_backend.blog.repository.BlogHeartRepository;
 import com.example.kbuddy_backend.user.entity.User;
+
 import java.util.Objects;
+
 import lombok.RequiredArgsConstructor;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,59 +24,79 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class BlogCommentService {
 
-    private final BlogCommentRepository blogCommentRepository;
-    private final BlogHeartRepository blogHeartRepository;
+	private final BlogCommentRepository blogCommentRepository;
+	private final BlogHeartRepository blogHeartRepository;
 
-    private final BlogService blogService;
+	private final BlogService blogService;
 
-    @Transactional
-    public void saveBlogComment(Long qnaId, BlogCommentSaveRequest blogCommentSaveRequest, User user) {
-        final Blog blog = blogService.findBlogById(qnaId);
-        BlogComment blogComment = BlogComment.builder()
-                .content(blogCommentSaveRequest.content())
-                .blog(blog)
-                .writer(user)
-                .build();
-        blogCommentRepository.save(blogComment);
-    }
+	@Transactional
+	public void saveBlogComment(Long blogId, BlogCommentSaveRequest request, User user) {
+		Blog blog = blogService.findBlogById(blogId);
 
-    @Transactional
-    public void plusHeart(Long commentId, User user) {
-        blogHeartRepository.findByBlogCommentIdAndUserId(commentId, user.getId())
-                .ifPresent(blogHeart -> {
-                    throw new DuplicatedBlogCommentHeartException();
-                });
-        BlogComment blogComment = findBlogCommentById(commentId);
-        BlogHeart blogHeart = new BlogHeart(user, blogComment);
-        blogComment.plusHeart(blogHeart);
-        blogHeartRepository.save(blogHeart);
-    }
+		BlogComment parent = null;
+		if (request.parentId() != null) {
+			parent = blogCommentRepository.findById(request.parentId())
+				.orElseThrow(BlogCommentNotFoundException::new);
+			// 대댓글의 대댓글 방지
+			if (parent.isReply()) {
+				throw new MaximumReplyDepthExceededException();
+			}
+		}
 
-    @Transactional
-    public void minusHeart(Long commentId, User user) {
-        BlogComment blogComment = findBlogCommentById(commentId);
-        BlogHeart byBlogIdAndUserId = blogHeartRepository.findByBlogCommentIdAndUserId(commentId, user.getId()).orElseThrow(BlogCommentNotFoundException::new);
-        blogComment.minusHeart(byBlogIdAndUserId);
-        blogHeartRepository.deleteByBlogCommentIdAndUserId(commentId, user.getId());
-    }
+		BlogComment blogComment = BlogComment.builder()
+			.content(request.content())
+			.blog(blog)
+			.writer(user)
+			.build();
 
-    private BlogComment findBlogCommentById(Long commentId) {
-        return blogCommentRepository.findById(commentId)
-            .orElseThrow(BlogCommentNotFoundException::new);
-    }
+		if (parent != null) {
+			parent.addChild(blogComment);
+		}
+		
+		blogCommentRepository.save(blogComment);
+	}
 
-    // 블로그 댓글 수정 메소드 추가
-    @Transactional
-    public void updateBlogComment(Long blogId, Long commentId, BlogCommentSaveRequest blogCommentSaveRequest, User user) {
-        Blog blogById = blogService.findBlogById(blogId);
-        BlogComment blogComment = findBlogCommentById(commentId);
-        isBlogCommentWriter(user, blogById);
-        blogComment.updateContent(blogCommentSaveRequest.content());
-    }
+	@Transactional
+	public void updateBlogComment(Long commentId, BlogCommentSaveRequest request, User user) {
+		BlogComment comment = findBlogCommentById(commentId);
+		if (!Objects.equals(comment.getWriter().getId(), user.getId())) {
+			throw new NotWriterException();
+		}
+		comment.updateContent(request.content());
+	}
 
-    private static void isBlogCommentWriter(User user, Blog blogById) {
-        if (!Objects.equals(blogById.getWriter().getId(), user.getId())) {
-            throw new NotWriterException();
-        }
-    }
+	@Transactional
+	public void deleteBlogComment(Long commentId, User user) {
+		BlogComment comment = findBlogCommentById(commentId);
+		if (!Objects.equals(comment.getWriter().getId(), user.getId())) {
+			throw new NotWriterException();
+		}
+		blogCommentRepository.delete(comment);
+	}
+
+	@Transactional
+	public void plusHeart(Long commentId, User user) {
+		blogHeartRepository.findByBlogCommentIdAndUserId(commentId, user.getId())
+			.ifPresent(blogHeart -> {
+				throw new DuplicatedBlogCommentHeartException();
+			});
+		BlogComment blogComment = findBlogCommentById(commentId);
+		BlogHeart blogHeart = new BlogHeart(user, blogComment);
+		blogComment.plusHeart(blogHeart);
+		blogHeartRepository.save(blogHeart);
+	}
+
+	@Transactional
+	public void minusHeart(Long commentId, User user) {
+		BlogComment blogComment = findBlogCommentById(commentId);
+		BlogHeart byBlogIdAndUserId = blogHeartRepository.findByBlogCommentIdAndUserId(commentId, user.getId())
+			.orElseThrow(BlogCommentNotFoundException::new);
+		blogComment.minusHeart(byBlogIdAndUserId);
+		blogHeartRepository.deleteByBlogCommentIdAndUserId(commentId, user.getId());
+	}
+
+	private BlogComment findBlogCommentById(Long commentId) {
+		return blogCommentRepository.findById(commentId)
+			.orElseThrow(BlogCommentNotFoundException::new);
+	}
 }

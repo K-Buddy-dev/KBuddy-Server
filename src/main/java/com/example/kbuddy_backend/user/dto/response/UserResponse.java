@@ -3,6 +3,7 @@ package com.example.kbuddy_backend.user.dto.response;
 import com.example.kbuddy_backend.user.constant.Country;
 import com.example.kbuddy_backend.user.constant.Gender;
 import com.example.kbuddy_backend.user.entity.Authority;
+import com.example.kbuddy_backend.user.entity.User;
 import java.time.LocalDateTime;
 import java.util.List;
 
