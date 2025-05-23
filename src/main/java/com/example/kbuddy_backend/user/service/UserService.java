@@ -45,7 +45,7 @@ public class UserService {
         List<String> authorities = findUser.getAuthorities().stream()
                 .map(authority -> authority.getAuthorityName().name())
                 .toList();
-        return UserResponse.of(findUser.getId(), findUser.getUsername(), findUser.getEmail(), authorities,
+        return UserResponse.of(findUser.getUuid().toString(), findUser.getUsername(), findUser.getEmail(), authorities,
                 findUser.getProfileImageUrl(), findUser.getBio(), findUser.getFirstName(), findUser.getLastName(),
                 findUser.getCreatedDate(), findUser.getGender(), findUser.getCountry(), findUser.isActive());
     }
@@ -78,7 +78,7 @@ public class UserService {
         List<DraftListResponse> qnaDrafts = draftQnas.stream()
                 .map(qna -> DraftListResponse.of(
                         qna.getId(),
-                        qna.getWriter().getId(),
+                        qna.getWriter().getUuid().toString(),
                         QnaType,
                         qna.getCategoryCode(),
                         qna.getTitle(),
@@ -102,7 +102,7 @@ public class UserService {
         List<DraftListResponse> blogDrafts = draftBlogs.stream()
                 .map(blog -> DraftListResponse.of(
                         blog.getId(),
-                        blog.getWriter().getId(),
+                        blog.getWriter().getUuid().toString(),
                         BlogType,
                         blog.getCategoryCode(),
                         blog.getTitle(),

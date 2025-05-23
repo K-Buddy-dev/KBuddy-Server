@@ -181,7 +181,7 @@ public class BlogService {
             if (currentUser == null) {
                 throw new AccessDeniedException("로그인이 필요합니다.");
             }
-            if (!Objects.equals(blogById.getWriter().getId(), currentUser.getId())) {
+            if (!Objects.equals(blogById.getWriter().getUuid(), currentUser.getUuid())) {
                 throw new AccessDeniedException("임시 저장된 글은 작성자만 조회할 수 있습니다."); // Or use NotWriterException
             }
         }
@@ -232,7 +232,7 @@ public class BlogService {
     }
 
     private static void isBlogWriter(User user, Blog blogById) {
-        if (!Objects.equals(blogById.getWriter().getId(), user.getId())) {
+        if (!Objects.equals(blogById.getWriter().getUuid(), user.getUuid())) {
             throw new NotWriterException();
         }
     }

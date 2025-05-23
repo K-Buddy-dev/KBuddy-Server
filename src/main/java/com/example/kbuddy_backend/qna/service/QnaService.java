@@ -176,7 +176,7 @@ public class QnaService {
             if (currentUser == null) {
                 throw new AccessDeniedException("로그인이 필요합니다.");
             }
-            if (!Objects.equals(qnaById.getWriter().getId(), currentUser.getId())) {
+            if (!Objects.equals(qnaById.getWriter().getUuid(), currentUser.getUuid())) {
                 throw new AccessDeniedException("임시 저장된 글은 작성자만 조회할 수 있습니다."); // Or use NotWriterException
             }
         }
@@ -218,7 +218,7 @@ public class QnaService {
     }
 
     private static void isQnaWriter(User user, Qna qnaById) {
-        if (!Objects.equals(qnaById.getWriter().getId(), user.getId())) {
+        if (!Objects.equals(qnaById.getWriter().getUuid(), user.getUuid())) {
             throw new NotWriterException();
         }
     }
