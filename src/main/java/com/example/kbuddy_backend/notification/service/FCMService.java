@@ -5,9 +5,14 @@ import com.example.kbuddy_backend.user.entity.User;
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.messaging.Message;
 import com.google.firebase.messaging.Notification;
+import com.google.firebase.messaging.ApnsConfig;
+import com.google.firebase.messaging.Aps;
+import com.google.firebase.messaging.AndroidConfig;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 
 @Service
@@ -27,12 +32,29 @@ public class FCMService {
             // 알림 메시지 생성
             Message message = Message.builder()
                     .setToken(token)
+                    // Foreground용 Notification 메시지
                     .setNotification(
                             Notification.builder()
                                     .setTitle(title)
                                     .setBody(body)
                                     .build()
                     )
+                    // Background용 Data 메시지
+                    .putData("title", title)
+                    .putData("body", body)
+                    .putData("time", String.valueOf(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC)))
+                    // iOS 설정
+                    .setApnsConfig(ApnsConfig.builder()
+                            .putHeader("apns-priority", "10")
+                            .setAps(Aps.builder()
+                                    .setContentAvailable(true)
+                                    .setSound("default")
+                                    .build())
+                            .build())
+                    // Android 설정
+                    .setAndroidConfig(AndroidConfig.builder()
+                            .setPriority(AndroidConfig.Priority.HIGH)
+                            .build())
                     .build();
 
             // FCM을 통해 메시지 전송
