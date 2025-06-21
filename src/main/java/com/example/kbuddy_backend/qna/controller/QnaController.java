@@ -108,27 +108,6 @@ public class QnaController {
         return ResponseEntity.noContent().build();
     }
 
-
-    @PostMapping("/{qnaId}/comments")
-    @Operation(summary = "댓글 작성", description = "Q&A 게시글에서 댓글을 작성 합니다.")
-    public ResponseEntity<Void> saveQnaComment(@PathVariable Long qnaId,
-                                               @Valid @RequestBody QnaCommentSaveRequest qnaCommentSaveRequest,
-                                               @Parameter(hidden = true) @CurrentUser User user) {
-        qnaCommentService.saveQnaComment(qnaId, qnaCommentSaveRequest, user);
-        return ResponseEntity.noContent().build(); // 204 No content 반환
-    }
-
-    @PutMapping("/{qnaId}/comments/{commentId}")
-    @Operation(summary = "댓글 수정", description = "Q&A 게시글에서 댓글을 수정 합니다.")
-    public ResponseEntity<String> updateQnaComment(@PathVariable Long qnaId,
-                                                   @PathVariable Long commentId,
-                                                   @Valid @RequestBody QnaCommentSaveRequest qnaCommentSaveRequest,
-                                                   @Parameter(hidden = true) @CurrentUser User user) {
-        qnaCommentService.updateQnaComment(qnaId, commentId, qnaCommentSaveRequest, user);
-        //todo: 응답
-        return ResponseEntity.noContent().build();
-    }
-
     //Qna 좋아요
     @PostMapping("/{qnaId}/hearts")
     @Operation(summary = "Q&A 게시글 좋아요", description = "Q&A 게시글에 좋아요를 1개 올립니다.")
@@ -145,28 +124,4 @@ public class QnaController {
         return ResponseEntity.noContent().build(); // 204 No content 반환
     }
 
-    //댓글 좋아요
-    @PostMapping("/comment/{commentId}/hearts")
-    @Operation(summary = "댓글 좋아요", description = "Q&A 게시글 댓글에 좋아요를 1개 올립니다.")
-    public ResponseEntity<String> plusCommentHeart(@PathVariable Long commentId, @Parameter(hidden = true) @CurrentUser User user) {
-        qnaCommentService.plusHeart(commentId, user);
-        return ResponseEntity.noContent().build(); // 204 No content 반환
-    }
-
-    //댓글 좋아요 취소
-    @DeleteMapping("/comment/{commentId}/hearts")
-    @Operation(summary = "댓글 좋아요 취소", description = "Q&A 게시글 댓글에 좋아요를 1개 내립니다.")
-    public ResponseEntity<Void> minusCommentHeart(@PathVariable Long commentId, @Parameter(hidden = true) @CurrentUser User user) {
-        qnaCommentService.minusHeart(commentId, user);
-        return ResponseEntity.noContent().build();
-    }
-
-    //임시 저장 게시글 조회 API
-    @GetMapping("/drafts")
-    @Operation(summary = "내 임시 저장 Q&A 목록 조회", description = "현재 로그인한 사용자가 임시 저장한 Q&A 게시글 전체 목록을 조회합니다.")
-    public ResponseEntity<List<QnaPaginationResponse>> getMyDrafts(
-            @Parameter(hidden = true) @CurrentUser User user) {
-        List<QnaPaginationResponse> drafts = qnaService.getMyDrafts(user);
-        return ResponseEntity.ok(drafts);
-    }
 }

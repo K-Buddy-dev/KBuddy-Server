@@ -10,11 +10,11 @@ import java.util.List;
 
 @Schema(description = "Blog 게시글 업데이트 요청")
 public record BlogUpdateRequest(
-        @Schema(description = "게시글 제목", example = "블로그 게시글 제목1", maxLength = 100, requiredMode = RequiredMode.REQUIRED)
+        @Schema(description = "게시글 제목", example = "블로그 게시글 제목", maxLength = 100, requiredMode = RequiredMode.REQUIRED)
         @Size(max = 100, message = "제목은 최대 100자까지 입력 가능합니다.")
         String title,
 
-        @Schema(description = "게시글 내용", example = "블로그 게시글 내용1", requiredMode = RequiredMode.REQUIRED)
+        @Schema(description = "게시글 내용", example = "블로그 게시글 내용", requiredMode = RequiredMode.REQUIRED)
         String description,
 
         @Schema(hidden = true)

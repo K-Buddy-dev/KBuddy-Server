@@ -14,6 +14,7 @@ import com.example.kbuddy_backend.qna.entity.Qna;
 import com.example.kbuddy_backend.qna.entity.QnaBookmark;
 import com.example.kbuddy_backend.qna.entity.QnaHeart;
 import com.example.kbuddy_backend.qna.entity.QnaImage;
+import com.example.kbuddy_backend.qna.entity.QnaComment;
 import com.example.kbuddy_backend.qna.exception.*;
 import com.example.kbuddy_backend.qna.repository.*;
 import com.example.kbuddy_backend.s3.dto.response.S3Response;
@@ -32,7 +33,9 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.example.kbuddy_backend.common.exception.BadRequestException;
@@ -49,6 +52,7 @@ public class QnaService {
     private final QnaBookmarkRepository qnaBookmarkRepository;
     private final QnaImageRepository qnaImageRepository;
     private final S3Service s3Service;
+    private final QnaCommentRepository qnaCommentRepository;
 
     @Transactional
     public QnaResponse saveQna(QnaSaveRequest qnaSaveRequest, List<MultipartFile> imageFiles, User user) {
@@ -125,10 +129,27 @@ public class QnaService {
                 .map(qna -> {
                     boolean isBookmarked = currentUser != null && qnaBookmarkRepository.existsByQnaIdAndUserId(qna.getId(), currentUser.getId());
                     boolean isHearted = currentUser != null && qnaHeartRepository.existsByQnaIdAndUserId(qna.getId(), currentUser.getId());
-                    return QnaPaginationResponse.of(qna.getId(), qna.getWriter().getId(), qna.getCategoryCode(),
-                            qna.getTitle(), qna.getDescription(), qna.getViewCount(), qna.getHeartCount(),
-                            qna.getCommentCount(), qna.getCreatedDate(),
-                            qna.getLastModifiedDate(), qna.getStatus(), isBookmarked, isHearted);
+                    String thumbnailImageUrl = qna.getImageUrls() != null && !qna.getImageUrls().isEmpty()
+                            ? qna.getImageUrls().get(0).getImageUrl()
+                            : "";
+                    return QnaPaginationResponse.of(
+                            qna.getId(),
+                            qna.getWriter().getUuid().toString(),
+                            qna.getWriter().getUsername(),
+                            qna.getWriter().getProfileImageUrl() != null ? qna.getWriter().getProfileImageUrl() : "",
+                            qna.getCategoryCode(),
+                            qna.getTitle(),
+                            qna.getDescription(),
+                            qna.getViewCount(),
+                            qna.getHeartCount(),
+                            qna.getCommentCount(),
+                            qna.getCreatedDate(),
+                            qna.getLastModifiedDate(),
+                            qna.getStatus(),
+                            isBookmarked,
+                            isHearted,
+                            thumbnailImageUrl
+                    );
                 })
                 .toList();
 
@@ -155,7 +176,7 @@ public class QnaService {
             if (currentUser == null) {
                 throw new AccessDeniedException("로그인이 필요합니다.");
             }
-            if (!Objects.equals(qnaById.getWriter().getId(), currentUser.getId())) {
+            if (!Objects.equals(qnaById.getWriter().getUuid(), currentUser.getUuid())) {
                 throw new AccessDeniedException("임시 저장된 글은 작성자만 조회할 수 있습니다."); // Or use NotWriterException
             }
         }
@@ -197,7 +218,7 @@ public class QnaService {
     }
 
     private static void isQnaWriter(User user, Qna qnaById) {
-        if (!Objects.equals(qnaById.getWriter().getId(), user.getId())) {
+        if (!Objects.equals(qnaById.getWriter().getUuid(), user.getUuid())) {
             throw new NotWriterException();
         }
     }
@@ -232,25 +253,89 @@ public class QnaService {
     private QnaResponse createQnaResponseDto(Qna qna, User currentUser) {
         List<ImageFileDto> images = qna.getImageUrls()
                 .stream()
-                .map(qnaImage -> new ImageFileDto(qnaImage.getId(), qnaImage.getFileType(), qnaImage.getFilePath(),
+                .map(qnaImage -> ImageFileDto.of(qnaImage.getId(), qnaImage.getFileType(), qnaImage.getFilePath(),
                         qnaImage.getImageUrl()))
                 .toList();
 
         boolean isBookmarked = qnaBookmarkRepository.existsByQnaIdAndUserId(qna.getId(), currentUser.getId());
         boolean isHearted = qnaHeartRepository.existsByQnaIdAndUserId(qna.getId(), currentUser.getId());
 
-        List<QnaCommentResponse> comments = qna.getComments()
-                .stream()
-                .map(qnaComment -> QnaCommentResponse.of(qnaComment.getId(), qnaComment.getQna().getId(),
-                        qnaComment.getWriter().getId(), qnaComment.getContent(), qnaComment.getCreatedDate(),
-                        qnaComment.getLastModifiedDate()))
+        List<QnaComment> comments = qnaCommentRepository.findCommentsWithWriterAndChildren(qna.getId());
+        
+        // 모든 댓글과 답글의 ID 수집
+        List<Long> allCommentIds = comments.stream()
+                .flatMap(comment -> {
+                    List<Long> ids = new ArrayList<>();
+                    ids.add(comment.getId());
+                    ids.addAll(comment.getChildren().stream()
+                            .map(QnaComment::getId)
+                            .toList());
+                    return ids.stream();
+                })
+                .toList();
+
+        // 좋아요 수 조회
+        Map<Long, Long> heartCounts = qnaCommentRepository.findCommentHeartCounts(allCommentIds);
+        
+        // 사용자가 좋아요한 댓글 ID 조회
+        Set<Long> heartedCommentIds = qnaCommentRepository.findHeartedCommentIds(allCommentIds, currentUser.getId());
+
+        List<QnaCommentResponse> commentResponses = comments.stream()
+                .map(comment -> {
+                    List<QnaCommentResponse> replies = comment.getChildren()
+                            .stream()
+                            .map(reply -> QnaCommentResponse.of(
+                                    reply.getId(),
+                                    reply.getQna().getId(),
+                                    reply.getWriter().getUuid().toString(),
+                                    reply.getWriter().getUsername(),
+                                    reply.getWriter().getProfileImageUrl() != null ? reply.getWriter().getProfileImageUrl() : "",
+                                    reply.getContent(),
+                                    reply.getCreatedDate(),
+                                    reply.getLastModifiedDate(),
+                                    List.of(),
+                                    heartCounts.getOrDefault(reply.getId(), 0L).intValue(),
+                                    heartedCommentIds.contains(reply.getId())
+                            ))
+                            .sorted(Comparator.comparing(QnaCommentResponse::createdAt))
+                            .toList();
+
+                    return QnaCommentResponse.of(
+                            comment.getId(),
+                            comment.getQna().getId(),
+                            comment.getWriter().getUuid().toString(),
+                            comment.getWriter().getUsername(),
+                            comment.getWriter().getProfileImageUrl() != null ? comment.getWriter().getProfileImageUrl() : "",
+                            comment.getContent(),
+                            comment.getCreatedDate(),
+                            comment.getLastModifiedDate(),
+                            replies,
+                            heartCounts.getOrDefault(comment.getId(), 0L).intValue(),
+                            heartedCommentIds.contains(comment.getId())
+                    );
+                })
                 .sorted(Comparator.comparing(QnaCommentResponse::createdAt))
                 .toList();
 
-        return QnaResponse.of(qna.getId(), qna.getWriter().getId(), qna.getCategoryCode(), qna.getTitle(),
-                qna.getDescription(), qna.getViewCount(), qna.getCreatedDate(), qna.getLastModifiedDate(),
-                images, comments, qna.getHeartCount(), qna.getCommentCount(), isBookmarked, isHearted,
-                qna.getStatus());
+        return QnaResponse.of(
+                qna.getId(),
+                qna.getWriter().getUuid().toString(),
+                qna.getWriter().getUsername(),
+                qna.getWriter().getProfileImageUrl() != null ? qna.getWriter().getProfileImageUrl() : "",
+                qna.getCategoryCode(),
+                qna.getTitle(),
+                qna.getDescription(),
+                qna.getViewCount(),
+                qna.getCreatedDate(),
+                qna.getLastModifiedDate(),
+                images,
+                commentResponses,
+                qna.getHeartCount(),
+                qna.getCommentCount(),
+                isBookmarked,
+                isHearted,
+                qna.getStatus()
+        );
     }
 
     private void saveImageFiles(List<ImageFileDto> imageFiles, Qna qna) {
@@ -303,31 +388,4 @@ public class QnaService {
     public Qna findQnaById(Long qnaId) {
         return qnaRepository.findById(qnaId).orElseThrow(QnaNotFoundException::new);
     }
-
-    public List<QnaPaginationResponse> getMyDrafts(User currentUser) {
-
-        List<Qna> draftQnas = qnaRepository.findByWriterAndStatus(currentUser, QnaStatus.DRAFT);
-        return draftQnas.stream()
-                .map(qna -> {
-                    boolean isBookmarked = qnaBookmarkRepository.existsByQnaIdAndUserId(qna.getId(), currentUser.getId());
-                    boolean isHearted = qnaHeartRepository.existsByQnaIdAndUserId(qna.getId(), currentUser.getId());
-                    return QnaPaginationResponse.of(
-                            qna.getId(),
-                            qna.getWriter().getId(),
-                            qna.getCategoryCode(),
-                            qna.getTitle(),
-                            qna.getDescription(),
-                            qna.getViewCount(),
-                            qna.getHeartCount(),
-                            qna.getCommentCount(),
-                            qna.getCreatedDate(),
-                            qna.getLastModifiedDate(),
-                            qna.getStatus(),
-                            isBookmarked,
-                            isHearted
-                    );
-                })
-                .collect(Collectors.toList()); // Collect results into a List
-    }
-
 }

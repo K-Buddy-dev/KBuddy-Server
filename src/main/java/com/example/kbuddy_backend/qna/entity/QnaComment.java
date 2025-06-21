@@ -1,6 +1,7 @@
 package com.example.kbuddy_backend.qna.entity;
 
 import com.example.kbuddy_backend.common.entity.BaseTimeEntity;
+import com.example.kbuddy_backend.common.exception.MaximumReplyDepthExceededException;
 import com.example.kbuddy_backend.qna.dto.response.QnaCommentResponse;
 import com.example.kbuddy_backend.user.entity.User;
 import jakarta.persistence.Column;
@@ -29,6 +30,7 @@ public class QnaComment extends BaseTimeEntity {
     @Column(name = "comment_id")
     private Long id;
 
+    @Column(nullable = false)
     private String content;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -57,7 +59,8 @@ public class QnaComment extends BaseTimeEntity {
     }
 
     @Builder
-    public QnaComment(User writer, Qna qna, String content) {
+    public QnaComment(Long id, String content, User writer, Qna qna) {
+        this.id = id;
         this.content = content;
         this.writer = writer;
         this.qna = qna;
@@ -79,10 +82,21 @@ public class QnaComment extends BaseTimeEntity {
         this.content = content;
     }
 
-
     public void addQna(Qna qna) {
         this.qna = qna;
         qna.addComment(this);
+    }
+
+    public boolean isReply() {
+        return parent != null;
+    }
+
+    public void addChild(QnaComment child) {
+        if (isReply()) {
+            throw new MaximumReplyDepthExceededException();
+        }
+        this.children.add(child);
+        child.parent = this;
     }
 
 }

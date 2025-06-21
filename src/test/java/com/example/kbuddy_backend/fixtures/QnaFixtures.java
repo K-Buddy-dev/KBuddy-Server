@@ -16,6 +16,25 @@ public class QnaFixtures {
     }
 
     public static QnaResponse createQnaResponse() {
-        return QnaResponse.of(1L, 123L, 1, "title", "description", 0, LocalDateTime.now(), LocalDateTime.now(), List.of(ImageFileDto.of(1L,ImageFileType.PNG,"test_pic","test_url")), null, 0, 0,true,true,QnaStatus.PUBLISHED);
+        return QnaResponse.of(
+                1L,
+                "test-uuid",
+                "test-writer",
+                "test-profile-url",
+                1,
+                "title",
+                "description",
+                0,
+                LocalDateTime.now(),
+                LocalDateTime.now(),
+                List.of(ImageFileDto.of(1L, ImageFileType.PNG, "test_pic", "test_url")),
+                null,
+                0,
+                0,
+                true,
+                true,
+                QnaStatus.PUBLISHED
+        );
     }
+
 }
