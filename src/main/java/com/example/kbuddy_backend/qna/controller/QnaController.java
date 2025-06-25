@@ -123,5 +123,4 @@ public class QnaController {
         qnaService.minusHeart(qnaId, user);
         return ResponseEntity.noContent().build(); // 204 No content 반환
     }
-
 }

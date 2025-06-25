@@ -3,6 +3,7 @@ package com.example.kbuddy_backend.user.controller;
 import com.example.kbuddy_backend.common.config.CurrentUser;
 import com.example.kbuddy_backend.qna.dto.response.QnaPaginationResponse;
 import com.example.kbuddy_backend.user.dto.request.UserBioRequest;
+import com.example.kbuddy_backend.user.dto.response.BookmarkedPostResponse;
 import com.example.kbuddy_backend.user.dto.response.DefaultResponse;
 import com.example.kbuddy_backend.user.dto.response.DraftListResponse;
 import com.example.kbuddy_backend.user.dto.response.UserProfileResponse;
@@ -47,6 +48,14 @@ public class UserPageController {
             @Parameter(hidden = true) @CurrentUser User user) {
         List<DraftListResponse> drafts = userService.getMyDrafts(user);
         return ResponseEntity.ok(drafts);
+    }
+
+    @GetMapping("/bookmarks")
+    @Operation(summary = "내 북마크 게시글 목록 조회", description = "현재 로그인한 사용자가 북마크한 블로그와 Q&A 게시글 전체 목록을 조회합니다.")
+    public ResponseEntity<List<BookmarkedPostResponse>> getMyBookmarks(
+            @Parameter(hidden = true) @CurrentUser User user) {
+        List<BookmarkedPostResponse> bookmarks = userService.getMyBookmarks(user);
+        return ResponseEntity.ok(bookmarks);
     }
 
     @PatchMapping(value = "/profile", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
