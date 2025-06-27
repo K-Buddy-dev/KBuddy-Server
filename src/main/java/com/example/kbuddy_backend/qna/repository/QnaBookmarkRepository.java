@@ -1,6 +1,7 @@
 package com.example.kbuddy_backend.qna.repository;
 
 import com.example.kbuddy_backend.qna.entity.Qna;
+import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -13,4 +14,6 @@ public interface QnaBookmarkRepository extends JpaRepository<QnaBookmark, Long> 
     Optional<QnaBookmark> findByQnaIdAndUserId(Long qnaId, Long userId);
 
     boolean existsByQnaIdAndUserId(Long qnaId, Long userId);
+    
+    List<QnaBookmark> findByUserId(Long userId);
 }
