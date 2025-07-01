@@ -3,11 +3,7 @@ package com.example.kbuddy_backend.user.controller;
 import com.example.kbuddy_backend.common.config.CurrentUser;
 import com.example.kbuddy_backend.qna.dto.response.QnaPaginationResponse;
 import com.example.kbuddy_backend.user.dto.request.UserBioRequest;
-import com.example.kbuddy_backend.user.dto.response.BookmarkedPostResponse;
-import com.example.kbuddy_backend.user.dto.response.DefaultResponse;
-import com.example.kbuddy_backend.user.dto.response.DraftListResponse;
-import com.example.kbuddy_backend.user.dto.response.UserProfileResponse;
-import com.example.kbuddy_backend.user.dto.response.UserResponse;
+import com.example.kbuddy_backend.user.dto.response.*;
 import com.example.kbuddy_backend.user.entity.User;
 import com.example.kbuddy_backend.user.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -56,6 +52,14 @@ public class UserPageController {
             @Parameter(hidden = true) @CurrentUser User user) {
         List<BookmarkedPostResponse> bookmarks = userService.getMyBookmarks(user);
         return ResponseEntity.ok(bookmarks);
+    }
+
+    @GetMapping("/myArticles")
+    @Operation(summary = "내가 작성한 게시글 목록 조회", description = "현재 로그인한 사용자가 작성한 블로그와 Q&A 게시글 전체 목록을 조회합니다.")
+    public ResponseEntity<List<MyArticleResponse>> getMyArticle(
+            @Parameter(hidden = true) @CurrentUser User user) {
+        List<MyArticleResponse> articles = userService.getMyArticle(user);
+        return ResponseEntity.ok(articles);
     }
 
     @PatchMapping(value = "/profile", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
