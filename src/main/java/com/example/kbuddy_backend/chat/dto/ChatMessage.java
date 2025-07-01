@@ -10,7 +10,7 @@ import lombok.*;
 public class ChatMessage {
     // 메시지 타입: 입장, 퇴장, 채팅
     public enum MessageType {
-        ENTER, LEAVE, TALK
+        JOIN ,ENTER, LEAVE, TALK
     }
 
     private MessageType messageType; // 메시지 타입
