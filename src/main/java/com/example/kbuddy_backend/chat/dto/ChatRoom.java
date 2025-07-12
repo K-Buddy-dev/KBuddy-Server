@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.socket.WebSocketSession;
+
+import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -13,7 +15,8 @@ import java.util.UUID;
 @Getter
 @AllArgsConstructor
 @Builder
-public class ChatRoom {
+public class ChatRoom implements Serializable {
+    private static final long serialVersionUID = 1L;
     private final String roomId;
     private final String name;
 

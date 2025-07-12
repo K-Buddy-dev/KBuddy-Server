@@ -26,6 +26,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         // SockJS를 통한 웹소캣 연결 지원
         // stomp 접속 주소 url = ws://localhost:8080/ws, 프로토콜이 http가 아님
         registry.addEndpoint("/ws-stomp") // 처음 웹소켓 HandShake를 위한 접속 경로
-                .withSockJS();
+                .setAllowedOriginPatterns("*");
+//                .withSockJS();
     }
 }

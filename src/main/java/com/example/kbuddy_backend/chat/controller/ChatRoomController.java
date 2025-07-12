@@ -2,35 +2,39 @@ package com.example.kbuddy_backend.chat.controller;
 
 import com.example.kbuddy_backend.chat.dto.ChatRoom;
 import com.example.kbuddy_backend.chat.service.ChatRoomService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RequiredArgsConstructor
-@Controller
+@RestController
+@RequestMapping("kbuddy/v1/chat")
+@Tag(name = "Chat API", description = "채팅 API 목록")
 public class ChatRoomController {
     private final ChatRoomService chatRoomService;
 
-    @GetMapping("/chat/rooms-all")
+    @GetMapping("/rooms-all")
     public String getAllRooms() {
         return "/chat/home";
     }
 
-    @GetMapping("/chat/rooms")
+    @GetMapping("/rooms")
     @ResponseBody
     public List<ChatRoom> getRooms() {
         return chatRoomService.findAll();
     }
 
-    @PostMapping("/chat/room")
-    public String createRoom(@RequestParam String name) {
+    @PostMapping("/room")
+    public ResponseEntity<Void> createRoom(@RequestParam String name) {
         chatRoomService.createRoom(name);
-        return "redirect:/chat/rooms";
+        return ResponseEntity.ok().build();
     }
 
-    @GetMapping("/chat/room/{roomId}")
+    @GetMapping("/room/{roomId}")
     @ResponseBody
     public ChatRoom getRoom(@PathVariable String roomId) {
         return chatRoomService.findRoomById(roomId);

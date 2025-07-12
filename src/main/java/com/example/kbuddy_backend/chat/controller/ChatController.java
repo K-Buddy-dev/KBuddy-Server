@@ -11,16 +11,17 @@ import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-@Tag(name = "Chat API", description = "웹소캣 채팅 관련 API")
 @RestController
-@RequestMapping("/api/chat")
 @RequiredArgsConstructor
+@RequestMapping("kbuddy/v1/chat")
+@Tag(name = "Chat API", description = "채팅 API 목록")
+
 public class ChatController {
 
     private final RedisPublisher redisPublisher;
     private final ChatRoomService chatRoomService;
 
-    @MessageMapping("/chat/message")
+    @MessageMapping("/message")
     public void sendMessage(ChatMessage message) {
         if (isJoin(message)) {
             chatRoomService.enterChatRoom(message.getRoomId());
