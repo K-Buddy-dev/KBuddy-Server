@@ -23,6 +23,7 @@ import com.example.kbuddy_backend.qna.constant.QnaStatus;
 import com.example.kbuddy_backend.s3.dto.response.S3Response;
 import com.example.kbuddy_backend.s3.service.S3Service;
 import com.example.kbuddy_backend.user.entity.User;
+import com.example.kbuddy_backend.user.service.UserBlockService;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -57,6 +58,7 @@ public class BlogService {
     private final BlogReportRepository blogReportRepository;
     private final BlogCommentRepository blogCommentRepository;
     private final S3Service s3Service;
+    private final UserBlockService userBlockService;
 
     // 새로운 블로그를 저장
     @Transactional
@@ -130,6 +132,15 @@ public class BlogService {
 
     public AllBlogResponse getAllBlog(int pageSize, Long blogId, String title, SortBy sortBy, Integer categoryCode, User currentUser) {
         List<Blog> allBlog = blogRepository.paginationNoOffset(blogId, title, pageSize, sortBy, categoryCode, BlogStatus.PUBLISHED);
+        
+        // 차단된 사용자 필터링
+        if (currentUser != null) {
+            List<Long> blockedUserIds = userBlockService.getBlockedUserIds(currentUser);
+            allBlog = allBlog.stream()
+                    .filter(blog -> !blockedUserIds.contains(blog.getWriter().getId()))
+                    .toList();
+        }
+        
         List<BlogPaginationResponse> blogPaginationResponseList = allBlog.stream()
                 .map(blog -> {
                     boolean isBookmarked = currentUser != null && blogBookmarkRepository.existsByBlogIdAndUserId(blog.getId(), currentUser.getId());
@@ -177,6 +188,12 @@ public class BlogService {
     @Transactional
     public BlogResponse getBlog(Long blogId, User currentUser) {
         Blog blogById = findBlogById(blogId);
+        
+        // 차단된 사용자의 게시글인지 확인
+        if (currentUser != null && userBlockService.isBlocked(currentUser, blogById.getWriter())) {
+            throw new AccessDeniedException("차단된 사용자의 게시글은 조회할 수 없습니다.");
+        }
+        
         if (blogById.getStatus() == BlogStatus.DRAFT) {
             if (currentUser == null) {
                 throw new AccessDeniedException("로그인이 필요합니다.");
@@ -303,9 +320,11 @@ public class BlogService {
         Set<Long> heartedCommentIds = blogCommentRepository.findHeartedCommentIds(allCommentIds, currentUser.getId());
 
         List<BlogCommentResponse> commentResponses = comments.stream()
+                .filter(comment -> currentUser == null || !userBlockService.isBlocked(currentUser, comment.getWriter()))
                 .map(comment -> {
                     List<BlogCommentResponse> replies = comment.getChildren()
                             .stream()
+                            .filter(reply -> currentUser == null || !userBlockService.isBlocked(currentUser, reply.getWriter()))
                             .map(reply -> BlogCommentResponse.of(
                                     reply.getId(),
                                     reply.getBlog().getId(),
