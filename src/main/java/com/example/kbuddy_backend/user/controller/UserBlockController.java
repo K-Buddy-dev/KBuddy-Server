@@ -23,26 +23,25 @@ public class UserBlockController {
 
     private final UserBlockService userBlockService;
 
-    @PostMapping("/{blockedUserId}")
+    @PostMapping()
     @Operation(summary = "사용자 차단", description = "특정 사용자를 차단합니다.")
     public ResponseEntity<UserBlockResponse> blockUser(
-            @PathVariable Long blockedUserId,
+            @RequestBody @Valid UserBlockRequest userBlockRequest,
             @Parameter(hidden = true) @CurrentUser User user) {
-        UserBlockRequest request = new UserBlockRequest(blockedUserId);
-        UserBlockResponse response = userBlockService.blockUser(user, request);
+        UserBlockResponse response = userBlockService.blockUser(user, userBlockRequest);
         return ResponseEntity.ok(response);
     }
 
-    @DeleteMapping("/{blockedUserId}")
+    @DeleteMapping()
     @Operation(summary = "사용자 차단 해제", description = "차단한 사용자의 차단을 해제합니다.")
     public ResponseEntity<Void> unblockUser(
-            @PathVariable Long blockedUserId,
+            @RequestBody @Valid UserBlockRequest userBlockRequest,
             @Parameter(hidden = true) @CurrentUser User user) {
-        userBlockService.unblockUser(user, blockedUserId);
+        userBlockService.unblockUser(user, userBlockRequest.blockedUserId());
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/blocked")
+    @GetMapping()
     @Operation(summary = "차단한 사용자 목록 조회", description = "현재 사용자가 차단한 사용자 목록을 조회합니다.")
     public ResponseEntity<List<UserBlockResponse>> getBlockedUsers(
             @Parameter(hidden = true) @CurrentUser User user) {
