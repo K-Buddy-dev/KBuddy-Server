@@ -21,6 +21,7 @@ import com.example.kbuddy_backend.s3.dto.response.S3Response;
 import com.example.kbuddy_backend.s3.service.S3Service;
 import com.example.kbuddy_backend.user.entity.User;
 import com.example.kbuddy_backend.user.exception.UserNotFoundException;
+import com.example.kbuddy_backend.user.service.UserBlockService;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -53,6 +54,7 @@ public class QnaService {
     private final QnaImageRepository qnaImageRepository;
     private final S3Service s3Service;
     private final QnaCommentRepository qnaCommentRepository;
+    private final UserBlockService userBlockService;
 
     @Transactional
     public QnaResponse saveQna(QnaSaveRequest qnaSaveRequest, List<MultipartFile> imageFiles, User user) {
@@ -125,6 +127,15 @@ public class QnaService {
 
     public AllQnaResponse getAllQna(int pageSize, Long qnaId, String title, SortBy sortBy, Integer categoryCode, User currentUser) {
         List<Qna> allQna = qnaRepository.paginationNoOffset(qnaId, title, pageSize, sortBy, categoryCode, QnaStatus.PUBLISHED);
+        
+        // 차단된 사용자 필터링
+        if (currentUser != null) {
+            List<Long> blockedUserIds = userBlockService.getBlockedUserIds(currentUser);
+            allQna = allQna.stream()
+                    .filter(qna -> !blockedUserIds.contains(qna.getWriter().getId()))
+                    .toList();
+        }
+        
         List<QnaPaginationResponse> qnaPaginationResponseList = allQna.stream()
                 .map(qna -> {
                     boolean isBookmarked = currentUser != null && qnaBookmarkRepository.existsByQnaIdAndUserId(qna.getId(), currentUser.getId());
@@ -171,6 +182,11 @@ public class QnaService {
     @Transactional
     public QnaResponse getQna(Long qnaId, User currentUser) {
         Qna qnaById = findQnaById(qnaId);
+        
+        // 차단된 사용자의 게시글인지 확인
+        if (currentUser != null && userBlockService.isBlocked(currentUser, qnaById.getWriter())) {
+            throw new AccessDeniedException("차단된 사용자의 게시글은 조회할 수 없습니다.");
+        }
 
         if (qnaById.getStatus() == QnaStatus.DRAFT) {
             if (currentUser == null) {
@@ -281,9 +297,11 @@ public class QnaService {
         Set<Long> heartedCommentIds = qnaCommentRepository.findHeartedCommentIds(allCommentIds, currentUser.getId());
 
         List<QnaCommentResponse> commentResponses = comments.stream()
+                .filter(comment -> currentUser == null || !userBlockService.isBlocked(currentUser, comment.getWriter()))
                 .map(comment -> {
                     List<QnaCommentResponse> replies = comment.getChildren()
                             .stream()
+                            .filter(reply -> currentUser == null || !userBlockService.isBlocked(currentUser, reply.getWriter()))
                             .map(reply -> QnaCommentResponse.of(
                                     reply.getId(),
                                     reply.getQna().getId(),
