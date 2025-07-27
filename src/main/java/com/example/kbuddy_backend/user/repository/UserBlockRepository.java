@@ -33,4 +33,10 @@ public interface UserBlockRepository extends JpaRepository<UserBlock, Long> {
     
     // 차단 관계 삭제
     void deleteByBlockerAndBlocked(User blocker, User blocked);
+    
+    // 사용자가 차단한 모든 관계 삭제
+    void deleteByBlocker(User blocker);
+    
+    // 사용자를 차단한 모든 관계 삭제
+    void deleteByBlocked(User blocked);
 } 

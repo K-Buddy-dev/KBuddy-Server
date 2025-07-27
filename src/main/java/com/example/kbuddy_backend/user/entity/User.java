@@ -81,6 +81,10 @@ public class User extends BaseTimeEntity {
         this.password = password;
     }
 
+    public void deactivateAccount() {
+        this.isActive = false;
+    }
+
     @Builder
     public User(String username, String password, String email, String firstName, String lastName, Gender gender,
                 Country country, String bio,

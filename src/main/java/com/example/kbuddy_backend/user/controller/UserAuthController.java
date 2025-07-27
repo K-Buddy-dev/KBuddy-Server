@@ -15,8 +15,10 @@ import com.example.kbuddy_backend.user.dto.request.OAuthRegisterRequest;
 import com.example.kbuddy_backend.user.dto.request.PasswordRequest;
 import com.example.kbuddy_backend.user.dto.request.RegisterRequest;
 import com.example.kbuddy_backend.user.dto.request.UserNameCheckRequest;
+import com.example.kbuddy_backend.user.dto.request.AppleCallbackRequest;
 import com.example.kbuddy_backend.user.dto.response.DefaultResponse;
 import com.example.kbuddy_backend.user.dto.response.EmailCodeResponse;
+import com.example.kbuddy_backend.user.dto.response.AppleLoginResponse;
 import com.example.kbuddy_backend.user.entity.User;
 import com.example.kbuddy_backend.user.exception.DuplicateEmailException;
 import com.example.kbuddy_backend.user.exception.DuplicateUserIdException;
@@ -31,6 +33,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -186,4 +189,29 @@ public class UserAuthController {
         return ResponseEntity.noContent().build();
     }
 
+    @Operation(summary = "계정 삭제", description = "사용자 계정을 삭제(비활성화)합니다.")
+    @DeleteMapping("/account")
+    public ResponseEntity<Void> deleteAccount(
+            @Parameter(hidden = true) @CurrentUser User user, 
+            HttpServletResponse response) {
+        // 계정 삭제 처리
+        userAuthService.deleteAccount(user);
+        
+        // 로그아웃 처리 (쿠키 삭제)
+        Cookie refreshTokenCookie = new Cookie("refreshToken", null);
+        refreshTokenCookie.setPath("/");
+        refreshTokenCookie.setHttpOnly(true);
+        refreshTokenCookie.setMaxAge(0);
+        refreshTokenCookie.setSecure(true);
+        response.addCookie(refreshTokenCookie);
+        
+        return ResponseEntity.noContent().build();
+    }
+
+    @Operation(summary = "Apple 로그인 콜백", description = "Apple에서 전송하는 로그인 콜백을 처리합니다.")
+    @PostMapping("/apple/callback")
+    public ResponseEntity<AppleLoginResponse> appleCallback(@RequestBody AppleCallbackRequest request) {
+        AppleLoginResponse response = userAuthService.handleAppleLogin(request.idToken(), request.user());
+        return ResponseEntity.ok(response);
+    }
 }
