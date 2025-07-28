@@ -21,6 +21,7 @@ public enum CustomCode {
     HTTP_409("KB-DATA-006", "데이터 중복으로 인한 충돌이 발생함."),
     HTTP_422("KB-HTTP-006", "해당 Endpoint 요청 작업을 수행할 수 없음."),
     HTTP_429("KB-HTTP-007", "해당 Endpoint에 너무 많은 접근이 수행되고 있음."),
+    HTTP_415("KB-HTTP-008", "탈퇴한 계정입니다."),
     HTTP_500("KB-SEVR-001", "서버에 문제가 발생함."),
     HTTP_502("KB-SEVR-002", "서버 네트워크에 문제가 발생함."),
     HTTP_503("KB-SEVR-003", "서버를 이용할 수 없음."),

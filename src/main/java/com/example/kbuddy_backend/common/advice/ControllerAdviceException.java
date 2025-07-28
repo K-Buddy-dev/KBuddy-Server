@@ -17,6 +17,8 @@ import com.example.kbuddy_backend.common.exception.UnauthorizedException;
 
 import java.util.Arrays;
 import java.util.List;
+
+import com.example.kbuddy_backend.user.exception.AccountDeactivatedException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -48,6 +50,12 @@ public class ControllerAdviceException {
     public ResponseEntity<ErrorResponse> handleDuplicate(final Exception e) {
         log.error(e.getMessage());
         return ResponseEntity.status(CONFLICT).body(new ErrorResponse(e.getMessage(), CustomCode.HTTP_409));
+    }
+
+    //탈퇴한 계정처리
+    @ExceptionHandler(AccountDeactivatedException.class)
+    public ResponseEntity<ErrorResponse> handleAccountDeactivated(final Exception e) {
+        return ResponseEntity.status(UNPROCESSABLE_ENTITY).body(new ErrorResponse(e.getMessage(), CustomCode.HTTP_415));
     }
 
     @ExceptionHandler(NotFoundException.class)
