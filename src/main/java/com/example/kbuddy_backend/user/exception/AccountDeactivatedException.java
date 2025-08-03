@@ -4,6 +4,6 @@ import com.example.kbuddy_backend.common.exception.BadRequestException;
 
 public class AccountDeactivatedException extends BadRequestException {
     public AccountDeactivatedException() {
-        super("탈퇴한 계정입니다.");
+        super("This account has been withdrawn.");
     }
 }
