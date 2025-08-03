@@ -4,17 +4,17 @@ import java.time.LocalDateTime;
 
 public record UserBlockResponse(
         Long id,
-        Long blockerId,
+        String blockerId,
         String blockerUsername,
-        Long blockedId,
+        String blockedId,
         String blockedUsername,
         LocalDateTime blockedAt
 ) {
     public static UserBlockResponse of(
             Long id,
-            Long blockerId,
+            String blockerId,
             String blockerUsername,
-            Long blockedId,
+            String blockedId,
             String blockedUsername,
             LocalDateTime blockedAt
     ) {

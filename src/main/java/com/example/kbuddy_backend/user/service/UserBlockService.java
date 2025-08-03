@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -27,7 +28,7 @@ public class UserBlockService {
     @Transactional
     public UserBlockResponse blockUser(User blocker, UserBlockRequest request) {
         // 차단할 사용자 조회
-        User blockedUser = userRepository.findById(request.blockedUserId())
+        User blockedUser = userRepository.findByUuid(UUID.fromString(request.blockedUserId()))
                 .orElseThrow(UserNotFoundException::new);
 
         // 자기 자신을 차단하려는 경우
@@ -46,9 +47,9 @@ public class UserBlockService {
 
         return UserBlockResponse.of(
                 savedBlock.getId(),
-                savedBlock.getBlocker().getId(),
+                savedBlock.getBlocker().getUuid().toString(),
                 savedBlock.getBlocker().getUsername(),
-                savedBlock.getBlocked().getId(),
+                savedBlock.getBlocked().getUuid().toString(),
                 savedBlock.getBlocked().getUsername(),
                 savedBlock.getCreatedDate()
         );
@@ -56,8 +57,8 @@ public class UserBlockService {
 
     // 사용자 차단 해제
     @Transactional
-    public void unblockUser(User blocker, Long blockedUserId) {
-        User blockedUser = userRepository.findById(blockedUserId)
+    public void unblockUser(User blocker, String blockedUserId) {
+        User blockedUser = userRepository.findByUuid(UUID.fromString(blockedUserId))
                 .orElseThrow(UserNotFoundException::new);
 
         // 차단 관계가 존재하는지 확인
@@ -75,9 +76,9 @@ public class UserBlockService {
         return blockedUsers.stream()
                 .map(block -> UserBlockResponse.of(
                         block.getId(),
-                        block.getBlocker().getId(),
+                        block.getBlocker().getUuid().toString(),
                         block.getBlocker().getUsername(),
-                        block.getBlocked().getId(),
+                        block.getBlocked().getUuid().toString(),
                         block.getBlocked().getUsername(),
                         block.getCreatedDate()
                 ))
@@ -91,9 +92,9 @@ public class UserBlockService {
         return blockedByUsers.stream()
                 .map(block -> UserBlockResponse.of(
                         block.getId(),
-                        block.getBlocker().getId(),
+                        block.getBlocker().getUuid().toString(),
                         block.getBlocker().getUsername(),
-                        block.getBlocked().getId(),
+                        block.getBlocked().getUuid().toString(),
                         block.getBlocked().getUsername(),
                         block.getCreatedDate()
                 ))
