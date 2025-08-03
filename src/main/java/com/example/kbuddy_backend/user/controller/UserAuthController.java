@@ -2,6 +2,7 @@ package com.example.kbuddy_backend.user.controller;
 
 import static org.springframework.http.HttpStatus.*;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import com.example.kbuddy_backend.auth.dto.response.AccessTokenAndRefreshTokenResponse;
 import com.example.kbuddy_backend.auth.dto.response.AccessTokenResponse;
 import com.example.kbuddy_backend.auth.service.MailSendService;
@@ -208,10 +209,26 @@ public class UserAuthController {
         return ResponseEntity.noContent().build();
     }
 
-    @Operation(summary = "Apple 로그인 콜백", description = "Apple에서 전송하는 로그인 콜백을 처리합니다.")
+    @Operation(summary = "Apple 로그인 콜백", description = "Apple에서 전송하는 로그인 콜백을 처리하고 302 리다이렉트합니다.")
     @PostMapping("/apple/callback")
-    public ResponseEntity<AppleLoginResponse> appleCallback(@RequestBody AppleCallbackRequest request) {
-        AppleLoginResponse response = userAuthService.handleAppleLogin(request.idToken(), request.user());
-        return ResponseEntity.ok(response);
+    public ResponseEntity<Void> appleCallback(@RequestBody AppleCallbackRequest request, HttpServletResponse response) {
+        AppleLoginResponse appleResponse = userAuthService.handleAppleLogin(request.idToken(), request.user());
+        
+        // 토큰을 쿠키에 설정 (기존 사용자인 경우에만)
+        if (!appleResponse.accessToken().isEmpty()) {
+            // Refresh token을 쿠키에 설정
+            Cookie refreshTokenCookie = new Cookie("refreshToken", appleResponse.refreshToken());
+            refreshTokenCookie.setPath("/");
+            refreshTokenCookie.setHttpOnly(true);
+            refreshTokenCookie.setSecure(true);
+            refreshTokenCookie.setMaxAge(refreshTokenExpiration);
+            response.addCookie(refreshTokenCookie);
+        }
+        
+        // 302 리다이렉트 응답 생성
+        String redirectUrl = "/oauth/apple-redirect?accessToken=" + appleResponse.accessToken() + "&isNew=" + appleResponse.isNew();
+        return ResponseEntity.status(HttpStatus.FOUND)
+                .header("Location", redirectUrl)
+                .build();
     }
 }
