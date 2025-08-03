@@ -119,6 +119,11 @@ public class UserAuthService {
 
     public AccessTokenAndRefreshTokenResponse oAuthLogin(final OAuthLoginRequest loginRequest) {
         final User user = userRepository.findByOauthUidAndOauthCategory(loginRequest.oAuthUid(), loginRequest.oAuthCategory()).orElseThrow(UserNotFoundException::new);
+
+        if (!user.isActive()) {
+            throw new AccountDeactivatedException();
+        }
+
         UsernamePasswordAuthenticationToken authenticationToken = getUsernamePasswordAuthenticationToken(
                 user, "oAuth");
 
