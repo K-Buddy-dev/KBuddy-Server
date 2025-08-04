@@ -16,7 +16,7 @@ import com.example.kbuddy_backend.user.dto.request.OAuthRegisterRequest;
 import com.example.kbuddy_backend.user.dto.request.PasswordRequest;
 import com.example.kbuddy_backend.user.dto.request.RegisterRequest;
 import com.example.kbuddy_backend.user.dto.request.UserNameCheckRequest;
-import com.example.kbuddy_backend.user.dto.request.AppleCallbackRequest;
+
 import com.example.kbuddy_backend.user.dto.response.DefaultResponse;
 import com.example.kbuddy_backend.user.dto.response.EmailCodeResponse;
 import com.example.kbuddy_backend.user.dto.response.AppleLoginResponse;
@@ -39,6 +39,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -210,9 +211,13 @@ public class UserAuthController {
     }
 
     @Operation(summary = "Apple 로그인 콜백", description = "Apple에서 전송하는 로그인 콜백을 처리하고 302 리다이렉트합니다.")
-    @PostMapping("/apple/callback")
-    public ResponseEntity<Void> appleCallback(@RequestBody AppleCallbackRequest request, HttpServletResponse response) {
-        AppleLoginResponse appleResponse = userAuthService.handleAppleLogin(request.idToken(), request.user());
+    @PostMapping(value = "/apple/callback", consumes = "application/x-www-form-urlencoded")
+    public ResponseEntity<Void> appleCallback(
+            @RequestParam("code") String code,
+            @RequestParam("id_token") String idToken,
+            @RequestParam(value = "user", required = false) String user,
+            HttpServletResponse response) {
+        AppleLoginResponse appleResponse = userAuthService.handleAppleLogin(idToken, user);
         
         // 토큰을 쿠키에 설정 (기존 사용자인 경우에만)
         if (!appleResponse.accessToken().isEmpty()) {
