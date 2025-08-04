@@ -70,7 +70,7 @@ class UserAuthServiceTest extends IntegrationTest {
         //then
         assertThatThrownBy(() -> userAuthService.login(loginRequest))
             .isInstanceOf(InvalidPasswordException.class)
-            .hasMessageContaining("비밀번호가 일치하지 않습니다.");
+            .hasMessageContaining("Password does not match.");
     }
 
     @DisplayName("아이디가 일치하지 않으면 에러를 던진다.")
@@ -83,7 +83,7 @@ class UserAuthServiceTest extends IntegrationTest {
         //then
         assertThatThrownBy(() -> userAuthService.login(loginRequest))
             .isInstanceOf(UserNotFoundException.class)
-            .hasMessageContaining("사용자를 찾을 수 없습니다.");
+            .hasMessageContaining("User not found.");
     }
 
     @DisplayName("중복된 이메일을 확인한다.")
