@@ -169,8 +169,9 @@ public class UserAuthService {
         Map<String, Object> claims = decodeIdToken(idToken);
         String email = (String) claims.get("email");
         String sub = (String) claims.get("sub"); // Apple의 고유 ID
-        log.debug("Apple ID Token claims: {}", claims);
-        log.debug("Apple email: {}, sub: {}", email, sub);
+        log.info("Apple ID Token: {}", idToken);
+        log.info("Apple ID Token claims: {}", claims);
+        log.info("Apple email: {}, sub: {}", email, sub);
         // 2. user JSON 파싱 (이름 정보)
         AppleUserInfo userInfo = parseUserInfo(userJson);
         
@@ -212,7 +213,8 @@ public class UserAuthService {
             // JWT 토큰의 payload 부분 디코딩
             String[] tokenParts = idToken.split("\\.");
             String payload = tokenParts[1];
-            
+            log.info("Apple ID Token payload: {}", payload);
+            log.info("Apple ID Token parts: {}", Arrays.toString(tokenParts));
             // Base64 디코딩
             String decodedPayload = new String(java.util.Base64.getUrlDecoder().decode(payload));
             
