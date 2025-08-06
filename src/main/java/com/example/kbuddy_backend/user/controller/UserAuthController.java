@@ -231,7 +231,9 @@ public class UserAuthController {
         }
         
         // 302 리다이렉트 응답 생성
-        String redirectUrl = "/oauth/apple-redirect?accessToken=" + appleResponse.accessToken() + "&isNew=" + appleResponse.isNew();
+        String redirectUrl = "/oauth/apple-redirect?accessToken=" + appleResponse.accessToken() + "&isNew=" + appleResponse.isNew()
+                + "&email=" + appleResponse.email() + "&oAuthUid=" + appleResponse.oAuthUid()
+                + "&firstName=" + appleResponse.firstName() + "&lastName=" + appleResponse.lastName();
         return ResponseEntity.status(HttpStatus.FOUND)
                 .header("Location", redirectUrl)
                 .build();

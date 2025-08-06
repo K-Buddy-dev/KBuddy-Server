@@ -169,7 +169,8 @@ public class UserAuthService {
         Map<String, Object> claims = decodeIdToken(idToken);
         String email = (String) claims.get("email");
         String sub = (String) claims.get("sub"); // Apple의 고유 ID
-        
+        log.debug("Apple ID Token claims: {}", claims);
+        log.debug("Apple email: {}, sub: {}", email, sub);
         // 2. user JSON 파싱 (이름 정보)
         AppleUserInfo userInfo = parseUserInfo(userJson);
         
