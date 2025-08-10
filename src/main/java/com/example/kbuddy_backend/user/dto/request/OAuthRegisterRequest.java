@@ -10,7 +10,7 @@ import jakarta.validation.constraints.Pattern;
 //todo: validation
 
 public record OAuthRegisterRequest(@NotNull @Pattern(regexp = "^[a-zA-Z0-9]{3,20}$",message = "닉네임 유효성 검사 실패") String userId, @NotNull @Email(message = "이메일 형식에 맞지 않습니다.") String email, @NotNull String firstName, @NotNull String lastName,
-								   @NotNull Country country, @NotNull Gender gender, @NotNull String birthDate,@NotNull String oAuthUid, @NotNull OAuthCategory oAuthCategory) {
+								   @NotNull Country country,  Gender gender, String birthDate,@NotNull String oAuthUid, @NotNull OAuthCategory oAuthCategory) {
 	public static OAuthRegisterRequest of(String userId, String email, String firstName, String lastName,
                                           Country country, Gender gender,String birthDate, String oAuthUid, OAuthCategory oAuthCategory) {
 		return new OAuthRegisterRequest(userId, email, firstName, lastName, country, gender,birthDate, oAuthUid, oAuthCategory);

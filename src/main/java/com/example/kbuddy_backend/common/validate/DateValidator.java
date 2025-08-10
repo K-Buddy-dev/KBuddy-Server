@@ -7,6 +7,9 @@ import java.time.format.DateTimeFormatter;
 public class DateValidator {
     public static void isValidDate(String date) {
         try {
+            if (date == null || date.isEmpty()) {
+                return;
+            }
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyMMdd");
             LocalDate.parse(date, formatter);
         } catch (Exception e) {

@@ -85,10 +85,10 @@ cloud:
       secretKey: ${S3_SECRET_KEY}
 
 #management:
-#  endpoints:
-#    web:
-#      exposure:
-#        include: "*" # 모든 엔드포인트 노출 -> 추후 변경
+##  endpoints:
+##    web:
+##      exposure:
+##        include: "*" # 모든 엔드포인트 노출 -> 추후 변경
 
 firebase:
   type: ${FIREBASE_TYPE}
