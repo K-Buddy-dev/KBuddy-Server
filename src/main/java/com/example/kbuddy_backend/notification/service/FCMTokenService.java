@@ -45,4 +45,13 @@ public class FCMTokenService {
     public List<FCMToken> getActiveTokens(User user) {
         return fcmTokenRepository.findByUserAndIsActiveTrue(user);
     }
+
+    @Transactional
+    public void deactivateAllUserTokens(User user) {
+        List<FCMToken> userTokens = fcmTokenRepository.findByUser(user);
+        for (FCMToken token : userTokens) {
+            token.setIsActive(false);
+        }
+        fcmTokenRepository.saveAll(userTokens);
+    }
 } 

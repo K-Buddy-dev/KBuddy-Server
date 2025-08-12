@@ -11,6 +11,7 @@ import com.example.kbuddy_backend.blog.exception.NotWriterException;
 import com.example.kbuddy_backend.blog.repository.BlogCommentRepository;
 import com.example.kbuddy_backend.blog.repository.BlogHeartRepository;
 import com.example.kbuddy_backend.user.entity.User;
+import com.example.kbuddy_backend.user.service.UserBlockService;
 
 import java.util.Objects;
 
@@ -26,17 +27,28 @@ public class BlogCommentService {
 
 	private final BlogCommentRepository blogCommentRepository;
 	private final BlogHeartRepository blogHeartRepository;
-
 	private final BlogService blogService;
+	private final UserBlockService userBlockService;
 
 	@Transactional
 	public void saveBlogComment(Long blogId, BlogCommentSaveRequest request, User user) {
 		Blog blog = blogService.findBlogById(blogId);
+		
+		// 차단된 사용자의 게시글에 댓글을 작성하려는 경우
+		if (userBlockService.isBlocked(user, blog.getWriter())) {
+			throw new IllegalArgumentException("차단된 사용자의 게시글에는 댓글을 작성할 수 없습니다.");
+		}
 
 		BlogComment parent = null;
 		if (request.parentId() != null) {
 			parent = blogCommentRepository.findById(request.parentId())
 				.orElseThrow(BlogCommentNotFoundException::new);
+			
+			// 차단된 사용자의 댓글에 답글을 작성하려는 경우
+			if (userBlockService.isBlocked(user, parent.getWriter())) {
+				throw new IllegalArgumentException("차단된 사용자의 댓글에는 답글을 작성할 수 없습니다.");
+			}
+			
 			// 대댓글의 대댓글 방지
 			if (parent.isReply()) {
 				throw new MaximumReplyDepthExceededException();

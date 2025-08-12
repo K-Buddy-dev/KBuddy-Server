@@ -2,6 +2,7 @@ package com.example.kbuddy_backend.user.controller;
 
 import static org.springframework.http.HttpStatus.*;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import com.example.kbuddy_backend.auth.dto.response.AccessTokenAndRefreshTokenResponse;
 import com.example.kbuddy_backend.auth.dto.response.AccessTokenResponse;
 import com.example.kbuddy_backend.auth.service.MailSendService;
@@ -15,8 +16,10 @@ import com.example.kbuddy_backend.user.dto.request.OAuthRegisterRequest;
 import com.example.kbuddy_backend.user.dto.request.PasswordRequest;
 import com.example.kbuddy_backend.user.dto.request.RegisterRequest;
 import com.example.kbuddy_backend.user.dto.request.UserNameCheckRequest;
+
 import com.example.kbuddy_backend.user.dto.response.DefaultResponse;
 import com.example.kbuddy_backend.user.dto.response.EmailCodeResponse;
+import com.example.kbuddy_backend.user.dto.response.AppleLoginResponse;
 import com.example.kbuddy_backend.user.entity.User;
 import com.example.kbuddy_backend.user.exception.DuplicateEmailException;
 import com.example.kbuddy_backend.user.exception.DuplicateUserIdException;
@@ -31,10 +34,12 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -186,4 +191,52 @@ public class UserAuthController {
         return ResponseEntity.noContent().build();
     }
 
+    @Operation(summary = "계정 삭제", description = "사용자 계정을 삭제(비활성화)합니다.")
+    @DeleteMapping("/account")
+    public ResponseEntity<Void> deleteAccount(
+            @Parameter(hidden = true) @CurrentUser User user, 
+            HttpServletResponse response) {
+        // 계정 삭제 처리
+        userAuthService.deleteAccount(user);
+        
+        // 로그아웃 처리 (쿠키 삭제)
+        Cookie refreshTokenCookie = new Cookie("refreshToken", null);
+        refreshTokenCookie.setPath("/");
+        refreshTokenCookie.setHttpOnly(true);
+        refreshTokenCookie.setMaxAge(0);
+        refreshTokenCookie.setSecure(true);
+        response.addCookie(refreshTokenCookie);
+        
+        return ResponseEntity.noContent().build();
+    }
+
+    @Operation(summary = "Apple 로그인 콜백", description = "Apple에서 전송하는 로그인 콜백을 처리하고 302 리다이렉트합니다.")
+    @PostMapping(value = "/apple/callback", consumes = "application/x-www-form-urlencoded")
+    public ResponseEntity<Void> appleCallback(
+            @RequestParam("code") String code,
+            @RequestParam("id_token") String idToken,
+            @RequestParam(value = "user", required = false) String user,
+            HttpServletResponse response) {
+        AppleLoginResponse appleResponse = userAuthService.handleAppleLogin(idToken, user);
+        
+        // 토큰을 쿠키에 설정 (기존 사용자인 경우에만)
+        if (!appleResponse.accessToken().isEmpty()) {
+            // Refresh token을 쿠키에 설정
+            Cookie refreshTokenCookie = new Cookie("refreshToken", appleResponse.refreshToken());
+            refreshTokenCookie.setPath("/");
+            refreshTokenCookie.setHttpOnly(true);
+            refreshTokenCookie.setSecure(true);
+            refreshTokenCookie.setMaxAge(refreshTokenExpiration);
+            response.addCookie(refreshTokenCookie);
+        }
+        
+        // 302 리다이렉트 응답 생성
+        String frontendDomain = "https://k-buddy.kr";
+        String redirectUrl = frontendDomain + "/oauth/apple-redirect?accessToken=" + appleResponse.accessToken() + "&isNew=" + appleResponse.isNew()
+                + "&email=" + appleResponse.email() + "&oAuthUid=" + appleResponse.oAuthUid()
+                + "&firstName=" + appleResponse.firstName() + "&lastName=" + appleResponse.lastName();
+        return ResponseEntity.status(HttpStatus.FOUND)
+                .header("Location", redirectUrl)
+                .build();
+    }
 }

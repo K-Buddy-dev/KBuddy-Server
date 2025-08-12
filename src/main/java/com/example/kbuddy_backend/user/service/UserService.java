@@ -13,10 +13,7 @@ import com.example.kbuddy_backend.qna.entity.QnaBookmark;
 import com.example.kbuddy_backend.qna.repository.QnaBookmarkRepository;
 import com.example.kbuddy_backend.qna.repository.QnaHeartRepository;
 import com.example.kbuddy_backend.qna.repository.QnaRepository;
-import com.example.kbuddy_backend.user.dto.response.BookmarkedPostResponse;
-import com.example.kbuddy_backend.user.dto.response.DraftListResponse;
-import com.example.kbuddy_backend.user.dto.response.UserProfileResponse;
-import com.example.kbuddy_backend.user.dto.response.UserResponse;
+import com.example.kbuddy_backend.user.dto.response.*;
 import com.example.kbuddy_backend.user.entity.User;
 import com.example.kbuddy_backend.user.repository.UserRepository;
 import com.example.kbuddy_backend.s3.service.S3Service;
@@ -204,5 +201,69 @@ public class UserService {
         allBookmarks.sort(Comparator.comparing(BookmarkedPostResponse::createdAt).reversed());
         
         return allBookmarks;
+    }
+
+    public List<MyArticleResponse> getMyArticle(User user) {
+        // QNA 본인 게시글 조회
+        List<Qna> myQnas = qnaRepository.findByWriterAndStatus(user, QnaStatus.PUBLISHED);
+        List<MyArticleResponse> qnaArticles = myQnas.stream()
+                .map(qna -> {
+                    String thumbnailImageUrl = qna.getImageUrls() != null && !qna.getImageUrls().isEmpty()
+                            ? qna.getImageUrls().get(0).getImageUrl()
+                            : "";
+                    return MyArticleResponse.of(
+                            qna.getId(),
+                            qna.getWriter().getUuid().toString(),
+                            qna.getWriter().getUsername(),
+                            qna.getWriter().getProfileImageUrl() != null ? qna.getWriter().getProfileImageUrl() : "",
+                            "QNA",
+                            List.of(qna.getCategoryCode()),
+                            qna.getTitle(),
+                            qna.getDescription(),
+                            qna.getViewCount(),
+                            qna.getHeartCount(),
+                            qna.getCommentCount(),
+                            qna.getCreatedDate(),
+                            qna.getLastModifiedDate(),
+                            thumbnailImageUrl,
+                            qnaHeartRepository.existsByQnaIdAndUserId(qna.getId(), user.getId()),
+                            false // 내가 쓴 글이므로 북마크는 false
+                    );
+                })
+                .toList();
+
+        // 블로그 본인 게시글 조회
+        List<Blog> myBlogs = blogRepository.findByWriterAndStatus(user, BlogStatus.PUBLISHED);
+        List<MyArticleResponse> blogArticles = myBlogs.stream()
+                .map(blog -> {
+                    String thumbnailImageUrl = blog.getImageUrls() != null && !blog.getImageUrls().isEmpty()
+                            ? blog.getImageUrls().get(0).getImageUrl()
+                            : "";
+                    return MyArticleResponse.of(
+                            blog.getId(),
+                            blog.getWriter().getUuid().toString(),
+                            blog.getWriter().getUsername(),
+                            blog.getWriter().getProfileImageUrl() != null ? blog.getWriter().getProfileImageUrl() : "",
+                            "BLOG",
+                            blog.getCategoryCode(),
+                            blog.getTitle(),
+                            blog.getDescription(),
+                            blog.getViewCount(),
+                            blog.getHeartCount(),
+                            blog.getCommentCount(),
+                            blog.getCreatedDate(),
+                            blog.getLastModifiedDate(),
+                            thumbnailImageUrl,
+                            blogHeartRepository.existsByBlogIdAndUserId(blog.getId(), user.getId()),
+                            false // 내가 쓴 글이므로 북마크는 false
+                    );
+                })
+                .toList();
+
+        List<MyArticleResponse> allArticles = new ArrayList<>();
+        allArticles.addAll(qnaArticles);
+        allArticles.addAll(blogArticles);
+        allArticles.sort(Comparator.comparing(MyArticleResponse::createdAt).reversed());
+        return allArticles;
     }
 }

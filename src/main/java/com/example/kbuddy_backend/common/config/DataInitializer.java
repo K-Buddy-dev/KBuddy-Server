@@ -4,6 +4,7 @@ import static com.example.kbuddy_backend.user.constant.UserRole.NORMAL_USER;
 
 import com.example.kbuddy_backend.auth.dto.response.AccessTokenAndRefreshTokenResponse;
 import com.example.kbuddy_backend.auth.service.AuthService;
+import com.example.kbuddy_backend.qna.constant.QnaStatus;
 import com.example.kbuddy_backend.qna.entity.Qna;
 import com.example.kbuddy_backend.qna.repository.QnaRepository;
 import com.example.kbuddy_backend.user.constant.Country;
@@ -51,6 +52,20 @@ public class DataInitializer {
         user.addAuthority(new Authority(NORMAL_USER));
         User saveUser = userRepository.save(user);
 
+        User user2 = User.builder()
+                .email("kbuddy2@gmail.com")
+                .username("johnhuh2")
+                .password(password)
+                .firstName("tony2")
+                .lastName("stark")
+                .gender(Gender.M)
+                .bio("hello, i'm tony stark.")
+                .country(Country.KR)
+                .birthDate("000725")
+                .build();
+        user.addAuthority(new Authority(NORMAL_USER));
+        userRepository.save(user2);
+
         List<GrantedAuthority> grantedAuthorities = saveUser.getAuthorities().stream()
                 .map(authority -> new SimpleGrantedAuthority(authority.getAuthorityName().name()))
                 .collect(Collectors.toList());
@@ -64,6 +79,7 @@ public class DataInitializer {
         Qna qna = Qna.builder()
                 .title("Dummy Title")
                 .description("Dummy Description")
+                .status(QnaStatus.PUBLISHED)
                 .writer(user)
                 .build();
         qnaRepository.save(qna);

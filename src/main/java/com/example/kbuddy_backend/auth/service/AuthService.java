@@ -7,7 +7,6 @@ import com.example.kbuddy_backend.auth.dto.response.AccessTokenAndRefreshTokenRe
 import com.example.kbuddy_backend.auth.dto.response.AccessTokenResponse;
 import com.example.kbuddy_backend.auth.dto.response.TokenResponse;
 import com.example.kbuddy_backend.auth.token.JwtTokenProvider;
-import com.example.kbuddy_backend.user.constant.UserRole;
 
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;

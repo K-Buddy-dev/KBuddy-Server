@@ -11,6 +11,7 @@ import com.example.kbuddy_backend.qna.exception.QnaCommentNotFoundException;
 import com.example.kbuddy_backend.qna.repository.QnaCommentRepository;
 import com.example.kbuddy_backend.qna.repository.QnaHeartRepository;
 import com.example.kbuddy_backend.user.entity.User;
+import com.example.kbuddy_backend.user.service.UserBlockService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,15 +25,27 @@ public class QnaCommentService {
 	private final QnaCommentRepository qnaCommentRepository;
 	private final QnaHeartRepository qnaHeartRepository;
 	private final QnaService qnaService;
+	private final UserBlockService userBlockService;
 
 	@Transactional
 	public void saveQnaComment(Long qnaId, QnaCommentSaveRequest request, User user) {
 		Qna qna = qnaService.findQnaById(qnaId);
+		
+		// 차단된 사용자의 게시글에 댓글을 작성하려는 경우
+		if (userBlockService.isBlocked(user, qna.getWriter())) {
+			throw new IllegalArgumentException("차단된 사용자의 게시글에는 댓글을 작성할 수 없습니다.");
+		}
 
 		QnaComment parent = null;
 		if (request.parentId() != null) {
 			parent = qnaCommentRepository.findById(request.parentId())
 				.orElseThrow(QnaCommentNotFoundException::new);
+			
+			// 차단된 사용자의 댓글에 답글을 작성하려는 경우
+			if (userBlockService.isBlocked(user, parent.getWriter())) {
+				throw new IllegalArgumentException("차단된 사용자의 댓글에는 답글을 작성할 수 없습니다.");
+			}
+			
 			if (parent.isReply()) {
 				throw new MaximumReplyDepthExceededException();
 			}
