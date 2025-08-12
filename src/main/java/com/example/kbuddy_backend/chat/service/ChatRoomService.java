@@ -46,4 +46,21 @@ public class ChatRoomService {
             topics.put(roomId, topic);
         }
     }
+
+    public void exitChatRoom(String roomId) {
+        ChannelTopic topic = topics.remove(roomId);
+        if (topic != null) {
+            redisMessageListenerContainer.removeMessageListener(redisSubscriber, topic);
+        }
+    }
+
+    public ChannelTopic getOrCreateTopic(String roomId) {
+        ChannelTopic topic = topics.get(roomId);
+        if (topic == null) {
+            topic = new ChannelTopic(roomId);
+            redisMessageListenerContainer.addMessageListener(redisSubscriber, topic);
+            topics.put(roomId, topic);
+        }
+        return topic;
+    }
 }
