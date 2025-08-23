@@ -4,6 +4,7 @@ import com.example.kbuddy_backend.common.constant.ImageFileType;
 import com.example.kbuddy_backend.common.dto.ImageFileDto;
 import com.example.kbuddy_backend.qna.constant.SortBy;
 import com.example.kbuddy_backend.qna.constant.QnaStatus;
+import com.example.kbuddy_backend.qna.dto.request.QnaReportRequest;
 import com.example.kbuddy_backend.qna.dto.request.QnaSaveRequest;
 import com.example.kbuddy_backend.qna.dto.request.QnaUpdateRequest;
 import com.example.kbuddy_backend.qna.dto.response.AllQnaResponse;
@@ -15,16 +16,18 @@ import com.example.kbuddy_backend.qna.entity.QnaBookmark;
 import com.example.kbuddy_backend.qna.entity.QnaHeart;
 import com.example.kbuddy_backend.qna.entity.QnaImage;
 import com.example.kbuddy_backend.qna.entity.QnaComment;
+import com.example.kbuddy_backend.qna.entity.QnaReport;
 import com.example.kbuddy_backend.qna.exception.*;
 import com.example.kbuddy_backend.qna.repository.*;
 import com.example.kbuddy_backend.s3.dto.response.S3Response;
 import com.example.kbuddy_backend.s3.service.S3Service;
 import com.example.kbuddy_backend.user.entity.User;
-import com.example.kbuddy_backend.user.exception.UserNotFoundException;
+import com.example.kbuddy_backend.user.exception.UserNotFoundException;;
 import com.example.kbuddy_backend.user.service.UserBlockService;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import com.example.kbuddy_backend.common.exception.DuplicateException;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -52,6 +55,7 @@ public class QnaService {
     private final QnaHeartRepository qnaHeartRepository;
     private final QnaBookmarkRepository qnaBookmarkRepository;
     private final QnaImageRepository qnaImageRepository;
+    private final QnaReportRepository qnaReportRepository;
     private final S3Service s3Service;
     private final QnaCommentRepository qnaCommentRepository;
     private final UserBlockService userBlockService;
@@ -401,6 +405,32 @@ public class QnaService {
         QnaBookmark qnaBookmark = qnaBookmarkRepository.findByQnaIdAndUserId(qnaId, user.getId())
                 .orElseThrow(QnaBookmarkNotFoundException::new);
         qnaBookmarkRepository.delete(qnaBookmark);
+    }
+
+    @Transactional
+    public void reportQna(Long qnaId, QnaReportRequest request, User user) {
+        // 신고하려는 Qna가 존재하는지 확인
+        Qna qna = qnaRepository.findById(qnaId)
+                .orElseThrow(QnaNotFoundException::new);
+
+        // 이미 신고한 Qna인지 확인
+        if (qnaReportRepository.existsByQnaIdAndReporterId(qnaId, user.getId())) {
+            throw new DuplicateException("이미 신고한 Q&A 입니다.");
+        }
+
+        // 자신이 쓴 블로그 신고하는지 확인
+        if (qna.getWriter().getId().equals(user.getId())) {
+            throw new BadRequestException(("자신의 Q&A 글을 신고할 수 없습니다."));
+        }
+
+        QnaReport report = QnaReport.builder()
+                .qna(qna)
+                .reporter(user)
+                .content(request.content())
+                .build();
+
+        qnaReportRepository.save(report);
+        qna.plusReportCount();
     }
 
     public Qna findQnaById(Long qnaId) {
