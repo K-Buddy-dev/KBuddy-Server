@@ -26,13 +26,20 @@ public class RedisSubscriber implements MessageListener {
     @Override
     public void onMessage(Message message, byte[] pattern) {
         try {
-            String publishMessage = redisTemplate
-                    .getStringSerializer()
-                    .deserialize(message.getBody());
+            Object payload = redisTemplate.getValueSerializer().deserialize(message.getBody());
+            ChatMessage roomMessage;
 
-            ChatMessage roomMessage = objectMapper.readValue(publishMessage, ChatMessage.class);
+            if (payload instanceof ChatMessage cm) {
+                roomMessage = cm;
+            } else if (payload instanceof String s) {
+                roomMessage = objectMapper.readValue(s, ChatMessage.class);
+            } else {
+                // GenericJackson2JsonRedisSerializer가 Map 등으로 반환하는 경우
+                roomMessage = objectMapper.convertValue(payload, ChatMessage.class);
+            }
+
             messageTemplate.convertAndSend("/sub/chat/room/" + roomMessage.getRoomId(), roomMessage);
-        } catch (JsonProcessingException e) {
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }

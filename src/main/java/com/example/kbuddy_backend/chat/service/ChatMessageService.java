@@ -5,6 +5,7 @@ import com.example.kbuddy_backend.chat.base.redis.service.RedisPublisher;
 import com.example.kbuddy_backend.chat.dto.ChatMessage;
 import com.example.kbuddy_backend.chat.repository.ChatMessageRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.listener.ChannelTopic;
 import org.springframework.stereotype.Service;
 
@@ -12,6 +13,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ChatMessageService {
 
     private final RedisPublisher redisPublisher;
@@ -41,7 +43,9 @@ public class ChatMessageService {
             }
         }
 
+        log.info("ChatMessageService: in -> {}", message);
         ChannelTopic topic = chatRoomService.getOrCreateTopic(roomId);
+        log.info("ChatMessageService: publish -> {}", topic.getTopic());
         redisPublisher.publish(topic, message);
         // 저장은 Subscriber에서 단일화 처리(권장). 직접 저장하려면 아래 주석 해제
         // chatMessageRepository.save(message);
