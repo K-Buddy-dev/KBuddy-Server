@@ -62,6 +62,7 @@ public class Qna extends BaseTimeEntity {
 
     private int heartCount;
     private int viewCount;
+    private int reportCount;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -136,5 +137,9 @@ public class Qna extends BaseTimeEntity {
         if (status != null) {
             this.status = status;
         }
+    }
+
+    public void plusReportCount() {
+        this.reportCount += 1;
     }
 }

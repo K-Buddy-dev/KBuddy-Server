@@ -5,6 +5,7 @@ import com.example.kbuddy_backend.common.advice.response.ErrorResponse;
 import com.example.kbuddy_backend.common.config.CurrentUser;
 import com.example.kbuddy_backend.qna.constant.SortBy;
 import com.example.kbuddy_backend.qna.dto.request.QnaCommentSaveRequest;
+import com.example.kbuddy_backend.qna.dto.request.QnaReportRequest;
 import com.example.kbuddy_backend.qna.dto.request.QnaSaveRequest;
 import com.example.kbuddy_backend.qna.dto.request.QnaUpdateRequest;
 import com.example.kbuddy_backend.qna.dto.response.AllQnaResponse;
@@ -122,5 +123,13 @@ public class QnaController {
     public ResponseEntity<Void> minusQnaHeart(@PathVariable Long qnaId, @Parameter(hidden = true) @CurrentUser User user) {
         qnaService.minusHeart(qnaId, user);
         return ResponseEntity.noContent().build(); // 204 No content 반환
+    }
+
+    //Qna 신고
+    @PostMapping("/{qnaId}/report")
+    @Operation(summary = "Q&A 게시글 신고", description = "Qna 게시글을 신고합니다.")
+    public ResponseEntity<String> reportQna(@PathVariable Long qnaId, @RequestBody QnaReportRequest request, @Parameter(hidden = true) @CurrentUser User user) {
+        qnaService.reportQna(qnaId, request, user);
+        return ResponseEntity.noContent().build(); // 204 No Content 반환
     }
 }
