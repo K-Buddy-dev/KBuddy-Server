@@ -10,6 +10,8 @@ import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 
 import java.util.List;
+import java.util.Optional;
+import com.example.kbuddy_backend.user.entity.User;
 
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -24,6 +26,9 @@ class ChatMessageControllerTest extends WebMVCTest {
     @DisplayName("REST 메시지 전송 API 호출시 서비스로 위임된다")
     @Test
     void sendMessageRest() throws Exception {
+        // @CurrentUser 리졸버가 호출하는 UserRepository 스텁
+        when(userRepository.findById(123L)).thenReturn(Optional.of(User.builder().username("mock").build()));
+
         ChatMessage req = ChatMessage.builder()
                 .messageType(ChatMessage.MessageType.TALK)
                 .sender("123")
