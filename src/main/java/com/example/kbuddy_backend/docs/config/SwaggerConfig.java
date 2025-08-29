@@ -1,7 +1,6 @@
 package com.example.kbuddy_backend.docs.config;
 
 import io.swagger.v3.oas.models.Operation;
-import io.swagger.v3.oas.models.info.License;
 import io.swagger.v3.oas.models.media.Content;
 import io.swagger.v3.oas.models.media.MediaType;
 import io.swagger.v3.oas.models.media.Schema;
@@ -81,16 +80,6 @@ public class SwaggerConfig {
 				new Server().url("http://localhost:8082").description("Local Server")
 			));
 	}
-
-	@Bean
-	public OpenAPI springShopOpenAPI() {
-		return new OpenAPI()
-				.info(new Info().title("KBuddy Chat API")
-						.description("KBuddy 채팅 서비스 API 문서")
-						.version("v1.0.0")
-						.license(new License().name("Apache 2.0").url("http://springdoc.org")));
-	}
-
 	private Info apiInfo() {
 		return new Info()
 			.title("K-Buddy API 문서")
