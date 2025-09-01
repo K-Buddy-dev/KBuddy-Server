@@ -2,6 +2,7 @@ package com.example.kbuddy_backend.chat.repository;
 
 import com.example.kbuddy_backend.chat.dto.ChatRoom;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Repository;
@@ -13,6 +14,7 @@ import java.util.List;
 @Repository
 public class ChatRoomRepository {
     private static final String CHAT_ROOMS = "CHAT_ROOM";
+    @Qualifier("redisTemplate")
     private final RedisTemplate<String, Object> redisTemplate;
     private HashOperations<String, String, ChatRoom> opsHashChatRoom;
 
