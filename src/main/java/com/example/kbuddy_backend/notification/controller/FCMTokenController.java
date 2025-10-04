@@ -25,8 +25,8 @@ public class FCMTokenController {
             @CurrentUser User user,
             @RequestParam String token,
             @RequestParam(required = false) String deviceInfo) {
-        FCMToken saved = fcmTokenService.registerToken(user, token, deviceInfo);
-        return ResponseEntity.ok(saved);
+        fcmTokenService.registerToken(user, token, deviceInfo);
+        return ResponseEntity.noContent().build();
     }
 
     /**

@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -16,21 +17,22 @@ public class FCMTokenService {
     private final FCMTokenRepository fcmTokenRepository;
 
     @Transactional
-    public FCMToken registerToken(User user, String token, String deviceInfo) {
+    public void registerToken(User user, String token, String deviceInfo) {
         Optional<FCMToken> existing = fcmTokenRepository.findByToken(token);
         if (existing.isPresent()) {
             FCMToken fcmToken = existing.get();
             fcmToken.setIsActive(true);
             fcmToken.setUser(user);
+            fcmToken.setUpdatedAt(LocalDateTime.now());
             fcmToken.setDeviceInfo(deviceInfo);
-            return fcmToken;
+            return;
         }
         FCMToken newToken = new FCMToken();
         newToken.setUser(user);
         newToken.setToken(token);
         newToken.setDeviceInfo(deviceInfo);
         newToken.setIsActive(true);
-        return fcmTokenRepository.save(newToken);
+        fcmTokenRepository.save(newToken);
     }
 
     @Transactional
