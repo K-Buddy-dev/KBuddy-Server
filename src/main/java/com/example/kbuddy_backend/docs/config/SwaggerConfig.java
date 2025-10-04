@@ -80,7 +80,6 @@ public class SwaggerConfig {
 				new Server().url("http://localhost:8082").description("Local Server")
 			));
 	}
-
 	private Info apiInfo() {
 		return new Info()
 			.title("K-Buddy API 문서")
