@@ -1,5 +1,6 @@
 package com.example.kbuddy_backend.notification.controller;
 
+import com.example.kbuddy_backend.common.config.CurrentUser;
 import com.example.kbuddy_backend.notification.entity.FCMToken;
 import com.example.kbuddy_backend.notification.service.FCMTokenService;
 import com.example.kbuddy_backend.user.entity.User;
@@ -16,12 +17,12 @@ import java.util.List;
 public class FCMTokenController {
     private final FCMTokenService fcmTokenService;
 
-    /**
+    /*
      * 유저의 새로운 토큰 등록
      */
     @PostMapping
     public ResponseEntity<FCMToken> registerToken(
-            @AuthenticationPrincipal User user,
+            @CurrentUser User user,
             @RequestParam String token,
             @RequestParam(required = false) String deviceInfo) {
         FCMToken saved = fcmTokenService.registerToken(user, token, deviceInfo);
