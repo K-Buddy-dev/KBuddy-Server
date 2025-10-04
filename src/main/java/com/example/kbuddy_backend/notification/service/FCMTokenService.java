@@ -23,7 +23,7 @@ public class FCMTokenService {
             fcmToken.setIsActive(true);
             fcmToken.setUser(user);
             fcmToken.setDeviceInfo(deviceInfo);
-            return fcmTokenRepository.save(fcmToken);
+            return fcmToken;
         }
         FCMToken newToken = new FCMToken();
         newToken.setUser(user);
