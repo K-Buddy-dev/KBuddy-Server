@@ -1,20 +1,13 @@
 package com.example.kbuddy_backend.user.entity;
 
 import com.example.kbuddy_backend.common.entity.BaseTimeEntity;
+import com.example.kbuddy_backend.notification.entity.FCMToken;
 import com.example.kbuddy_backend.qna.entity.QnaHeart;
 import com.example.kbuddy_backend.user.constant.Country;
 import com.example.kbuddy_backend.user.constant.Gender;
 import com.example.kbuddy_backend.user.constant.OAuthCategory;
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -54,6 +47,9 @@ public class User extends BaseTimeEntity {
 
     @OneToMany(cascade = CascadeType.ALL)
     private List<Authority> authorities = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<FCMToken> fcmToken = new ArrayList<>();
 
     @Enumerated(EnumType.STRING)
     private OAuthCategory oauthCategory;

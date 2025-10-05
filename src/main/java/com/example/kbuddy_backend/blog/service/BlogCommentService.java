@@ -10,6 +10,7 @@ import com.example.kbuddy_backend.common.exception.MaximumReplyDepthExceededExce
 import com.example.kbuddy_backend.blog.exception.NotWriterException;
 import com.example.kbuddy_backend.blog.repository.BlogCommentRepository;
 import com.example.kbuddy_backend.blog.repository.BlogHeartRepository;
+import com.example.kbuddy_backend.notification.service.FCMService;
 import com.example.kbuddy_backend.user.entity.User;
 import com.example.kbuddy_backend.user.service.UserBlockService;
 
@@ -29,11 +30,12 @@ public class BlogCommentService {
 	private final BlogHeartRepository blogHeartRepository;
 	private final BlogService blogService;
 	private final UserBlockService userBlockService;
+    private final FCMService fcmService;
 
 	@Transactional
 	public void saveBlogComment(Long blogId, BlogCommentSaveRequest request, User user) {
 		Blog blog = blogService.findBlogById(blogId);
-		
+
 		// 차단된 사용자의 게시글에 댓글을 작성하려는 경우
 		if (userBlockService.isBlocked(user, blog.getWriter())) {
 			throw new IllegalArgumentException("차단된 사용자의 게시글에는 댓글을 작성할 수 없습니다.");
@@ -63,9 +65,23 @@ public class BlogCommentService {
 
 		if (parent != null) {
 			parent.addChild(blogComment);
+            //대댓글 알림
+            if (!Objects.equals(parent.getWriter().getId(), user.getId())) {
+                String title = "New Reply to Your Comment";
+                String body = user.getUsername() + "has replied to your comment.";
+                fcmService.sendNotificationAllFcmTokens(parent.getWriter(), title, body);
+            }
 		}
 		
 		blogCommentRepository.save(blogComment);
+
+        //알림 전송
+        if (!Objects.equals(blog.getWriter().getId(), user.getId())) {
+            String title = "New Comment on Your Blog Post";
+            String body = user.getUsername() + "has left a comment on your post.";
+            fcmService.sendNotificationAllFcmTokens(blog.getWriter(), title, body);
+        }
+
 	}
 
 	@Transactional
@@ -96,6 +112,13 @@ public class BlogCommentService {
 		BlogHeart blogHeart = new BlogHeart(user, blogComment);
 		blogComment.plusHeart(blogHeart);
 		blogHeartRepository.save(blogHeart);
+
+        //알림 전송
+        if (!Objects.equals(blogComment.getWriter().getId(), user.getId())) {
+            String title = "Your  Comment Got a New Like";
+            String body = user.getUsername() + "liked your comment.";
+            fcmService.sendNotificationAllFcmTokens(blogComment.getWriter(), title, body);
+        }
 	}
 
 	@Transactional

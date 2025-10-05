@@ -70,14 +70,14 @@ public class FCMService {
      * @param user 알림을 받을 사용자
      * @param message 알림 메시지
      */
-    public void sendNotification(User user, String message) {
+    public void sendNotificationAllFcmTokens(User user, String title, String message) {
         // 사용자의 모든 활성 FCM 토큰 조회
         List<FCMToken> activeTokens = fcmTokenService.getActiveTokens(user);
         
         // 각 토큰에 대해 알림 전송
         for (FCMToken token : activeTokens) {
             try {
-                sendNotification(token.getToken(), "KBuddy 알림", message);
+                sendNotification(token.getToken(), title, message);
             } catch (Exception e) {
                 // 토큰이 유효하지 않은 경우 비활성화
                 fcmTokenService.deactivateToken(token.getToken());

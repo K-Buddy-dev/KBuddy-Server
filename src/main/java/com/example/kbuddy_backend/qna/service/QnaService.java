@@ -2,6 +2,7 @@ package com.example.kbuddy_backend.qna.service;
 
 import com.example.kbuddy_backend.common.constant.ImageFileType;
 import com.example.kbuddy_backend.common.dto.ImageFileDto;
+import com.example.kbuddy_backend.notification.service.FCMService;
 import com.example.kbuddy_backend.qna.constant.SortBy;
 import com.example.kbuddy_backend.qna.constant.QnaStatus;
 import com.example.kbuddy_backend.qna.dto.request.QnaReportRequest;
@@ -59,6 +60,7 @@ public class QnaService {
     private final S3Service s3Service;
     private final QnaCommentRepository qnaCommentRepository;
     private final UserBlockService userBlockService;
+    private final FCMService fcmService;
 
     @Transactional
     public QnaResponse saveQna(QnaSaveRequest qnaSaveRequest, List<MultipartFile> imageFiles, User user) {
@@ -382,6 +384,13 @@ public class QnaService {
         QnaHeart qnaHeart = new QnaHeart(user, qna);
         qna.plusHeart(qnaHeart);
         qnaHeartRepository.save(qnaHeart);
+
+        //알림 전송
+        if (!Objects.equals(qna.getWriter().getId(), user.getId())) {
+            String title = "Your Q&A Post Got a New Like";
+            String body = user.getUsername() + " liked your Q&A post.";
+            fcmService.sendNotificationAllFcmTokens(qna.getWriter(), title, body);
+        }
     }
 
     @Transactional
