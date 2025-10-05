@@ -78,7 +78,7 @@ public class BlogCommentService {
         //알림 전송
         if (!Objects.equals(blog.getWriter().getId(), user.getId())) {
             String title = "New Comment on Your Blog Post";
-            String body = user.getUsername() + "has left a comment on your post.";
+            String body = user.getUsername() + " has left a comment on your post.";
             fcmService.sendNotificationAllFcmTokens(blog.getWriter(), title, body);
         }
 

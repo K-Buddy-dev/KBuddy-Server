@@ -74,7 +74,7 @@ public class QnaCommentService {
         //알림 전송
         if (!Objects.equals(qna.getWriter().getId(), user.getId())) {
             String title = "New Comment on Your Q&A Post";
-            String body = user.getUsername() + "has left a comment on your post.";
+            String body = user.getUsername() + " has left a comment on your post.";
             fcmService.sendNotificationAllFcmTokens(qna.getWriter(), title, body);
         }
 	}
