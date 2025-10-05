@@ -29,7 +29,7 @@ public class NotificationService {
         notification = notificationRepository.save(notification);
         
         // FCM 푸시 알림 전송
-        fcmService.sendNotification(receiver, message);
+//        fcmService.sendNotification(receiver, message);
         
         return notification;
     }

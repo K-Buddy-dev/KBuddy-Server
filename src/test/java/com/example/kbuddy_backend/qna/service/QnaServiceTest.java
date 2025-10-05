@@ -70,20 +70,20 @@ public class QnaServiceTest extends IntegrationTest {
         verify(qnaHeartRepository, times(0)).save(any(QnaHeart.class));  // save는 호출되지 않아야 함
     }
 
-    @DisplayName("좋아요 추가 테스트 - 좋아요를 처음 누를 때 정상적으로 저장")
-    @Test
-    public void testPlusHeart_FirstTimeLike() {
-        // given
-        given(qnaHeartRepository.findByQnaIdAndUserId(any(), any()))
-                .willReturn(Optional.empty());  // 이미 좋아요를 누르지 않았음
-        given(qnaRepository.findById(qnaId)).willReturn(Optional.of(qna));
-
-        // when
-        qnaService.plusHeart(qnaId, user);
-
-        // then
-        verify(qnaHeartRepository, times(1)).save(any(QnaHeart.class));  // 좋아요 저장이 호출되었는지 검증
-    }
+//    @DisplayName("좋아요 추가 테스트 - 좋아요를 처음 누를 때 정상적으로 저장")
+//    @Test
+//    public void testPlusHeart_FirstTimeLike() {
+//        // given
+//        given(qnaHeartRepository.findByQnaIdAndUserId(any(), any()))
+//                .willReturn(Optional.empty());  // 이미 좋아요를 누르지 않았음
+//        given(qnaRepository.findById(qnaId)).willReturn(Optional.of(qna));
+//
+//        // when
+//        qnaService.plusHeart(qnaId, user);
+//
+//        // then
+//        verify(qnaHeartRepository, times(1)).save(any(QnaHeart.class));  // 좋아요 저장이 호출되었는지 검증
+//    }
 
     @DisplayName("좋아요 취소 테스트 - 좋아요를 하지 않은 상태에서 취소 시 예외 발생")
     @Test

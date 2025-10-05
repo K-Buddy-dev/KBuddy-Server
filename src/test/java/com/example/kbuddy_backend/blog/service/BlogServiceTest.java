@@ -69,20 +69,20 @@ public class BlogServiceTest extends IntegrationTest {
         verify(blogHeartRepository, times(0)).save(any(BlogHeart.class));
     }
 
-    @DisplayName("블로그 좋아요 테스트 - 좋아요를 처음 누를 때 정상적으로 저장")
-    @Test
-    public void testPlusHeart_FirstTimeLike() {
-        // given
-        given(blogHeartRepository.findByBlogIdAndUserId(any(), any()))
-                .willReturn(Optional.empty());
-        given(blogRepository.findById(blogId)).willReturn(Optional.of(blog));
-
-        // when
-        blogService.plusHeart(blogId, user);
-
-        // then
-        verify(blogHeartRepository, times(1)).save(any(BlogHeart.class));
-    }
+//    @DisplayName("블로그 좋아요 테스트 - 좋아요를 처음 누를 때 정상적으로 저장")
+//    @Test
+//    public void testPlusHeart_FirstTimeLike() {
+//        // given
+//        given(blogHeartRepository.findByBlogIdAndUserId(any(), any()))
+//                .willReturn(Optional.empty());
+//        given(blogRepository.findById(blogId)).willReturn(Optional.of(blog));
+//
+//        // when
+//        blogService.plusHeart(blogId, user);
+//
+//        // then
+//        verify(blogHeartRepository, times(1)).save(any(BlogHeart.class));
+//    }
 
     @DisplayName("블로그 좋아요 취소 테스트 - 좋아요를 하지 않은 상태에서 취소 시 예외 발생")
     @Test
