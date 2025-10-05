@@ -116,7 +116,7 @@ public class BlogCommentService {
         //알림 전송
         if (!Objects.equals(blogComment.getWriter().getId(), user.getId())) {
             String title = "Your  Comment Got a New Like";
-            String body = user.getUsername() + "liked your comment.";
+            String body = user.getUsername() + " liked your comment.";
             fcmService.sendNotificationAllFcmTokens(blogComment.getWriter(), title, body);
         }
 	}

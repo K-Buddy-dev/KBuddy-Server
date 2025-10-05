@@ -111,7 +111,7 @@ public class QnaCommentService {
         //알림 전송
         if (!Objects.equals(qnaComment.getWriter().getId(), user.getId())) {
             String title = "Your Q&A Comment Got a New Like";
-            String body = user.getUsername() + "liked your comment.";
+            String body = user.getUsername() + " liked your comment.";
             fcmService.sendNotificationAllFcmTokens(qnaComment.getWriter(), title, body);
         }
 	}
