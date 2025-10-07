@@ -27,7 +27,7 @@ public class FCMService {
      * @param title 알림 제목
      * @param body 알림 내용
      */
-    public void sendNotification(String token, String title, String body) {
+    public void sendNotification(String token, String title, String body, String type, String targetId) {
         try {
             // 알림 메시지 생성
             Message message = Message.builder()
@@ -42,6 +42,8 @@ public class FCMService {
                     // Background용 Data 메시지
                     .putData("title", title)
                     .putData("body", body)
+                    .putData("click_action", type)
+                    .putData("deep_link", targetId) // 딥링크 예시
                     .putData("time", String.valueOf(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC)))
                     // iOS 설정
                     .setApnsConfig(ApnsConfig.builder()
@@ -70,14 +72,14 @@ public class FCMService {
      * @param user 알림을 받을 사용자
      * @param message 알림 메시지
      */
-    public void sendNotificationAllFcmTokens(User user, String title, String message) {
+    public void sendNotificationAllFcmTokens(User user, String title, String message, String type, String targetId) {
         // 사용자의 모든 활성 FCM 토큰 조회
         List<FCMToken> activeTokens = fcmTokenService.getActiveTokens(user);
         
         // 각 토큰에 대해 알림 전송
         for (FCMToken token : activeTokens) {
             try {
-                sendNotification(token.getToken(), title, message);
+                sendNotification(token.getToken(), title, message, type, targetId);
             } catch (Exception e) {
                 // 토큰이 유효하지 않은 경우 비활성화
                 fcmTokenService.deactivateToken(token.getToken());

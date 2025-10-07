@@ -409,7 +409,7 @@ public class BlogService {
         if (!Objects.equals(blog.getWriter().getId(), user.getId())) {
             String title = "Your Blog Post Got a New Like";
             String body = user.getUsername() + " liked your blog post.";
-            fcmService.sendNotificationAllFcmTokens(blog.getWriter(), title, body);
+            fcmService.sendNotificationAllFcmTokens(blog.getWriter(), title, body, "blog", blogId.toString());
         }
 
     }

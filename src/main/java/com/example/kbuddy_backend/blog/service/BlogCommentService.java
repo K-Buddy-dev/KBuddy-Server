@@ -69,7 +69,7 @@ public class BlogCommentService {
             if (!Objects.equals(parent.getWriter().getId(), user.getId())) {
                 String title = "New Reply to Your Comment";
                 String body = user.getUsername() + "has replied to your comment.";
-                fcmService.sendNotificationAllFcmTokens(parent.getWriter(), title, body);
+                fcmService.sendNotificationAllFcmTokens(parent.getWriter(), title, body, "blog", blogId.toString());
             }
 		}
 		
@@ -79,7 +79,7 @@ public class BlogCommentService {
         if (!Objects.equals(blog.getWriter().getId(), user.getId())) {
             String title = "New Comment on Your Blog Post";
             String body = user.getUsername() + " has left a comment on your post.";
-            fcmService.sendNotificationAllFcmTokens(blog.getWriter(), title, body);
+            fcmService.sendNotificationAllFcmTokens(blog.getWriter(), title, body, "blog", blogId.toString());
         }
 
 	}
@@ -117,7 +117,7 @@ public class BlogCommentService {
         if (!Objects.equals(blogComment.getWriter().getId(), user.getId())) {
             String title = "Your  Comment Got a New Like";
             String body = user.getUsername() + " liked your comment.";
-            fcmService.sendNotificationAllFcmTokens(blogComment.getWriter(), title, body);
+            fcmService.sendNotificationAllFcmTokens(blogComment.getWriter(), title, body, "blog", blogComment.getBlog().getId().toString());
         }
 	}
 

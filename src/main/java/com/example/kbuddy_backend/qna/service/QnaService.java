@@ -389,7 +389,7 @@ public class QnaService {
         if (!Objects.equals(qna.getWriter().getId(), user.getId())) {
             String title = "Your Q&A Post Got a New Like";
             String body = user.getUsername() + " liked your Q&A post.";
-            fcmService.sendNotificationAllFcmTokens(qna.getWriter(), title, body);
+            fcmService.sendNotificationAllFcmTokens(qna.getWriter(), title, body, "qna", qnaId.toString());
         }
     }
 

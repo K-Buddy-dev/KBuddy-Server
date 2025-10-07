@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.parameters.P;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -28,9 +29,13 @@ public class FCMController {
             @RequestParam String title,
 
             @Parameter(description = "알림 내용", required = true)
-            @RequestParam String body
+            @RequestParam String body,
+            @Parameter(description = "추가 데이터 타입", required = false)
+            @RequestParam String dataType,
+            @Parameter(description = "추가 데이터 ID", required = false)
+            @RequestParam String dataId
     ) {
-        fcmService.sendNotification(token, title, body);
+        fcmService.sendNotification(token, title, body,dataType,dataId);
         return "알림이 성공적으로 전송되었습니다.";
     }
 }
