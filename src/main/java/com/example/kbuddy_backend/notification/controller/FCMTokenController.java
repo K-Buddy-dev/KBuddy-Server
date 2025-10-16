@@ -1,6 +1,7 @@
 package com.example.kbuddy_backend.notification.controller;
 
 import com.example.kbuddy_backend.common.config.CurrentUser;
+import com.example.kbuddy_backend.notification.entity.DevicePlatform;
 import com.example.kbuddy_backend.notification.entity.FCMToken;
 import com.example.kbuddy_backend.notification.service.FCMTokenService;
 import com.example.kbuddy_backend.user.entity.User;
@@ -24,8 +25,9 @@ public class FCMTokenController {
     public ResponseEntity<FCMToken> registerToken(
             @CurrentUser User user,
             @RequestParam String token,
-            @RequestParam(required = false) String deviceInfo) {
-        fcmTokenService.registerToken(user, token, deviceInfo);
+            @RequestParam(required = false) String deviceInfo,
+            @RequestParam DevicePlatform platform) {
+        fcmTokenService.registerToken(user, token, deviceInfo, platform);
         return ResponseEntity.noContent().build();
     }
 

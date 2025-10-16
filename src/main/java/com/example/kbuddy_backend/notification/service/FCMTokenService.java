@@ -1,5 +1,6 @@
 package com.example.kbuddy_backend.notification.service;
 
+import com.example.kbuddy_backend.notification.entity.DevicePlatform;
 import com.example.kbuddy_backend.notification.entity.FCMToken;
 import com.example.kbuddy_backend.notification.repository.FCMTokenRepository;
 import com.example.kbuddy_backend.user.entity.User;
@@ -17,7 +18,7 @@ public class FCMTokenService {
     private final FCMTokenRepository fcmTokenRepository;
 
     @Transactional
-    public void registerToken(User user, String token, String deviceInfo) {
+    public void registerToken(User user, String token, String deviceInfo, DevicePlatform platform) {
         Optional<FCMToken> existing = fcmTokenRepository.findByToken(token);
         if (existing.isPresent()) {
             FCMToken fcmToken = existing.get();
@@ -25,14 +26,21 @@ public class FCMTokenService {
             fcmToken.setUser(user);
             fcmToken.setUpdatedAt(LocalDateTime.now());
             fcmToken.setDeviceInfo(deviceInfo);
+            fcmToken.setPlatform(platform);
             return;
         }
         FCMToken newToken = new FCMToken();
         newToken.setUser(user);
         newToken.setToken(token);
         newToken.setDeviceInfo(deviceInfo);
+        newToken.setPlatform(platform);
         newToken.setIsActive(true);
         fcmTokenRepository.save(newToken);
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<FCMToken> findByToken(String token) {
+        return fcmTokenRepository.findByToken(token);
     }
 
     @Transactional

@@ -34,6 +34,10 @@ public class FCMToken {
     @Column
     private String deviceInfo;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 16)
+    private DevicePlatform platform;
+
     @Column(nullable = false)
     private Boolean isActive = true;
 

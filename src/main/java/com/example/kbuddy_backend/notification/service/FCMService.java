@@ -1,5 +1,6 @@
 package com.example.kbuddy_backend.notification.service;
 
+import com.example.kbuddy_backend.notification.entity.DevicePlatform;
 import com.example.kbuddy_backend.notification.entity.FCMToken;
 import com.example.kbuddy_backend.user.entity.User;
 import com.google.firebase.messaging.FirebaseMessaging;
@@ -29,23 +30,20 @@ public class FCMService {
      */
     public void sendNotification(String token, String title, String body, String type, String targetId) {
         try {
-            // 알림 메시지 생성
-            Message message = Message.builder()
+            // 토큰으로 플랫폼 조회 (없으면 기본 iOS처럼 동작)
+            DevicePlatform platform = fcmTokenService.findByToken(token)
+                    .map(FCMToken::getPlatform)
+                    .orElse(DevicePlatform.IOS);
+
+            Message.Builder builder = Message.builder()
                     .setToken(token)
-                    // Foreground용 Notification 메시지
-                    .setNotification(
-                            Notification.builder()
-                                    .setTitle(title)
-                                    .setBody(body)
-                                    .build()
-                    )
-                    // Background용 Data 메시지
+                    // 공통 data
                     .putData("title", title)
                     .putData("body", body)
                     .putData("click_action", type)
-                    .putData("deep_link", targetId) // 딥링크 예시
+                    .putData("deep_link", targetId)
                     .putData("time", String.valueOf(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC)))
-                    // iOS 설정
+                    // iOS 설정은 있어도 notification 미포함 시 data-only로 동작 가능
                     .setApnsConfig(ApnsConfig.builder()
                             .putHeader("apns-priority", "10")
                             .setAps(Aps.builder()
@@ -53,14 +51,22 @@ public class FCMService {
                                     .setSound("default")
                                     .build())
                             .build())
-                    // Android 설정
                     .setAndroidConfig(AndroidConfig.builder()
                             .setPriority(AndroidConfig.Priority.HIGH)
-                            .build())
-                    .build();
+                            .build());
 
-            // FCM을 통해 메시지 전송
-            FirebaseMessaging.getInstance().send(message);
+            // 플랫폼별 notification 포함 여부 분기
+            if (platform == DevicePlatform.IOS) {
+                builder.setNotification(
+                        Notification.builder()
+                                .setTitle(title)
+                                .setBody(body)
+                                .build()
+                );
+            }
+            // ANDROID는 notification 미설정 → data-only
+
+            FirebaseMessaging.getInstance().send(builder.build());
         } catch (Exception e) {
             throw new RuntimeException("Failed to send FCM notification", e);
         }
