@@ -33,9 +33,11 @@ public class FCMController {
             @Parameter(description = "추가 데이터 타입", required = false)
             @RequestParam String dataType,
             @Parameter(description = "추가 데이터 ID", required = false)
-            @RequestParam String dataId
+            @RequestParam String dataId,
+            @Parameter(description = "디바이스 정보(android/ios 등)", required = true)
+            @RequestParam String deviceInfo
     ) {
-        fcmService.sendNotification(token, title, body,dataType,dataId);
+        fcmService.sendNotification(token, title, body,dataType,dataId, deviceInfo);
         return "알림이 성공적으로 전송되었습니다.";
     }
 }

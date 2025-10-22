@@ -26,38 +26,45 @@ public class FCMService {
      * @param token 클라이언트의 FCM 토큰
      * @param title 알림 제목
      * @param body 알림 내용
+     * @param deviceInfo 디바이스 타입(android/ios) 등
      */
-    public void sendNotification(String token, String title, String body, String type, String targetId) {
+    public void sendNotification(String token, String title, String body, String type, String targetId, String deviceInfo) {
         try {
-            // 알림 메시지 생성
-            Message message = Message.builder()
+            Message.Builder builder = Message.builder()
                     .setToken(token)
-                    // Foreground용 Notification 메시지
-                    .setNotification(
-                            Notification.builder()
-                                    .setTitle(title)
-                                    .setBody(body)
-                                    .build()
-                    )
-                    // Background용 Data 메시지
                     .putData("title", title)
                     .putData("body", body)
                     .putData("click_action", type)
-                    .putData("deep_link", targetId) // 딥링크 예시
-                    .putData("time", String.valueOf(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC)))
-                    // iOS 설정
-                    .setApnsConfig(ApnsConfig.builder()
-                            .putHeader("apns-priority", "10")
-                            .setAps(Aps.builder()
-                                    .setContentAvailable(true)
-                                    .setSound("default")
-                                    .build())
-                            .build())
-                    // Android 설정
-                    .setAndroidConfig(AndroidConfig.builder()
-                            .setPriority(AndroidConfig.Priority.HIGH)
-                            .build())
-                    .build();
+                    .putData("deep_link", targetId)
+                    .putData("time", String.valueOf(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC)));
+
+            // iOS의 경우 Notification 포함, Android의 경우 미포함
+            if (!"android".equalsIgnoreCase(deviceInfo)) {
+                builder.setNotification(Notification.builder()
+                        .setTitle(title)
+                        .setBody(body)
+                        .build());
+            }
+
+            // iOS 설정
+            if ("ios".equalsIgnoreCase(deviceInfo)) {
+                builder.setApnsConfig(ApnsConfig.builder()
+                        .putHeader("apns-priority", "10")
+                        .setAps(Aps.builder()
+                                .setContentAvailable(true)
+                                .setSound("default")
+                                .build())
+                        .build());
+            }
+
+            // Android 설정
+            if ("android".equalsIgnoreCase(deviceInfo)) {
+                builder.setAndroidConfig(AndroidConfig.builder()
+                        .setPriority(AndroidConfig.Priority.HIGH)
+                        .build());
+            }
+
+            Message message = builder.build();
 
             // FCM을 통해 메시지 전송
             FirebaseMessaging.getInstance().send(message);
@@ -75,11 +82,11 @@ public class FCMService {
     public void sendNotificationAllFcmTokens(User user, String title, String message, String type, String targetId) {
         // 사용자의 모든 활성 FCM 토큰 조회
         List<FCMToken> activeTokens = fcmTokenService.getActiveTokens(user);
-        
+
         // 각 토큰에 대해 알림 전송
         for (FCMToken token : activeTokens) {
             try {
-                sendNotification(token.getToken(), title, message, type, targetId);
+                sendNotification(token.getToken(), title, message, type, targetId, token.getDeviceInfo());
             } catch (Exception e) {
                 // 토큰이 유효하지 않은 경우 비활성화
                 fcmTokenService.deactivateToken(token.getToken());
