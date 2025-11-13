@@ -1,4 +1,4 @@
-package com.example.kbuddy_backend.announcement.dto.request;
+package com.example.kbuddy_backend.announcement.dto.response;
 
 import com.example.kbuddy_backend.common.dto.ImageFileDto;
 
@@ -12,7 +12,8 @@ public record AnnouncementResponse(
     String writerProfileImageUrl,
     String title,
     String description,
-    LocalDateTime createAt,
+    int viewCount,
+    LocalDateTime createdAt,
     LocalDateTime modifiedAt,
     List<ImageFileDto> images
 ) {
@@ -23,8 +24,9 @@ public record AnnouncementResponse(
             String writerProfileImageUrl,
             String title,
             String description,
+            int viewCount,
             LocalDateTime createdAt,
-            LocalDateTime modifiedAt
+            LocalDateTime modifiedAt,
             List<ImageFileDto>images
 ) {
     return new AnnouncementResponse(
@@ -34,6 +36,7 @@ public record AnnouncementResponse(
             writerProfileImageUrl,
             title,
             description,
+            viewCount,
             createdAt,
             modifiedAt,
             images
