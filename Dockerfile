@@ -1,4 +1,4 @@
-FROM openjdk:17-jdk-slim as builder
+FROM eclipse-temurin:17-jdk AS builder
 COPY gradlew .
 COPY gradle gradle
 COPY build.gradle .
@@ -9,7 +9,7 @@ RUN chmod +x ./gradlew
 RUN ./gradlew bootjar
 
 ENV TZ=Asia/Seoul
-FROM openjdk:17-jdk-slim
+FROM eclipse-temurin:17-jdk
 COPY --from=builder build/libs/*.jar app.jar
 COPY --from=builder .env .env
 EXPOSE 8080
