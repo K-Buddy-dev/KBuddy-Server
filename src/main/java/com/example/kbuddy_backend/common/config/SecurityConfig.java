@@ -1,5 +1,6 @@
 package com.example.kbuddy_backend.common.config;
 
+import com.example.kbuddy_backend.admin.filter.AdminBasicAuthFilter;
 import com.example.kbuddy_backend.auth.config.JwtAccessDeniedHandler;
 import com.example.kbuddy_backend.auth.config.JwtAuthenticationEntryPoint;
 import com.example.kbuddy_backend.auth.config.JwtFilter;
@@ -27,6 +28,7 @@ public class SecurityConfig {
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
     private final JwtAccessDeniedHandler jwtAccessDeniedHandler;
     private final JwtTokenProvider tokenProvider;
+    private final AdminBasicAuthFilter adminBasicAuthFilter;
 
     //시큐리티를 적용하지 않을 리소스
     @Bean
@@ -47,6 +49,7 @@ public class SecurityConfig {
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .headers(header -> header.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin))
                 .addFilterBefore(new JwtFilter(tokenProvider), UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(adminBasicAuthFilter, JwtFilter.class)
                 .exceptionHandling(exceptionHandling -> {
                     exceptionHandling
                             .authenticationEntryPoint(jwtAuthenticationEntryPoint)
