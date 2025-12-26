@@ -1,3 +1,7 @@
 spring:
   profiles:
     active: dev # 또는 원하는 profile 이름
+admin:
+  credentials:
+    id: ${ADMIN_BASIC_ID:admin}
+    password: ${ADMIN_BASIC_PASSWORD:change-me}
