@@ -17,11 +17,10 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.bind.annotation.RestController;
 
-@WebMvcTest(includeFilters = @Filter(type = FilterType.ANNOTATION, classes = RestController.class),
-        excludeAutoConfiguration = {SecurityAutoConfiguration.class, WebSecurityConfiguration.class},
-        excludeFilters = {
-                @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = SecurityConfig.class)})
-@Import({JwtTokenProvider.class, MockedServiceClassBeanRegister.class})
+@WebMvcTest(includeFilters = @Filter(type = FilterType.ANNOTATION, classes = RestController.class), excludeAutoConfiguration = {
+        SecurityAutoConfiguration.class, WebSecurityConfiguration.class }, excludeFilters = {
+                @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = SecurityConfig.class) })
+@Import({ JwtTokenProvider.class, MockedServiceClassBeanRegister.class })
 public abstract class WebMVCTest {
 
     @Autowired
@@ -35,4 +34,7 @@ public abstract class WebMVCTest {
 
     @MockBean
     protected UserRepository userRepository;
+
+    @MockBean
+    protected com.example.kbuddy_backend.admin.config.AdminCredentialsProperties adminCredentialsProperties;
 }

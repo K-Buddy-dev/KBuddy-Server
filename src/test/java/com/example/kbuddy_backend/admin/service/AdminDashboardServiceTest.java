@@ -26,6 +26,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.test.util.ReflectionTestUtils;
 
 @ExtendWith(MockitoExtension.class)
@@ -72,7 +73,7 @@ class AdminDashboardServiceTest {
         ReflectionTestUtils.setField(user, "createdDate", LocalDateTime.now());
 
         PageRequest pageable = PageRequest.of(0, 20);
-        given(userRepository.findAll(any()))
+        given(userRepository.findAll(any(Pageable.class)))
                 .willReturn(new PageImpl<>(List.of(user), pageable, 1));
 
         AdminSubscriberListResponse response = adminDashboardService.getSubscribers(pageable);
@@ -116,7 +117,8 @@ class AdminDashboardServiceTest {
         assertThat(response.getUsers().get(0).getPosts()).hasSize(2);
     }
 
-    private BlogReportSummary mockBlogSummary(Long blogId, String title, Long writerId, String username, String email, Long count) {
+    private BlogReportSummary mockBlogSummary(Long blogId, String title, Long writerId, String username, String email,
+            Long count) {
         return new BlogReportSummary() {
             @Override
             public Long getBlogId() {
@@ -150,7 +152,8 @@ class AdminDashboardServiceTest {
         };
     }
 
-    private QnaReportSummary mockQnaSummary(Long qnaId, String title, Long writerId, String username, String email, Long count) {
+    private QnaReportSummary mockQnaSummary(Long qnaId, String title, Long writerId, String username, String email,
+            Long count) {
         return new QnaReportSummary() {
             @Override
             public Long getQnaId() {
@@ -184,4 +187,3 @@ class AdminDashboardServiceTest {
         };
     }
 }
-
