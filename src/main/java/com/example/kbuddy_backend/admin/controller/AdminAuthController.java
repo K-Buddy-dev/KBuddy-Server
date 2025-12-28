@@ -45,6 +45,7 @@ public class AdminAuthController {
     private void setRefreshTokenInCookie(HttpServletResponse response, AccessTokenAndRefreshTokenResponse token) {
         jakarta.servlet.http.Cookie refreshTokenCookie = new jakarta.servlet.http.Cookie("refreshToken", token.refreshToken());
         refreshTokenCookie.setPath("/");
+        refreshTokenCookie.setSecure(true);
         refreshTokenCookie.setHttpOnly(true);
         refreshTokenCookie.setMaxAge(refreshTokenExpiration);
         response.addCookie(refreshTokenCookie);
