@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/admin")
+@RequestMapping("/kbuddy/v1/admin")
 public class AdminDashboardController {
 
     private final AdminDashboardService adminDashboardService;
