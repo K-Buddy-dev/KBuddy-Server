@@ -27,7 +27,10 @@ public class AdminBasicAuthFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         final String uri = request.getRequestURI();
-        return uri == null || !uri.startsWith("/admin") || "/admin/login".equals(uri) || "/kbuddy/v1/admin/login".equals(uri);
+        return uri == null || !uri.startsWith("/admin")
+                || "/admin/login".equals(uri)
+                || "/admin/refresh".equals(uri)
+                || "/kbuddy/v1/admin/login".equals(uri);
     }
 
     @Override

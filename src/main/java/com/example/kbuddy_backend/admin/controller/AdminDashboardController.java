@@ -5,6 +5,9 @@ import com.example.kbuddy_backend.admin.dto.response.AdminReportedUsersResponse;
 import com.example.kbuddy_backend.admin.dto.response.AdminSubscriberListResponse;
 import com.example.kbuddy_backend.admin.dto.response.AdminSubscriberStatsResponse;
 import com.example.kbuddy_backend.admin.service.AdminDashboardService;
+import com.example.kbuddy_backend.admin.service.AdminAuthService;
+import com.example.kbuddy_backend.auth.dto.response.AccessTokenResponse;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -20,6 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class AdminDashboardController {
 
     private final AdminDashboardService adminDashboardService;
+    private final AdminAuthService adminAuthService;
 
     @GetMapping("/subscribers/stats")
     public ResponseEntity<AdminSubscriberStatsResponse> getSubscriberStats() {
@@ -42,5 +46,9 @@ public class AdminDashboardController {
     public ResponseEntity<AdminReportedPostsResponse> getReportedPosts() {
         return ResponseEntity.ok(adminDashboardService.getReportedPosts());
     }
-}
 
+    @GetMapping("/refresh")
+    public ResponseEntity<AccessTokenResponse> refreshAccessToken(HttpServletRequest request) {
+        return ResponseEntity.ok(adminAuthService.refreshAccessToken(request));
+    }
+}
