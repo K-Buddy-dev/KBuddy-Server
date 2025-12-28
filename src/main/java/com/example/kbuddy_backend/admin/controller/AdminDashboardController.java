@@ -46,9 +46,4 @@ public class AdminDashboardController {
     public ResponseEntity<AdminReportedPostsResponse> getReportedPosts() {
         return ResponseEntity.ok(adminDashboardService.getReportedPosts());
     }
-
-    @GetMapping("/refresh")
-    public ResponseEntity<AccessTokenResponse> refreshAccessToken(HttpServletRequest request) {
-        return ResponseEntity.ok(adminAuthService.refreshAccessToken(request));
-    }
 }
