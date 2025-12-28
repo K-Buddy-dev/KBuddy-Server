@@ -57,6 +57,8 @@ public class SecurityConfig {
                 })
                 .authorizeHttpRequests(authorizeRequests ->
                         authorizeRequests
+                                .requestMatchers("/kbuddy/v1/admin/login").permitAll()
+                                .requestMatchers("/admin/**").hasRole("ADMIN")
                                 .requestMatchers("/kbuddy/v1/auth/password","/kbuddy/v1/auth/authentication","/kbuddy/v1/auth/account").authenticated()
                                 .requestMatchers("/kbuddy/v1/auth/**","/actuator/health").permitAll()
                                 .anyRequest().authenticated());
@@ -70,5 +72,3 @@ public class SecurityConfig {
     }
 
 }
-
-

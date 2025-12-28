@@ -27,7 +27,7 @@ public class AdminBasicAuthFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         final String uri = request.getRequestURI();
-        return uri == null || !uri.startsWith("/admin");
+        return uri == null || !uri.startsWith("/admin") || "/admin/login".equals(uri) || "/kbuddy/v1/admin/login".equals(uri);
     }
 
     @Override
@@ -39,6 +39,11 @@ public class AdminBasicAuthFilter extends OncePerRequestFilter {
         }
 
         String header = request.getHeader(HttpHeaders.AUTHORIZATION);
+        if (header != null && header.startsWith("Bearer ")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         if (header == null || !header.startsWith("Basic ")) {
             reject(response);
             return;
@@ -61,8 +66,7 @@ public class AdminBasicAuthFilter extends OncePerRequestFilter {
         String inputId = decoded.substring(0, separatorIndex);
         String inputPassword = decoded.substring(separatorIndex + 1);
 
-        if (!constantTimeEquals(credentialsProperties.getId(), inputId)
-                || !constantTimeEquals(credentialsProperties.getPassword(), inputPassword)) {
+        if (!credentialsProperties.matches(inputId, inputPassword)) {
             reject(response);
             return;
         }
@@ -76,28 +80,9 @@ public class AdminBasicAuthFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
-    private boolean constantTimeEquals(String expected, String actual) {
-        if (expected == null || actual == null) {
-            return false;
-        }
-        byte[] expectedBytes = expected.getBytes(StandardCharsets.UTF_8);
-        byte[] actualBytes = actual.getBytes(StandardCharsets.UTF_8);
-        if (expectedBytes.length != actualBytes.length) {
-            return false;
-        }
-
-        int result = 0;
-        for (int i = 0; i < expectedBytes.length; i++) {
-            result |= expectedBytes[i] ^ actualBytes[i];
-        }
-        return result == 0;
-    }
-
     private void reject(HttpServletResponse response) throws IOException {
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         response.setHeader(HttpHeaders.WWW_AUTHENTICATE, "Basic realm=\"" + ADMIN_REALM + "\"");
         response.getWriter().write("Unauthorized");
     }
 }
-
-
