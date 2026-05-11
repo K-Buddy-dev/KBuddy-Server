@@ -10,6 +10,6 @@ public record CounselorAvailabilityResponse(
             Long availabilityId,
             LocalDate date,
             LocalTime time,
-            boolean isBooked) {
+            String status) {
     }
 }
