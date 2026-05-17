@@ -4,6 +4,7 @@ import com.example.kbuddy_backend.common.entity.BaseTimeEntity;
 import com.example.kbuddy_backend.livechat.constant.BookingStatus;
 import com.example.kbuddy_backend.user.entity.User;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -14,13 +15,17 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "booking")
@@ -40,9 +45,14 @@ public class Booking extends BaseTimeEntity {
     @JoinColumn(name = "counselor_id", nullable = false)
     private User counselor;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "availability_id", nullable = false)
-    private CounselorAvailability availability;
+    @Column(nullable = false)
+    private LocalDateTime bookingStartUtc;
+
+    @Column(nullable = false)
+    private LocalDateTime bookingEndUtc;
+
+    @Column(nullable = false)
+    private Integer slotCount;
 
     @Column(nullable = false)
     private Integer totalPrice;
@@ -51,13 +61,26 @@ public class Booking extends BaseTimeEntity {
     @Column(nullable = false, length = 20)
     private BookingStatus status;
 
+    @Column(columnDefinition = "TEXT")
+    private String cancelReason;
+
+    @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<BookingSlot> bookingSlots = new ArrayList<>();
+
     @Builder
-    public Booking(User customer, User counselor, CounselorAvailability availability, Integer totalPrice) {
+    public Booking(User customer, User counselor, LocalDateTime bookingStartUtc,
+                   LocalDateTime bookingEndUtc, Integer slotCount, Integer totalPrice) {
         this.customer = customer;
         this.counselor = counselor;
-        this.availability = availability;
+        this.bookingStartUtc = bookingStartUtc;
+        this.bookingEndUtc = bookingEndUtc;
+        this.slotCount = slotCount;
         this.totalPrice = totalPrice;
         this.status = BookingStatus.PENDING;
+    }
+
+    public void addBookingSlot(BookingSlot bookingSlot) {
+        this.bookingSlots.add(bookingSlot);
     }
 
     public void confirmPayment() {
@@ -74,12 +97,20 @@ public class Booking extends BaseTimeEntity {
         this.status = BookingStatus.COMPLETED;
     }
 
-    public void cancel() {
+    public void cancel(String reason) {
         if (this.status == BookingStatus.COMPLETED || this.status == BookingStatus.REFUNDED) {
             throw new IllegalStateException("완료되었거나 환불된 예약은 취소할 수 없습니다");
         }
         this.status = BookingStatus.CANCELLED;
-        this.availability.cancelBooking();
+        this.cancelReason = reason;
+        // 관련 슬롯들을 AVAILABLE로 복원
+        for (BookingSlot slot : this.bookingSlots) {
+            slot.getAvailability().cancelBooking();
+        }
+    }
+
+    public void cancel() {
+        cancel(null);
     }
 
     public void refund() {

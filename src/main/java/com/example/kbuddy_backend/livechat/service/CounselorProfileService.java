@@ -63,7 +63,8 @@ public class CounselorProfileService {
                                 profile.getSpecialty() != null ? profile.getSpecialty().name() : null,
                                 profile.getRatingAvg(),
                                 (int) reviewCount,
-                                profile.getHourlyRate(),
+                                profile.getSlotRate(),
+                                profile.getTimezone(),
                                 profile.getUser().getProfileImageUrl(),
                                 recentReviews.stream()
                                                 .map(r -> new CounselorDetailResponse.RecentReview(
@@ -80,22 +81,22 @@ public class CounselorProfileService {
                 LocalDate startDate = yearMonth.atDay(1);
                 LocalDate endDate = yearMonth.atEndOfMonth();
 
-                var slots = availabilityRepository.findByCounselorIdAndAvailableDateBetween(
+                var slots = availabilityRepository.findByCounselorIdAndSlotDateBetween(
                                 counselorId, startDate, endDate);
 
                 List<CounselorAvailabilityResponse.AvailabilitySlot> slotList = slots.stream()
                                 .map(s -> new CounselorAvailabilityResponse.AvailabilitySlot(
                                                 s.getId(),
-                                                s.getAvailableDate(),
-                                                s.getStartTime(),
-                                                s.isBooked()))
+                                                s.getSlotDate(),
+                                                s.getSlotStartTime(),
+                                                s.getStatus().name()))
                                 .toList();
 
                 return new CounselorAvailabilityResponse(slotList);
         }
 
         @Transactional
-        public void registerCounselor(User user, String intro, Specialty specialty, Integer hourlyRate) {
+        public void registerCounselor(User user, String intro, Specialty specialty, Integer slotRate, String timezone) {
                 if (counselorProfileRepository.existsByUserId(user.getId())) {
                         throw new IllegalStateException("이미 상담사로 등록된 사용자입니다");
                 }
@@ -104,7 +105,8 @@ public class CounselorProfileService {
                                 .user(user)
                                 .intro(intro)
                                 .specialty(specialty)
-                                .hourlyRate(hourlyRate)
+                                .slotRate(slotRate)
+                                .timezone(timezone)
                                 .build();
 
                 counselorProfileRepository.save(profile);
@@ -120,7 +122,7 @@ public class CounselorProfileService {
                                 profile.getSpecialty() != null ? profile.getSpecialty().name() : null,
                                 profile.getRatingAvg(),
                                 (int) reviewCount,
-                                profile.getHourlyRate(),
+                                profile.getSlotRate(),
                                 profile.getUser().getProfileImageUrl());
         }
 }

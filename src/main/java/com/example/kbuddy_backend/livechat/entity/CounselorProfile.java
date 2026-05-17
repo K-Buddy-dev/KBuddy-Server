@@ -45,29 +45,36 @@ public class CounselorProfile extends BaseTimeEntity {
     private Specialty specialty;
 
     @Column(nullable = false)
-    private Integer hourlyRate;
+    private Integer slotRate;
+
+    @Column(length = 50)
+    private String timezone;
 
     @Column(precision = 3, scale = 2)
     private BigDecimal ratingAvg;
 
     @Builder
-    public CounselorProfile(User user, String intro, Specialty specialty, Integer hourlyRate) {
+    public CounselorProfile(User user, String intro, Specialty specialty, Integer slotRate, String timezone) {
         this.user = user;
         this.intro = intro;
         this.specialty = specialty;
-        this.hourlyRate = hourlyRate;
+        this.slotRate = slotRate;
+        this.timezone = timezone != null ? timezone : "UTC";
         this.ratingAvg = BigDecimal.ZERO;
     }
 
-    public void updateProfile(String intro, Specialty specialty, Integer hourlyRate) {
+    public void updateProfile(String intro, Specialty specialty, Integer slotRate, String timezone) {
         if (intro != null) {
             this.intro = intro;
         }
         if (specialty != null) {
             this.specialty = specialty;
         }
-        if (hourlyRate != null) {
-            this.hourlyRate = hourlyRate;
+        if (slotRate != null) {
+            this.slotRate = slotRate;
+        }
+        if (timezone != null) {
+            this.timezone = timezone;
         }
     }
 

@@ -10,7 +10,8 @@ public record CounselorDetailResponse(
         String specialty,
         BigDecimal ratingAvg,
         int reviewCount,
-        int hourlyRate,
+        int slotRate,
+        String timezone,
         String profileImageUrl,
         List<RecentReview> recentReviews) {
     public record RecentReview(

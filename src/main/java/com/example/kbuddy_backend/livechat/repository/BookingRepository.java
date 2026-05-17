@@ -12,7 +12,6 @@ import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 public interface BookingRepository extends JpaRepository<Booking, Long> {
 
@@ -22,12 +21,8 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
 
     Page<Booking> findByCustomerAndStatus(User customer, BookingStatus status, Pageable pageable);
 
-    Optional<Booking> findByAvailabilityId(Long availabilityId);
-
     @Query("SELECT b FROM Booking b WHERE b.status = :status AND b.createdDate < :expireTime")
     List<Booking> findExpiredPendingBookings(
             @Param("status") BookingStatus status,
             @Param("expireTime") LocalDateTime expireTime);
-
-    boolean existsByAvailabilityId(Long availabilityId);
 }

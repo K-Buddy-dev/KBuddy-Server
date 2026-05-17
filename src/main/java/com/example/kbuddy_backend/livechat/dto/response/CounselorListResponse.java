@@ -13,7 +13,7 @@ public record CounselorListResponse(
             String specialty,
             BigDecimal ratingAvg,
             int reviewCount,
-            int hourlyRate,
+            int slotRate,
             String profileImageUrl) {
     }
 }

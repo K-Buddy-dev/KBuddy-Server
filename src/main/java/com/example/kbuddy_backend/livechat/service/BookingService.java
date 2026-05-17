@@ -4,6 +4,7 @@ import com.example.kbuddy_backend.livechat.constant.BookingStatus;
 import com.example.kbuddy_backend.livechat.dto.request.BookingReserveRequest;
 import com.example.kbuddy_backend.livechat.dto.response.BookingReserveResponse;
 import com.example.kbuddy_backend.livechat.entity.Booking;
+import com.example.kbuddy_backend.livechat.entity.BookingSlot;
 import com.example.kbuddy_backend.livechat.entity.CounselorAvailability;
 import com.example.kbuddy_backend.livechat.entity.CounselorProfile;
 import com.example.kbuddy_backend.livechat.repository.BookingRepository;
@@ -19,7 +20,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.Comparator;
 import java.util.List;
 
 @Service
@@ -36,36 +40,75 @@ public class BookingService {
     @Transactional
     public BookingReserveResponse reserve(User customer, BookingReserveRequest request) {
         try {
-            // 낙관적 락으로 슬롯 조회
-            CounselorAvailability slot = availabilityRepository.findByIdWithLock(request.availabilityId())
-                    .orElseThrow(() -> new IllegalArgumentException("가용 시간 슬롯을 찾을 수 없습니다"));
+            // 낙관적 락으로 모든 슬롯 조회
+            List<CounselorAvailability> slots = availabilityRepository.findAllByIdWithLock(request.slotIds());
 
-            // 이미 예약된 슬롯인지 확인
-            if (slot.isBooked()) {
-                throw new IllegalStateException("이미 예약된 시간대입니다");
+            // 요청한 슬롯 수와 조회된 슬롯 수 일치 확인
+            if (slots.size() != request.slotIds().size()) {
+                throw new IllegalArgumentException("일부 슬롯을 찾을 수 없습니다");
             }
 
-            // 슬롯 예약 처리
-            slot.book();
+            // 모든 슬롯이 같은 상담사의 것인지 확인
+            CounselorProfile counselorProfile = slots.get(0).getCounselor();
+            boolean allSameCounselor = slots.stream()
+                    .allMatch(s -> s.getCounselor().getId().equals(counselorProfile.getId()));
+            if (!allSameCounselor) {
+                throw new IllegalArgumentException("모든 슬롯은 같은 상담사의 것이어야 합니다");
+            }
 
-            // 상담사 정보 조회
-            CounselorProfile counselorProfile = slot.getCounselor();
+            // 모든 슬롯이 예약 가능한지 확인 후 예약 처리
+            for (CounselorAvailability slot : slots) {
+                slot.book();
+            }
+
+            // 시간순 정렬하여 시작/종료 시간 계산
+            slots.sort(Comparator.comparing(CounselorAvailability::getSlotDate)
+                    .thenComparing(CounselorAvailability::getSlotStartTime));
+
+            CounselorAvailability firstSlot = slots.get(0);
+            CounselorAvailability lastSlot = slots.get(slots.size() - 1);
+
+            LocalDateTime bookingStartUtc = LocalDateTime.of(firstSlot.getSlotDate(), firstSlot.getSlotStartTime());
+            LocalDateTime bookingEndUtc = LocalDateTime.of(lastSlot.getSlotDate(),
+                    lastSlot.getSlotStartTime().plusMinutes(30));
+
+            int slotCount = slots.size();
+            int totalPrice = slotCount * counselorProfile.getSlotRate();
+
             User counselor = counselorProfile.getUser();
 
             // Booking 생성
             Booking booking = Booking.builder()
                     .customer(customer)
                     .counselor(counselor)
-                    .availability(slot)
-                    .totalPrice(counselorProfile.getHourlyRate())
+                    .bookingStartUtc(bookingStartUtc)
+                    .bookingEndUtc(bookingEndUtc)
+                    .slotCount(slotCount)
+                    .totalPrice(totalPrice)
                     .build();
 
             bookingRepository.save(booking);
 
+            // BookingSlot 매핑 생성
+            for (CounselorAvailability slot : slots) {
+                BookingSlot bookingSlot = BookingSlot.builder()
+                        .booking(booking)
+                        .availability(slot)
+                        .build();
+                booking.addBookingSlot(bookingSlot);
+            }
+
             // 결제 만료 시간 계산
             Instant holdExpiresAt = Instant.now().plusSeconds(PAYMENT_TIMEOUT_MINUTES * 60L);
 
-            return new BookingReserveResponse(booking.getId(), booking.getStatus().name(), holdExpiresAt);
+            return new BookingReserveResponse(
+                    booking.getId(),
+                    booking.getStatus().name(),
+                    slotCount,
+                    totalPrice,
+                    bookingStartUtc,
+                    bookingEndUtc,
+                    holdExpiresAt);
 
         } catch (ObjectOptimisticLockingFailureException e) {
             throw new IllegalStateException("다른 사용자가 방금 예약한 시간대입니다. 다른 시간을 선택해주세요.");
