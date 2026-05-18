@@ -1,5 +1,6 @@
 package com.example.kbuddy_backend.livechat.service;
 
+import com.example.kbuddy_backend.common.exception.DuplicateException;
 import com.example.kbuddy_backend.livechat.constant.SlotStatus;
 import com.example.kbuddy_backend.livechat.entity.CounselorAvailability;
 import com.example.kbuddy_backend.livechat.entity.CounselorProfile;
@@ -29,12 +30,12 @@ public class CounselorAvailabilityService {
      * 단일 슬롯 추가
      */
     @Transactional
-    public void addAvailability(User counselor, LocalDate date, LocalTime startTime) {
+    public CounselorAvailability addAvailability(User counselor, LocalDate date, LocalTime startTime) {
         CounselorProfile profile = getCounselorProfile(counselor);
 
         // 중복 체크
         if (availabilityRepository.existsByCounselorAndSlotDateAndSlotStartTime(profile, date, startTime)) {
-            throw new IllegalStateException("해당 시간대에 이미 가용 시간이 존재합니다");
+            throw new DuplicateException("해당 시간대에 이미 가용 시간이 존재합니다");
         }
 
         CounselorAvailability availability = CounselorAvailability.builder()
@@ -43,7 +44,7 @@ public class CounselorAvailabilityService {
                 .slotStartTime(startTime)
                 .build();
 
-        availabilityRepository.save(availability);
+        return availabilityRepository.save(availability);
     }
 
     /**
@@ -52,6 +53,8 @@ public class CounselorAvailabilityService {
     @Transactional
     public List<CounselorAvailability> addAvailabilityBulk(User counselor, LocalDate date,
                                                             LocalTime startTime, LocalTime endTime) {
+        validateBulkTimeRange(startTime, endTime);
+
         CounselorProfile profile = getCounselorProfile(counselor);
 
         List<CounselorAvailability> created = new ArrayList<>();
@@ -133,5 +136,20 @@ public class CounselorAvailabilityService {
     private CounselorProfile getCounselorProfile(User counselor) {
         return counselorProfileRepository.findByUserId(counselor.getId())
                 .orElseThrow(() -> new IllegalArgumentException("상담사로 등록되지 않은 사용자입니다"));
+    }
+
+    private void validateBulkTimeRange(LocalTime startTime, LocalTime endTime) {
+        validateSlotTime(startTime);
+        validateSlotTime(endTime);
+
+        if (!startTime.isBefore(endTime)) {
+            throw new IllegalArgumentException("시작 시간은 종료 시간보다 이전이어야 합니다");
+        }
+    }
+
+    private void validateSlotTime(LocalTime time) {
+        if (time.getMinute() % 30 != 0 || time.getSecond() != 0) {
+            throw new IllegalArgumentException("슬롯 시간은 30분 단위여야 합니다 (예: 09:00, 09:30)");
+        }
     }
 }
