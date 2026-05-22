@@ -69,5 +69,7 @@ public class CounselorReviewService {
         if (avgRating != null) {
             profile.updateRatingAvg(avgRating);
         }
+
+        profile.incrementReviewCount();
     }
 }
