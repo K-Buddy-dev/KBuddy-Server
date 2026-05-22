@@ -48,28 +48,33 @@ public class CounselorAvailabilityService {
     }
 
     /**
-     * 여러 슬롯 일괄 추가 (특정 날짜의 시작~종료 시간 범위)
+     * 여러 슬롯 일괄 추가 (날짜 범위 × 시작~종료 시간 범위)
      */
     @Transactional
-    public List<CounselorAvailability> addAvailabilityBulk(User counselor, LocalDate date,
+    public List<CounselorAvailability> addAvailabilityBulk(User counselor,
+                                                            LocalDate startDate, LocalDate endDate,
                                                             LocalTime startTime, LocalTime endTime) {
         validateBulkTimeRange(startTime, endTime);
 
         CounselorProfile profile = getCounselorProfile(counselor);
-
         List<CounselorAvailability> created = new ArrayList<>();
-        LocalTime current = startTime;
 
-        while (current.isBefore(endTime)) {
-            if (!availabilityRepository.existsByCounselorAndSlotDateAndSlotStartTime(profile, date, current)) {
-                CounselorAvailability availability = CounselorAvailability.builder()
-                        .counselor(profile)
-                        .slotDate(date)
-                        .slotStartTime(current)
-                        .build();
-                created.add(availabilityRepository.save(availability));
+        LocalDate currentDate = startDate;
+        while (!currentDate.isAfter(endDate)) {
+            LocalTime currentTime = startTime;
+            while (currentTime.isBefore(endTime)) {
+                if (!availabilityRepository.existsByCounselorAndSlotDateAndSlotStartTime(
+                        profile, currentDate, currentTime)) {
+                    created.add(availabilityRepository.save(
+                            CounselorAvailability.builder()
+                                    .counselor(profile)
+                                    .slotDate(currentDate)
+                                    .slotStartTime(currentTime)
+                                    .build()));
+                }
+                currentTime = currentTime.plusMinutes(30);
             }
-            current = current.plusMinutes(30);
+            currentDate = currentDate.plusDays(1);
         }
 
         return created;

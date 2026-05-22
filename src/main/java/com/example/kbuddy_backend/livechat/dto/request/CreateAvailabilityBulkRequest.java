@@ -6,7 +6,8 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 
 public record CreateAvailabilityBulkRequest(
-        @NotNull LocalDate date,
+        @NotNull LocalDate startDate,
+        @NotNull LocalDate endDate,
         @NotNull LocalTime startTime,
         @NotNull LocalTime endTime) {
 }

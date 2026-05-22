@@ -18,6 +18,8 @@ import lombok.RequiredArgsConstructor;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -44,18 +46,28 @@ public class CounselorAvailabilityController {
     }
 
     @PostMapping("/bulk")
-    @Operation(summary = "상담 가능 시간 일괄 추가", description = "로그인한 상담사의 특정 날짜 시작~종료 시간 범위에 30분 단위 슬롯을 추가합니다.")
+    @Operation(summary = "상담 가능 시간 일괄 추가", description = "로그인한 상담사의 날짜 범위 × 시작~종료 시간 범위에 30분 단위 슬롯을 추가합니다.")
     public ResponseEntity<CounselorAvailabilityResponse> createAvailabilityBulk(
             @Valid @RequestBody CreateAvailabilityBulkRequest request,
             @Parameter(hidden = true) @CurrentUser User user) {
         List<CounselorAvailability> availabilities = availabilityService.addAvailabilityBulk(
-                user, request.date(), request.startTime(), request.endTime());
+                user, request.startDate(), request.endDate(),
+                request.startTime(), request.endTime());
 
         List<CounselorAvailabilityResponse.AvailabilitySlot> slots = availabilities.stream()
                 .map(this::toResponse)
                 .toList();
 
         return ResponseEntity.status(HttpStatus.CREATED).body(new CounselorAvailabilityResponse(slots));
+    }
+
+    @DeleteMapping("/{availabilityId}")
+    @Operation(summary = "상담 가능 시간 삭제", description = "상담 가능 시간 슬롯을 삭제합니다. AVAILABLE 상태만 삭제 가능합니다.")
+    public ResponseEntity<Void> deleteAvailability(
+            @PathVariable Long availabilityId,
+            @Parameter(hidden = true) @CurrentUser User user) {
+        availabilityService.removeAvailability(user, availabilityId);
+        return ResponseEntity.noContent().build();
     }
 
     private CounselorAvailabilityResponse.AvailabilitySlot toResponse(CounselorAvailability availability) {
