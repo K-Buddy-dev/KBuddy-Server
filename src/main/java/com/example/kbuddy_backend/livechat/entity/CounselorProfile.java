@@ -13,6 +13,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
+import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
 
 import java.util.ArrayList;
@@ -72,6 +73,10 @@ public class CounselorProfile extends BaseTimeEntity {
 
     @OneToMany(mappedBy = "counselor", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CounselorCategory> categories = new ArrayList<>();
+
+    @OneToMany(mappedBy = "counselor", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("sortOrder ASC")
+    private List<CounselorPhoto> photos = new ArrayList<>();
 
     @Builder
     public CounselorProfile(User user, String title, String detail, String intro,
