@@ -9,7 +9,7 @@ public record CounselorDetailResponse(
         String intro,
         BigDecimal ratingAvg,
         int reviewCount,
-        int slotRate,
+        int regularPrice,
         String timezone,
         String profileImageUrl,
         List<RecentReview> recentReviews) {
