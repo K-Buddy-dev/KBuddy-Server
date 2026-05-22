@@ -2,6 +2,7 @@ package com.example.kbuddy_backend.livechat.service;
 
 import com.example.kbuddy_backend.livechat.constant.BookingStatus;
 import com.example.kbuddy_backend.livechat.dto.request.BookingReserveRequest;
+import com.example.kbuddy_backend.livechat.dto.response.BookingListResponse;
 import com.example.kbuddy_backend.livechat.dto.response.BookingReserveResponse;
 import com.example.kbuddy_backend.livechat.entity.Booking;
 import com.example.kbuddy_backend.livechat.entity.BookingSlot;
@@ -9,7 +10,11 @@ import com.example.kbuddy_backend.livechat.entity.CounselorAvailability;
 import com.example.kbuddy_backend.livechat.entity.CounselorProfile;
 import com.example.kbuddy_backend.livechat.repository.BookingRepository;
 import com.example.kbuddy_backend.livechat.repository.CounselorAvailabilityRepository;
+import com.example.kbuddy_backend.livechat.repository.CounselorProfileRepository;
 import com.example.kbuddy_backend.user.entity.User;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -36,6 +41,7 @@ public class BookingService {
 
     private final BookingRepository bookingRepository;
     private final CounselorAvailabilityRepository availabilityRepository;
+    private final CounselorProfileRepository counselorProfileRepository;
 
     @Transactional
     public BookingReserveResponse reserve(User customer, BookingReserveRequest request) {
@@ -85,6 +91,8 @@ public class BookingService {
                     .bookingEndUtc(bookingEndUtc)
                     .slotCount(slotCount)
                     .totalPrice(totalPrice)
+                    .topic(request.topic())
+                    .memo(request.memo())
                     .build();
 
             bookingRepository.save(booking);
@@ -142,6 +150,22 @@ public class BookingService {
         }
 
         booking.cancel();
+    }
+
+    public BookingListResponse getMyBookings(User customer, Pageable pageable) {
+        Page<Booking> bookings = bookingRepository.findByCustomer(customer, pageable);
+        List<BookingListResponse.BookingSummary> content = bookings.getContent().stream()
+                .map(b -> {
+                    CounselorProfile profile = counselorProfileRepository
+                            .findByUserId(b.getCounselor().getId()).orElse(null);
+                    String name = b.getCounselor().getFirstName() + " " + b.getCounselor().getLastName();
+                    String coverUrl = profile != null ? profile.getCoverImageUrl() : null;
+                    return new BookingListResponse.BookingSummary(
+                            b.getId(), name, coverUrl, b.getTopic(),
+                            b.getStatus().name(), b.getTotalPrice(),
+                            b.getBookingStartUtc(), b.getBookingEndUtc());
+                }).toList();
+        return new BookingListResponse(content, bookings.getTotalElements());
     }
 
     @Scheduled(fixedRate = 60000) // 1분마다 실행

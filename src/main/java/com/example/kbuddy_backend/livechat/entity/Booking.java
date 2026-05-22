@@ -61,6 +61,12 @@ public class Booking extends BaseTimeEntity {
     @Column(nullable = false, length = 20)
     private BookingStatus status;
 
+    @Column(length = 200)
+    private String topic;
+
+    @Column(columnDefinition = "TEXT")
+    private String memo;
+
     @Column(columnDefinition = "TEXT")
     private String cancelReason;
 
@@ -69,13 +75,16 @@ public class Booking extends BaseTimeEntity {
 
     @Builder
     public Booking(User customer, User counselor, LocalDateTime bookingStartUtc,
-                   LocalDateTime bookingEndUtc, Integer slotCount, Integer totalPrice) {
+                   LocalDateTime bookingEndUtc, Integer slotCount, Integer totalPrice,
+                   String topic, String memo) {
         this.customer = customer;
         this.counselor = counselor;
         this.bookingStartUtc = bookingStartUtc;
         this.bookingEndUtc = bookingEndUtc;
         this.slotCount = slotCount;
         this.totalPrice = totalPrice;
+        this.topic = topic;
+        this.memo = memo;
         this.status = BookingStatus.PENDING;
     }
 
