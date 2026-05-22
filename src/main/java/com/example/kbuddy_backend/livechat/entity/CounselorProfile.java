@@ -78,6 +78,9 @@ public class CounselorProfile extends BaseTimeEntity {
     @OrderBy("sortOrder ASC")
     private List<CounselorPhoto> photos = new ArrayList<>();
 
+    @OneToOne(mappedBy = "counselor", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private CounselorPromotion promotion;
+
     @Builder
     public CounselorProfile(User user, String title, String detail, String intro,
                              String professionalBackground, String coverImageUrl,
