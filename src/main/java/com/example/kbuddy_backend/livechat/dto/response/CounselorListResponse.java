@@ -10,7 +10,6 @@ public record CounselorListResponse(
             String counselorId,
             String name,
             String intro,
-            String specialty,
             BigDecimal ratingAvg,
             int reviewCount,
             int slotRate,

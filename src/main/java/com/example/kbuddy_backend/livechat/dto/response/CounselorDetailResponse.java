@@ -7,7 +7,6 @@ public record CounselorDetailResponse(
         String counselorId,
         String name,
         String intro,
-        String specialty,
         BigDecimal ratingAvg,
         int reviewCount,
         int slotRate,
