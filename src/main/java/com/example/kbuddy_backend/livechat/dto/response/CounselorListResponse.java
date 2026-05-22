@@ -6,13 +6,17 @@ import java.util.List;
 public record CounselorListResponse(
         List<CounselorSummary> content,
         long totalElements) {
+
     public record CounselorSummary(
             String counselorId,
             String name,
-            String intro,
+            String title,
+            List<String> categories,
             BigDecimal ratingAvg,
             int reviewCount,
             int regularPrice,
-            String profileImageUrl) {
+            int sessionMinutes,
+            String coverImageUrl,
+            boolean hasPromotion) {
     }
 }

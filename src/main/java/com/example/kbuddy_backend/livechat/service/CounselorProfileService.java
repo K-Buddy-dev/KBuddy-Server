@@ -53,17 +53,43 @@ public class CounselorProfileService {
                 List<CounselorReview> recentReviews = reviewRepository
                                 .findTop3ByCounselorIdOrderByCreatedAtDesc(profile.getUser().getId());
 
-                long reviewCount = reviewRepository.countByCounselorId(profile.getUser().getId());
+                List<String> categories = profile.getCategories().stream()
+                                .map(c -> c.getCategory().getDisplayName())
+                                .toList();
+
+                List<String> photoUrls = profile.getPhotos().stream()
+                                .map(p -> p.getPhotoUrl())
+                                .toList();
+
+                CounselorDetailResponse.PromotionInfo promotionInfo = null;
+                if (profile.getPromotion() != null) {
+                        var promo = profile.getPromotion();
+                        promotionInfo = new CounselorDetailResponse.PromotionInfo(
+                                        promo.getPromotionalPrice(),
+                                        promo.getPromotionSessionMinutes(),
+                                        promo.getStartDate().toString(),
+                                        promo.getEndDate().toString(),
+                                        promo.isActive());
+                }
 
                 return new CounselorDetailResponse(
                                 profile.getId().toString(),
                                 profile.getUser().getFirstName() + " " + profile.getUser().getLastName(),
+                                profile.getTitle(),
+                                profile.getDetail(),
                                 profile.getIntro(),
+                                profile.getProfessionalBackground(),
+                                profile.getCoverImageUrl(),
+                                profile.getProofFileUrl(),
+                                photoUrls,
+                                categories,
                                 profile.getRatingAvg(),
-                                (int) reviewCount,
+                                profile.getReviewCount(),
                                 profile.getRegularPrice(),
+                                profile.getSessionMinutes(),
                                 profile.getTimezone(),
                                 profile.getUser().getProfileImageUrl(),
+                                promotionInfo,
                                 recentReviews.stream()
                                                 .map(r -> new CounselorDetailResponse.RecentReview(
                                                                 r.getId(),
@@ -110,15 +136,20 @@ public class CounselorProfileService {
         }
 
         private CounselorListResponse.CounselorSummary toSummary(CounselorProfile profile) {
-                long reviewCount = reviewRepository.countByCounselorId(profile.getUser().getId());
+                List<String> categories = profile.getCategories().stream()
+                                .map(c -> c.getCategory().getDisplayName())
+                                .toList();
 
                 return new CounselorListResponse.CounselorSummary(
                                 profile.getId().toString(),
                                 profile.getUser().getFirstName() + " " + profile.getUser().getLastName(),
-                                profile.getIntro(),
+                                profile.getTitle(),
+                                categories,
                                 profile.getRatingAvg(),
-                                (int) reviewCount,
+                                profile.getReviewCount(),
                                 profile.getRegularPrice(),
-                                profile.getUser().getProfileImageUrl());
+                                profile.getSessionMinutes(),
+                                profile.getCoverImageUrl(),
+                                profile.getPromotion() != null && profile.getPromotion().isActive());
         }
 }
