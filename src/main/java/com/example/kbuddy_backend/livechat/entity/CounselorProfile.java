@@ -1,13 +1,10 @@
 package com.example.kbuddy_backend.livechat.entity;
 
 import com.example.kbuddy_backend.common.entity.BaseTimeEntity;
-import com.example.kbuddy_backend.livechat.constant.Specialty;
 import com.example.kbuddy_backend.user.entity.User;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -40,10 +37,6 @@ public class CounselorProfile extends BaseTimeEntity {
     @Column(columnDefinition = "TEXT", nullable = false)
     private String intro;
 
-    @Enumerated(EnumType.STRING)
-    @Column(length = 50)
-    private Specialty specialty;
-
     @Column(nullable = false)
     private Integer slotRate;
 
@@ -54,21 +47,17 @@ public class CounselorProfile extends BaseTimeEntity {
     private BigDecimal ratingAvg;
 
     @Builder
-    public CounselorProfile(User user, String intro, Specialty specialty, Integer slotRate, String timezone) {
+    public CounselorProfile(User user, String intro, Integer slotRate, String timezone) {
         this.user = user;
         this.intro = intro;
-        this.specialty = specialty;
         this.slotRate = slotRate;
         this.timezone = timezone != null ? timezone : "UTC";
         this.ratingAvg = BigDecimal.ZERO;
     }
 
-    public void updateProfile(String intro, Specialty specialty, Integer slotRate, String timezone) {
+    public void updateProfile(String intro, Integer slotRate, String timezone) {
         if (intro != null) {
             this.intro = intro;
-        }
-        if (specialty != null) {
-            this.specialty = specialty;
         }
         if (slotRate != null) {
             this.slotRate = slotRate;

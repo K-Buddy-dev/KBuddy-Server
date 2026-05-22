@@ -1,7 +1,6 @@
 package com.example.kbuddy_backend.livechat.controller;
 
 import com.example.kbuddy_backend.common.config.CurrentUser;
-import com.example.kbuddy_backend.livechat.constant.Specialty;
 import com.example.kbuddy_backend.livechat.dto.response.CounselorAvailabilityResponse;
 import com.example.kbuddy_backend.livechat.dto.response.CounselorDetailResponse;
 import com.example.kbuddy_backend.livechat.dto.response.CounselorListResponse;
@@ -32,16 +31,14 @@ public class CounselorController {
     private final CounselorProfileService counselorProfileService;
 
     @GetMapping
-    @Operation(summary = "상담사 목록 조회", description = "상담사 목록을 페이징하여 조회합니다. specialty로 필터링 가능합니다.")
+    @Operation(summary = "상담사 목록 조회", description = "상담사 목록을 페이징하여 조회합니다.")
     public ResponseEntity<CounselorListResponse> getCounselors(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
-            @RequestParam(required = false) String specialty,
             @RequestParam(required = false) String sort,
             @Parameter(hidden = true) @CurrentUser User user) {
-        Specialty specialtyEnum = specialty != null ? Specialty.valueOf(specialty) : null;
         Pageable pageable = PageRequest.of(page, size);
-        CounselorListResponse response = counselorProfileService.getCounselors(specialtyEnum, sort, pageable);
+        CounselorListResponse response = counselorProfileService.getCounselors(sort, pageable);
         return ResponseEntity.ok(response);
     }
 

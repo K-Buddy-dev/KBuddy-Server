@@ -1,14 +1,12 @@
 package com.example.kbuddy_backend.livechat.repository;
 
 import com.example.kbuddy_backend.livechat.entity.CounselorProfile;
-import com.example.kbuddy_backend.livechat.constant.Specialty;
 import com.example.kbuddy_backend.user.entity.User;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 
 import java.util.Optional;
 
@@ -19,9 +17,6 @@ public interface CounselorProfileRepository extends JpaRepository<CounselorProfi
     Optional<CounselorProfile> findByUserId(Long userId);
 
     boolean existsByUserId(Long userId);
-
-    @Query("SELECT cp FROM CounselorProfile cp WHERE (:specialty IS NULL OR cp.specialty = :specialty)")
-    Page<CounselorProfile> findAllBySpecialty(@Param("specialty") Specialty specialty, Pageable pageable);
 
     @Query("SELECT cp FROM CounselorProfile cp ORDER BY cp.ratingAvg DESC")
     Page<CounselorProfile> findAllOrderByRatingDesc(Pageable pageable);

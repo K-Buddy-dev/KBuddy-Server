@@ -1,6 +1,5 @@
 package com.example.kbuddy_backend.livechat.service;
 
-import com.example.kbuddy_backend.livechat.constant.Specialty;
 import com.example.kbuddy_backend.livechat.dto.response.CounselorAvailabilityResponse;
 import com.example.kbuddy_backend.livechat.dto.response.CounselorDetailResponse;
 import com.example.kbuddy_backend.livechat.dto.response.CounselorListResponse;
@@ -31,13 +30,13 @@ public class CounselorProfileService {
         private final CounselorAvailabilityRepository availabilityRepository;
         private final CounselorReviewRepository reviewRepository;
 
-        public CounselorListResponse getCounselors(Specialty specialty, String sort, Pageable pageable) {
+        public CounselorListResponse getCounselors(String sort, Pageable pageable) {
                 Page<CounselorProfile> profiles;
 
                 if ("rating".equals(sort)) {
                         profiles = counselorProfileRepository.findAllOrderByRatingDesc(pageable);
                 } else {
-                        profiles = counselorProfileRepository.findAllBySpecialty(specialty, pageable);
+                        profiles = counselorProfileRepository.findAll(pageable);
                 }
 
                 List<CounselorListResponse.CounselorSummary> content = profiles.getContent().stream()
@@ -60,7 +59,7 @@ public class CounselorProfileService {
                                 profile.getId().toString(),
                                 profile.getUser().getFirstName() + " " + profile.getUser().getLastName(),
                                 profile.getIntro(),
-                                profile.getSpecialty() != null ? profile.getSpecialty().name() : null,
+                                null,
                                 profile.getRatingAvg(),
                                 (int) reviewCount,
                                 profile.getSlotRate(),
@@ -96,7 +95,7 @@ public class CounselorProfileService {
         }
 
         @Transactional
-        public void registerCounselor(User user, String intro, Specialty specialty, Integer slotRate, String timezone) {
+        public void registerCounselor(User user, String intro, Integer slotRate, String timezone) {
                 if (counselorProfileRepository.existsByUserId(user.getId())) {
                         throw new IllegalStateException("이미 상담사로 등록된 사용자입니다");
                 }
@@ -104,7 +103,6 @@ public class CounselorProfileService {
                 CounselorProfile profile = CounselorProfile.builder()
                                 .user(user)
                                 .intro(intro)
-                                .specialty(specialty)
                                 .slotRate(slotRate)
                                 .timezone(timezone)
                                 .build();
@@ -119,7 +117,7 @@ public class CounselorProfileService {
                                 profile.getId().toString(),
                                 profile.getUser().getFirstName() + " " + profile.getUser().getLastName(),
                                 profile.getIntro(),
-                                profile.getSpecialty() != null ? profile.getSpecialty().name() : null,
+                                null,
                                 profile.getRatingAvg(),
                                 (int) reviewCount,
                                 profile.getSlotRate(),
