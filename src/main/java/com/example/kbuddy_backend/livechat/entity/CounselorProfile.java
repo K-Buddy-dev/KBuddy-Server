@@ -34,11 +34,27 @@ public class CounselorProfile extends BaseTimeEntity {
     @JoinColumn(name = "user_id", nullable = false, unique = true)
     private User user;
 
+    @Column(length = 100, nullable = false)
+    private String title;
+
+    @Column(columnDefinition = "TEXT")
+    private String detail;
+
     @Column(columnDefinition = "TEXT", nullable = false)
     private String intro;
 
+    @Column(columnDefinition = "TEXT")
+    private String professionalBackground;
+
+    private String coverImageUrl;
+
+    private String proofFileUrl;
+
     @Column(nullable = false)
-    private Integer slotRate;
+    private Integer regularPrice;
+
+    @Column(nullable = false)
+    private Integer sessionMinutes;
 
     @Column(length = 50)
     private String timezone;
@@ -46,25 +62,52 @@ public class CounselorProfile extends BaseTimeEntity {
     @Column(precision = 3, scale = 2)
     private BigDecimal ratingAvg;
 
+    @Column(nullable = false)
+    private Integer reviewCount;
+
     @Builder
-    public CounselorProfile(User user, String intro, Integer slotRate, String timezone) {
+    public CounselorProfile(User user, String title, String detail, String intro,
+                             String professionalBackground, String coverImageUrl,
+                             String proofFileUrl, Integer regularPrice,
+                             Integer sessionMinutes, String timezone) {
         this.user = user;
+        this.title = title;
+        this.detail = detail;
         this.intro = intro;
-        this.slotRate = slotRate;
+        this.professionalBackground = professionalBackground;
+        this.coverImageUrl = coverImageUrl;
+        this.proofFileUrl = proofFileUrl;
+        this.regularPrice = regularPrice;
+        this.sessionMinutes = sessionMinutes != null ? sessionMinutes : 30;
         this.timezone = timezone != null ? timezone : "UTC";
         this.ratingAvg = BigDecimal.ZERO;
+        this.reviewCount = 0;
     }
 
-    public void updateProfile(String intro, Integer slotRate, String timezone) {
-        if (intro != null) {
-            this.intro = intro;
-        }
-        if (slotRate != null) {
-            this.slotRate = slotRate;
-        }
+    public void updateProfile(String title, String detail, String intro,
+                               String professionalBackground, String coverImageUrl,
+                               String proofFileUrl, Integer regularPrice,
+                               Integer sessionMinutes, String timezone) {
+        if (title != null) this.title = title;
+        if (detail != null) this.detail = detail;
+        if (intro != null) this.intro = intro;
+        if (professionalBackground != null) this.professionalBackground = professionalBackground;
+        if (coverImageUrl != null) this.coverImageUrl = coverImageUrl;
+        if (proofFileUrl != null) this.proofFileUrl = proofFileUrl;
+        if (regularPrice != null) this.regularPrice = regularPrice;
+        if (sessionMinutes != null) this.sessionMinutes = sessionMinutes;
         if (timezone != null) {
-            this.timezone = timezone;
+            try {
+                java.time.ZoneId.of(timezone);
+                this.timezone = timezone;
+            } catch (java.time.zone.ZoneRulesException e) {
+                throw new IllegalArgumentException("유효하지 않은 timezone: " + timezone);
+            }
         }
+    }
+
+    public void incrementReviewCount() {
+        this.reviewCount++;
     }
 
     public void updateRatingAvg(BigDecimal ratingAvg) {

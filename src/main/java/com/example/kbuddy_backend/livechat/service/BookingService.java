@@ -73,7 +73,7 @@ public class BookingService {
                     lastSlot.getSlotStartTime().plusMinutes(30));
 
             int slotCount = slots.size();
-            int totalPrice = slotCount * counselorProfile.getSlotRate();
+            int totalPrice = slotCount * counselorProfile.getRegularPrice();
 
             User counselor = counselorProfile.getUser();
 

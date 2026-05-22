@@ -61,7 +61,7 @@ public class CounselorProfileService {
                                 profile.getIntro(),
                                 profile.getRatingAvg(),
                                 (int) reviewCount,
-                                profile.getSlotRate(),
+                                profile.getRegularPrice(),
                                 profile.getTimezone(),
                                 profile.getUser().getProfileImageUrl(),
                                 recentReviews.stream()
@@ -94,7 +94,7 @@ public class CounselorProfileService {
         }
 
         @Transactional
-        public void registerCounselor(User user, String intro, Integer slotRate, String timezone) {
+        public void registerCounselor(User user, String intro, Integer regularPrice, String timezone) {
                 if (counselorProfileRepository.existsByUserId(user.getId())) {
                         throw new IllegalStateException("이미 상담사로 등록된 사용자입니다");
                 }
@@ -102,7 +102,7 @@ public class CounselorProfileService {
                 CounselorProfile profile = CounselorProfile.builder()
                                 .user(user)
                                 .intro(intro)
-                                .slotRate(slotRate)
+                                .regularPrice(regularPrice)
                                 .timezone(timezone)
                                 .build();
 
@@ -118,7 +118,7 @@ public class CounselorProfileService {
                                 profile.getIntro(),
                                 profile.getRatingAvg(),
                                 (int) reviewCount,
-                                profile.getSlotRate(),
+                                profile.getRegularPrice(),
                                 profile.getUser().getProfileImageUrl());
         }
 }
