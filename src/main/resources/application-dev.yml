@@ -103,5 +103,13 @@ firebase:
   client-x509-cert-url: ${FIREBASE_CLIENT_X509_CERT_URL}
   universe-domain: ${FIREBASE_UNIVERSE_DOMAIN}
 
+payment:
+  bank-transfer:
+    bank-name: ${PAYMENT_BANK_NAME:}
+    account-number: ${PAYMENT_ACCOUNT_NUMBER:}
+    account-holder: ${PAYMENT_ACCOUNT_HOLDER:KBuddy}
+    deposit-timeout-hours: ${PAYMENT_DEPOSIT_TIMEOUT_HOURS:24}
+    platform-fee-rate: ${PAYMENT_PLATFORM_FEE_RATE:15.00}
+
 server:
   port: 8080
