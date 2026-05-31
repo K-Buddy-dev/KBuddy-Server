@@ -24,16 +24,16 @@ public class NotificationService {
      * 새로운 알림 생성 및 FCM 푸시 알림 전송
      */
     @Transactional
-    public Notification createNotification(User receiver, String message, NotificationType type) {
-        Notification notification = Notification.createNotification(receiver, message, type);
-        return notificationRepository.save(notification);
+    public void notify(User receiver, String title, String body, NotificationType type, String targetId) {
+        Notification notification = Notification.createNotification(receiver, title, body, type, targetId);
+        notificationRepository.save(notification);
+        fcmService.sendNotificationAllFcmTokens(receiver, title, body, type.name(), targetId);
     }
 
     @Transactional
-    public void notify(User receiver, String title, String body, NotificationType type, String targetId) {
-        Notification notification = Notification.createNotification(receiver, body, type);
-        notificationRepository.save(notification);
-        fcmService.sendNotificationAllFcmTokens(receiver, title, body, type.name(), targetId);
+    public void markAsRead(Long notificationId, User user) {
+        notificationRepository.findByIdAndReceiver(notificationId, user)
+                .ifPresent(Notification::markAsRead);
     }
 
     /**

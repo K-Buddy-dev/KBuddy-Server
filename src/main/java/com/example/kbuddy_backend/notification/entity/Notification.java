@@ -40,9 +40,16 @@ public class Notification {
     @NotNull
     private Boolean isRead = false;
 
+    @Column(nullable = false)
+    @NotNull
+    private String title;
+
     @Column(nullable = false, columnDefinition = "TEXT")
     @NotNull
     private String message;
+
+    @Column
+    private String targetId;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -53,15 +60,18 @@ public class Notification {
     @NotNull
     private NotificationType type;
 
-    /**
-     * 알림 생성 시 사용할 정적 팩토리 메서드
-     */
-    public static Notification createNotification(User receiver, String message, NotificationType type) {
+    public static Notification createNotification(User receiver, String title, String message, NotificationType type, String targetId) {
         Notification notification = new Notification();
         notification.setReceiver(receiver);
+        notification.setTitle(title);
         notification.setMessage(message);
         notification.setType(type);
+        notification.setTargetId(targetId);
         notification.setIsRead(false);
         return notification;
+    }
+
+    public void markAsRead() {
+        this.isRead = true;
     }
 } 

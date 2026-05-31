@@ -5,6 +5,7 @@ import com.example.kbuddy_backend.user.entity.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -25,6 +26,7 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     /**
      * 특정 사용자의 모든 알림을 읽음 상태로 변경
      */
+    @Modifying
     @Query("UPDATE Notification n SET n.isRead = true WHERE n.receiver = :receiver AND n.isRead = false")
     void markAllAsRead(@Param("receiver") User receiver);
     
@@ -32,4 +34,6 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
      * 특정 사용자의 읽지 않은 알림 목록 조회
      */
     List<Notification> findByReceiverAndIsReadFalseOrderByCreatedAtDesc(User receiver);
+
+    java.util.Optional<Notification> findByIdAndReceiver(Long id, User receiver);
 } 
