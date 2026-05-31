@@ -1,6 +1,7 @@
 package com.example.kbuddy_backend.chat.controller;
 
 import com.example.kbuddy_backend.chat.dto.ChatRoom;
+import com.example.kbuddy_backend.chat.dto.ChatRoomSummary;
 import com.example.kbuddy_backend.chat.service.ChatParticipationService;
 import com.example.kbuddy_backend.chat.service.ChatRoomService;
 import com.example.kbuddy_backend.common.config.CurrentUser;
@@ -26,8 +27,10 @@ public class ChatRoomController {
     }
 
     @PostMapping("/room")
-    public ResponseEntity<Void> createRoom(@RequestParam String name) {
-        chatRoomService.createRoom(name);
+    public ResponseEntity<Void> createRoom(@RequestParam String name,
+                                           @RequestParam Long counselorId,
+                                           @RequestParam Long clientId) {
+        chatRoomService.createRoom(name, counselorId, clientId);
         return ResponseEntity.ok().build();
     }
 
@@ -54,7 +57,24 @@ public class ChatRoomController {
 
     // 사용자별 채팅방 목록
     @GetMapping("/users/me/rooms")
-    public List<ChatRoom> getMyRooms(@CurrentUser User user) {
-        return chatParticipationService.findRoomsByUser(user.getId());
+    public List<ChatRoomSummary> getMyRooms(@CurrentUser User user) {
+        return chatParticipationService.findRoomSummariesByUser(user.getId());
+    }
+
+    // 예약 ID로 채팅방 조회
+    @GetMapping("/bookings/{bookingId}/room")
+    public ResponseEntity<ChatRoom> getRoomByBooking(@PathVariable Long bookingId) {
+        ChatRoom room = chatRoomService.findRoomByBookingId(bookingId);
+        if (room == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(room);
+    }
+
+    // 채팅방 메시지 읽음 처리
+    @PatchMapping("/rooms/{roomId}/read")
+    public ResponseEntity<Void> markAsRead(@PathVariable String roomId, @CurrentUser User user) {
+        chatParticipationService.markAsRead(user.getId(), roomId);
+        return ResponseEntity.noContent().build();
     }
 }

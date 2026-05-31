@@ -9,12 +9,15 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
 import java.util.Optional;
+import java.util.UUID;
 
 public interface CounselorProfileRepository extends JpaRepository<CounselorProfile, Long> {
 
     Optional<CounselorProfile> findByUser(User user);
 
     Optional<CounselorProfile> findByUserId(Long userId);
+
+    Optional<CounselorProfile> findByUuid(UUID uuid);
 
     boolean existsByUserId(Long userId);
 

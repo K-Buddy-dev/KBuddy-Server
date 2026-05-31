@@ -1,5 +1,6 @@
 package com.example.kbuddy_backend.livechat.dto.request;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.*;
 import java.time.LocalDate;
 import java.util.List;
@@ -15,6 +16,8 @@ public record UpdateCounselorRequest(
         String timezone,
         Integer promotionalPrice,
         Integer promotionSessionMinutes,
-        LocalDate promotionStartDate,
-        LocalDate promotionEndDate) {
+        @JsonFormat(pattern = "yyyy-MM-dd") LocalDate promotionStartDate,
+        @JsonFormat(pattern = "yyyy-MM-dd") LocalDate promotionEndDate,
+        List<String> existingPhotoUrls,
+        List<SlotRequest> slots) {
 }

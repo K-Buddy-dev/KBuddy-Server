@@ -1,6 +1,7 @@
 package com.example.kbuddy_backend.livechat.dto.response;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 
 public record CounselorDetailResponse(
@@ -21,7 +22,8 @@ public record CounselorDetailResponse(
         String timezone,
         String profileImageUrl,
         PromotionInfo promotion,
-        List<RecentReview> recentReviews) {
+        List<RecentReview> recentReviews,
+        List<RecentInquiry> recentInquiries) {
 
     public record PromotionInfo(
             int promotionalPrice,
@@ -36,6 +38,14 @@ public record CounselorDetailResponse(
             String customerName,
             int rating,
             String comment,
-            String createdAt) {
+            LocalDateTime createdAt) {
+    }
+
+    public record RecentInquiry(
+            Long inquiryId,
+            String title,
+            String writerName,
+            boolean isSecret,
+            LocalDateTime createdAt) {
     }
 }

@@ -26,12 +26,14 @@ public class NotificationService {
     @Transactional
     public Notification createNotification(User receiver, String message, NotificationType type) {
         Notification notification = Notification.createNotification(receiver, message, type);
-        notification = notificationRepository.save(notification);
-        
-        // FCM 푸시 알림 전송
-//        fcmService.sendNotification(receiver, message);
-        
-        return notification;
+        return notificationRepository.save(notification);
+    }
+
+    @Transactional
+    public void notify(User receiver, String title, String body, NotificationType type, String targetId) {
+        Notification notification = Notification.createNotification(receiver, body, type);
+        notificationRepository.save(notification);
+        fcmService.sendNotificationAllFcmTokens(receiver, title, body, type.name(), targetId);
     }
 
     /**

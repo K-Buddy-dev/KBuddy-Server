@@ -283,7 +283,7 @@ public class BlogService {
             s3Service.deleteFile(image.getFilePath());
         }
 
-        blogRepository.delete(blog);
+        blog.markDeleted();
     }
 
     // 블로그 엔티티를 응답 DTO로 변환합니다.

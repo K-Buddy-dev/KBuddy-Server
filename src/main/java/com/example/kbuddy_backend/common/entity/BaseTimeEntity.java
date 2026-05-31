@@ -22,4 +22,8 @@ public abstract class BaseTimeEntity {
     private LocalDateTime lastModifiedDate;
 
     private boolean delYn;
+
+    public void markDeleted() {
+        this.delYn = true;
+    }
 }

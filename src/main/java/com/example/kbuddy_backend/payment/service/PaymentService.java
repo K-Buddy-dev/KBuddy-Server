@@ -1,11 +1,13 @@
 package com.example.kbuddy_backend.payment.service;
 
+import com.example.kbuddy_backend.chat.service.ChatRoomService;
 import com.example.kbuddy_backend.common.exception.BadRequestException;
 import com.example.kbuddy_backend.common.exception.NotFoundException;
 import com.example.kbuddy_backend.common.exception.UnauthorizedException;
 import com.example.kbuddy_backend.livechat.constant.BookingStatus;
 import com.example.kbuddy_backend.livechat.entity.Booking;
 import com.example.kbuddy_backend.livechat.repository.BookingRepository;
+import com.example.kbuddy_backend.livechat.repository.CounselorProfileRepository;
 import com.example.kbuddy_backend.payment.config.BankTransferPaymentProperties;
 import com.example.kbuddy_backend.payment.constant.PaymentStatus;
 import com.example.kbuddy_backend.payment.dto.request.BankTransferPaymentCreateRequest;
@@ -15,7 +17,10 @@ import com.example.kbuddy_backend.payment.dto.request.PaymentConfirmRequest;
 import com.example.kbuddy_backend.payment.dto.response.PaymentResponse;
 import com.example.kbuddy_backend.payment.entity.Payment;
 import com.example.kbuddy_backend.payment.repository.PaymentRepository;
+import com.example.kbuddy_backend.notification.entity.NotificationType;
+import com.example.kbuddy_backend.notification.service.NotificationService;
 import com.example.kbuddy_backend.user.entity.User;
+import com.example.kbuddy_backend.user.util.UserNameUtils;
 
 import java.time.LocalDateTime;
 
@@ -34,6 +39,9 @@ public class PaymentService {
     private final PaymentRepository paymentRepository;
     private final BookingRepository bookingRepository;
     private final BankTransferPaymentProperties bankTransferPaymentProperties;
+    private final ChatRoomService chatRoomService;
+    private final CounselorProfileRepository counselorProfileRepository;
+    private final NotificationService notificationService;
 
     @Transactional
     public PaymentResponse createBankTransferPayment(User customer, BankTransferPaymentCreateRequest request) {
@@ -94,7 +102,18 @@ public class PaymentService {
 
         if (payment.getBooking().getStatus() == BookingStatus.PENDING) {
             payment.confirmDeposit(confirmRequest.confirmedAmount(), confirmRequest.adminMemo());
-            payment.getBooking().confirmPayment();
+            Booking booking = payment.getBooking();
+            booking.confirmPayment();
+
+            String roomName = counselorProfileRepository.findByUser(booking.getCounselor())
+                    .map(profile -> profile.getTitle())
+                    .orElseGet(() -> UserNameUtils.fullName(booking.getCounselor()) + " Counseling");
+            chatRoomService.createRoom(roomName, booking.getCounselor().getId(), booking.getCustomer().getId(), booking.getId());
+
+            notificationService.notify(booking.getCustomer(), "Booking Confirmed",
+                    "Your booking for '" + booking.getTopic() + "' has been confirmed. Your chat room is now open.",
+                    NotificationType.BOOKING_CONFIRMED_NOTIFICATION, String.valueOf(booking.getId()));
+
             return PaymentResponse.from(payment);
         }
         if (payment.getBooking().getStatus() == BookingStatus.PAID) {
@@ -114,7 +133,16 @@ public class PaymentService {
         return PaymentResponse.from(payment);
     }
 
+    @Transactional
+    public Payment createPayment(Booking booking) {
+        return buildAndSavePayment(booking, null);
+    }
+
     private PaymentResponse createPayment(Booking booking, String depositorName) {
+        return PaymentResponse.from(buildAndSavePayment(booking, depositorName));
+    }
+
+    private Payment buildAndSavePayment(Booking booking, String depositorName) {
         if (booking.getStatus() != BookingStatus.PENDING) {
             throw new BadRequestException("결제 대기 상태의 예약만 결제를 생성할 수 있습니다");
         }
@@ -128,12 +156,11 @@ public class PaymentService {
                 .bankName(bankTransferPaymentProperties.getBankName())
                 .accountNumber(bankTransferPaymentProperties.getAccountNumber())
                 .accountHolder(bankTransferPaymentProperties.getAccountHolder())
-                .depositDueAt(LocalDateTime.now().plusHours(bankTransferPaymentProperties.getDepositTimeoutHours()))
+                .depositDueAt(LocalDateTime.now(java.time.ZoneOffset.UTC).plusHours(bankTransferPaymentProperties.getDepositTimeoutHours()))
                 .depositorName(depositorName)
                 .build();
 
-        Payment savedPayment = paymentRepository.save(payment);
-        return PaymentResponse.from(savedPayment);
+        return paymentRepository.save(payment);
     }
 
     private Payment getPaymentEntity(Long paymentId) {
@@ -154,7 +181,7 @@ public class PaymentService {
     }
 
     private void validateDepositDue(Payment payment) {
-        if (payment.getDepositDueAt().isBefore(LocalDateTime.now())) {
+        if (payment.getDepositDueAt().isBefore(LocalDateTime.now(java.time.ZoneOffset.UTC))) {
             throw new BadRequestException("입금 기한이 만료된 결제입니다");
         }
     }

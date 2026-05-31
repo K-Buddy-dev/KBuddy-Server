@@ -94,7 +94,7 @@ public class QnaCommentService {
 		if (!Objects.equals(comment.getWriter().getId(), user.getId())) {
 			throw new NotWriterException();
 		}
-		qnaCommentRepository.delete(comment);
+		comment.markDeleted();
 	}
 
 	@Transactional

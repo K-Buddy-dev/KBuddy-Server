@@ -1,18 +1,19 @@
 package com.example.kbuddy_backend.livechat.dto.response;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
-public record BookingListResponse(
+public record CounselorBookingListResponse(
         List<BookingSummary> content,
         long totalElements) {
 
     public record BookingSummary(
             Long bookingId,
-            String counselorId,
-            String counselorName,
-            String counselorCoverImageUrl,
+            String customerName,
+            String customerUsername,
             String topic,
+            LocalDate birthDate,
             String status,
             int totalPrice,
             LocalDateTime bookingStartUtc,

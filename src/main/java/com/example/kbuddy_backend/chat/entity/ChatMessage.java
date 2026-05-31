@@ -19,7 +19,7 @@ public class ChatMessage {
     private ChatRoom chatRoom; // 채팅방
 
     @Column(nullable = false)
-    private String sender; // 발신자 ID
+    private Long sender; // 발신자 ID
 
     @Column(nullable = false)
     private String message; // 메시지 내용
@@ -29,10 +29,13 @@ public class ChatMessage {
     private ChatRole role; // 발신자 역할 (상담자/내담자)
 
     @Column(nullable = false)
-    private LocalDateTime sentAt; // 전송 시간
+    private LocalDateTime sentAt;
+
+    @Column(length = 64)
+    private String clientMessageId; // 클라이언트 임시 ID (중복 방지 및 echo 매칭용)
 
     @PrePersist
     protected void onCreate() {
-        sentAt = LocalDateTime.now();
+        sentAt = LocalDateTime.now(java.time.ZoneOffset.UTC);
     }
 }

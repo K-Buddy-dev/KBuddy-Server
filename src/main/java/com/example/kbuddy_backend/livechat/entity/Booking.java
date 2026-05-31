@@ -23,6 +23,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -64,6 +65,8 @@ public class Booking extends BaseTimeEntity {
     @Column(length = 200)
     private String topic;
 
+    private LocalDate birthDate;
+
     @Column(columnDefinition = "TEXT")
     private String memo;
 
@@ -76,7 +79,7 @@ public class Booking extends BaseTimeEntity {
     @Builder
     public Booking(User customer, User counselor, LocalDateTime bookingStartUtc,
                    LocalDateTime bookingEndUtc, Integer slotCount, Integer totalPrice,
-                   String topic, String memo) {
+                   String topic, String memo, LocalDate birthDate) {
         this.customer = customer;
         this.counselor = counselor;
         this.bookingStartUtc = bookingStartUtc;
@@ -85,6 +88,7 @@ public class Booking extends BaseTimeEntity {
         this.totalPrice = totalPrice;
         this.topic = topic;
         this.memo = memo;
+        this.birthDate = birthDate;
         this.status = BookingStatus.PENDING;
     }
 

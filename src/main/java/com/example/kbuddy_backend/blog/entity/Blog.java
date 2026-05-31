@@ -9,6 +9,7 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.SQLRestriction;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,6 +18,7 @@ import java.util.List;
 @Getter
 @Table(name = "blog")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@SQLRestriction("del_yn = false")
 public class Blog extends BaseTimeEntity {
 
     @Id
@@ -52,6 +54,7 @@ public class Blog extends BaseTimeEntity {
     private BlogStatus status = BlogStatus.DRAFT;
 
     private String title;
+    @Column(columnDefinition = "TEXT")
     private String description;
 
     private int heartCount;

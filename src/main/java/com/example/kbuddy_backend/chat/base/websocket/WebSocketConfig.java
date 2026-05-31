@@ -28,7 +28,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         // 메시지 브로커 설정
         // /sub 구독 주소 prefix
         // /pub: 메시지 전송 주소 prefix
-        registry.enableSimpleBroker("/sub"); // "/sub"이 붙은 메시지를 발행할 경우, 메시지 브로커가 이를 처리
+        registry.enableSimpleBroker("/sub", "/topic"); // "/sub"이 붙은 메시지를 발행할 경우, 메시지 브로커가 이를 처리
         registry.setApplicationDestinationPrefixes("/pub"); // 메세지 핸들러로 라우팅도는 "/pub"을 파라미터로 지정할 수 있다.
         // 메시지 가공 처리가 필요할 경우, 가공 핸들러로 메시지를 라우팅 되도록하는 설정
     }

@@ -44,6 +44,17 @@ public class CounselorPromotion extends BaseTimeEntity {
         this.endDate = endDate;
     }
 
+    public void update(Integer promotionalPrice, Integer promotionSessionMinutes,
+                       LocalDate startDate, LocalDate endDate) {
+        if (endDate.isBefore(startDate)) {
+            throw new IllegalArgumentException("종료일은 시작일보다 이후여야 합니다");
+        }
+        this.promotionalPrice = promotionalPrice;
+        this.promotionSessionMinutes = promotionSessionMinutes;
+        this.startDate = startDate;
+        this.endDate = endDate;
+    }
+
     public boolean isActive() {
         LocalDate today = LocalDate.now();
         return !today.isBefore(startDate) && !today.isAfter(endDate);

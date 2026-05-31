@@ -19,6 +19,7 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import org.hibernate.annotations.SQLRestriction;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,6 +34,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@SQLRestriction("del_yn = false")
 public class Qna extends BaseTimeEntity {
 
     @Id
@@ -58,6 +60,7 @@ public class Qna extends BaseTimeEntity {
     private int categoryCode;
 
     private String title;
+    @Column(columnDefinition = "TEXT")
     private String description;
 
     private int heartCount;

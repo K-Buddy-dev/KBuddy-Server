@@ -45,3 +45,6 @@ out/
 ### VS Code ###
 .vscode/
 .DS_Store
+
+# H2 local test DB
+data/

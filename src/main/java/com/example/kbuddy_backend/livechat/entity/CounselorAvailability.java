@@ -22,14 +22,13 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDate;
-import java.time.LocalTime;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "counselor_availability",
         uniqueConstraints = @UniqueConstraint(
                 name = "uk_counselor_slot",
-                columnNames = {"counselor_id", "slot_date", "slot_start_time"}
+                columnNames = {"counselor_id", "slot_start_utc"}
         ))
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -43,11 +42,8 @@ public class CounselorAvailability extends BaseTimeEntity {
     @JoinColumn(name = "counselor_id", nullable = false)
     private CounselorProfile counselor;
 
-    @Column(name = "slot_date", nullable = false)
-    private LocalDate slotDate;
-
-    @Column(name = "slot_start_time", nullable = false)
-    private LocalTime slotStartTime;
+    @Column(name = "slot_start_utc", nullable = false)
+    private LocalDateTime slotStartUtc;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
@@ -57,11 +53,10 @@ public class CounselorAvailability extends BaseTimeEntity {
     private Integer version;
 
     @Builder
-    public CounselorAvailability(CounselorProfile counselor, LocalDate slotDate, LocalTime slotStartTime) {
-        validateSlotTime(slotStartTime);
+    public CounselorAvailability(CounselorProfile counselor, LocalDateTime slotStartUtc) {
+        validateSlotTime(slotStartUtc);
         this.counselor = counselor;
-        this.slotDate = slotDate;
-        this.slotStartTime = slotStartTime;
+        this.slotStartUtc = slotStartUtc;
         this.status = SlotStatus.AVAILABLE;
     }
 
@@ -97,8 +92,8 @@ public class CounselorAvailability extends BaseTimeEntity {
         return this.status == SlotStatus.AVAILABLE;
     }
 
-    private void validateSlotTime(LocalTime time) {
-        if (time.getMinute() % 30 != 0 || time.getSecond() != 0) {
+    private void validateSlotTime(LocalDateTime utc) {
+        if (utc.getMinute() % 30 != 0 || utc.getSecond() != 0) {
             throw new IllegalArgumentException("슬롯 시간은 30분 단위여야 합니다 (예: 09:00, 09:30)");
         }
     }

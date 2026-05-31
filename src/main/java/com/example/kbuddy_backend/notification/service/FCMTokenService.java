@@ -23,7 +23,7 @@ public class FCMTokenService {
             FCMToken fcmToken = existing.get();
             fcmToken.setIsActive(true);
             fcmToken.setUser(user);
-            fcmToken.setUpdatedAt(LocalDateTime.now());
+            fcmToken.setUpdatedAt(LocalDateTime.now(java.time.ZoneOffset.UTC));
             fcmToken.setDeviceInfo(deviceInfo);
             return;
         }

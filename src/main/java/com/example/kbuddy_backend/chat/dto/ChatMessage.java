@@ -1,6 +1,7 @@
 package com.example.kbuddy_backend.chat.dto;
 
 import lombok.*;
+import java.time.LocalDateTime;
 
 @Getter
 @Setter
@@ -13,9 +14,11 @@ public class ChatMessage {
         JOIN ,ENTER, LEAVE, TALK
     }
 
-    private MessageType messageType; // 메시지 타입
-    private String roomId;    // 채팅방 ID
-    private String sender;    // 메시지 발신자
-    private String message;   // 메시지 내용
-    private String role;      // 발신자 역할 (상담자/내담자)
+    private MessageType messageType;
+    private String roomId;
+    private String sender;
+    private String message;
+    private String role;
+    private LocalDateTime sentAt;
+    private String clientMessageId; // 클라이언트 임시 ID (echo 매칭용)
 }

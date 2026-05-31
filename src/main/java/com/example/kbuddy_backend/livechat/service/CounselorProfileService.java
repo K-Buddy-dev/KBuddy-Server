@@ -1,11 +1,14 @@
 package com.example.kbuddy_backend.livechat.service;
 
 import com.example.kbuddy_backend.livechat.constant.Category;
+import com.example.kbuddy_backend.livechat.constant.SlotStatus;
+import com.example.kbuddy_backend.livechat.dto.request.SlotRequest;
 import com.example.kbuddy_backend.livechat.dto.request.RegisterCounselorRequest;
 import com.example.kbuddy_backend.livechat.dto.request.UpdateCounselorRequest;
 import com.example.kbuddy_backend.livechat.dto.response.CounselorAvailabilityResponse;
 import com.example.kbuddy_backend.livechat.dto.response.CounselorDetailResponse;
 import com.example.kbuddy_backend.livechat.dto.response.CounselorListResponse;
+import com.example.kbuddy_backend.livechat.entity.CounselorAvailability;
 import com.example.kbuddy_backend.livechat.entity.CounselorCategory;
 import com.example.kbuddy_backend.livechat.entity.CounselorPhoto;
 import com.example.kbuddy_backend.livechat.entity.CounselorProfile;
@@ -13,13 +16,17 @@ import com.example.kbuddy_backend.livechat.entity.CounselorPromotion;
 import com.example.kbuddy_backend.livechat.entity.CounselorReview;
 import com.example.kbuddy_backend.livechat.repository.CounselorAvailabilityRepository;
 import com.example.kbuddy_backend.livechat.repository.CounselorCategoryRepository;
+import com.example.kbuddy_backend.livechat.repository.CounselorInquiryRepository;
 import com.example.kbuddy_backend.livechat.repository.CounselorPhotoRepository;
 import com.example.kbuddy_backend.livechat.repository.CounselorProfileRepository;
 import com.example.kbuddy_backend.livechat.repository.CounselorPromotionRepository;
 import com.example.kbuddy_backend.livechat.repository.CounselorReviewRepository;
 import com.example.kbuddy_backend.s3.service.S3Service;
 import com.example.kbuddy_backend.user.entity.User;
+import com.example.kbuddy_backend.user.util.UserNameUtils;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.data.domain.Page;
@@ -29,8 +36,14 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.YearMonth;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -43,7 +56,11 @@ public class CounselorProfileService {
         private final CounselorCategoryRepository categoryRepository;
         private final CounselorPromotionRepository promotionRepository;
         private final CounselorPhotoRepository photoRepository;
+        private final CounselorInquiryRepository inquiryRepository;
         private final S3Service s3Service;
+
+        @PersistenceContext
+        private EntityManager entityManager;
 
         public CounselorListResponse getCounselors(String sort, Pageable pageable) {
                 Page<CounselorProfile> profiles;
@@ -61,19 +78,39 @@ public class CounselorProfileService {
                 return new CounselorListResponse(content, profiles.getTotalElements());
         }
 
-        public CounselorDetailResponse getCounselor(Long counselorId) {
-                CounselorProfile profile = counselorProfileRepository.findById(counselorId)
-                                .orElseThrow(() -> new IllegalArgumentException("상담사를 찾을 수 없습니다: " + counselorId));
+        public CounselorDetailResponse getMyProfile(User user) {
+                CounselorProfile profile = counselorProfileRepository.findByUserId(user.getId())
+                                .orElseThrow(() -> new IllegalArgumentException("상담사로 등록되지 않은 사용자입니다"));
+                return toCounselorDetailResponse(profile);
+        }
 
+        public CounselorDetailResponse getCounselor(String counselorUuid) {
+                CounselorProfile profile = counselorProfileRepository.findByUuid(UUID.fromString(counselorUuid))
+                                .orElseThrow(() -> new IllegalArgumentException("상담사를 찾을 수 없습니다: " + counselorUuid));
+                return toCounselorDetailResponse(profile);
+        }
+
+        private CounselorDetailResponse toCounselorDetailResponse(CounselorProfile profile) {
                 List<CounselorReview> recentReviews = reviewRepository
                                 .findTop3ByCounselorIdOrderByCreatedAtDesc(profile.getUser().getId());
+
+                List<CounselorDetailResponse.RecentInquiry> recentInquiries = inquiryRepository
+                                .findTop5ByCounselorIdAndIsSecretFalseOrderByCreatedDateDesc(profile.getUser().getId())
+                                .stream()
+                                .map(i -> new CounselorDetailResponse.RecentInquiry(
+                                                i.getId(),
+                                                i.getTitle(),
+                                                UserNameUtils.fullName(i.getWriter()),
+                                                i.isSecret(),
+                                                i.getCreatedDate()))
+                                .toList();
 
                 List<String> categories = profile.getCategories().stream()
                                 .map(c -> c.getCategory().getDisplayName())
                                 .toList();
 
                 List<String> photoUrls = profile.getPhotos().stream()
-                                .map(p -> p.getPhotoUrl())
+                                .map(CounselorPhoto::getPhotoUrl)
                                 .toList();
 
                 CounselorDetailResponse.PromotionInfo promotionInfo = null;
@@ -88,8 +125,8 @@ public class CounselorProfileService {
                 }
 
                 return new CounselorDetailResponse(
-                                profile.getId().toString(),
-                                profile.getUser().getFirstName() + " " + profile.getUser().getLastName(),
+                                profile.getUuid().toString(),
+                                UserNameUtils.fullName(profile.getUser()),
                                 profile.getTitle(),
                                 profile.getDetail(),
                                 profile.getIntro(),
@@ -108,26 +145,29 @@ public class CounselorProfileService {
                                 recentReviews.stream()
                                                 .map(r -> new CounselorDetailResponse.RecentReview(
                                                                 r.getId(),
-                                                                r.getCustomer().getFirstName(),
+                                                                UserNameUtils.fullName(r.getCustomer()),
                                                                 r.getRating(),
                                                                 r.getComment(),
-                                                                r.getCreatedAt().toString()))
-                                                .toList());
+                                                                r.getCreatedAt()))
+                                                .toList(),
+                                recentInquiries);
         }
 
-        public CounselorAvailabilityResponse getAvailability(Long counselorId, int year, int month) {
-                YearMonth yearMonth = YearMonth.of(year, month);
-                LocalDate startDate = yearMonth.atDay(1);
-                LocalDate endDate = yearMonth.atEndOfMonth();
+        public CounselorAvailabilityResponse getAvailability(String counselorUuid, int year, int month) {
+                CounselorProfile profile = counselorProfileRepository.findByUuid(UUID.fromString(counselorUuid))
+                                .orElseThrow(() -> new IllegalArgumentException("상담사를 찾을 수 없습니다: " + counselorUuid));
 
-                var slots = availabilityRepository.findByCounselorIdAndSlotDateBetween(
-                                counselorId, startDate, endDate);
+                YearMonth yearMonth = YearMonth.of(year, month);
+                LocalDateTime startUtc = yearMonth.atDay(1).minusDays(1).atStartOfDay();
+                LocalDateTime endUtc = yearMonth.atEndOfMonth().plusDays(1).atTime(23, 59, 59);
+
+                var slots = availabilityRepository.findByCounselorIdAndSlotStartUtcBetween(
+                                profile.getId(), startUtc, endUtc);
 
                 List<CounselorAvailabilityResponse.AvailabilitySlot> slotList = slots.stream()
                                 .map(s -> new CounselorAvailabilityResponse.AvailabilitySlot(
                                                 s.getId(),
-                                                s.getSlotDate(),
-                                                s.getSlotStartTime(),
+                                                s.getSlotStartUtc().toInstant(java.time.ZoneOffset.UTC),
                                                 s.getStatus().name()))
                                 .toList();
 
@@ -169,6 +209,10 @@ public class CounselorProfileService {
                         savePromotion(profile, request.promotionalPrice(),
                                         request.promotionSessionMinutes(), request.promotionStartDate(), request.promotionEndDate());
                 }
+
+                if (request.slots() != null && !request.slots().isEmpty()) {
+                        saveSlots(profile, request.slots());
+                }
         }
 
         @Transactional
@@ -188,20 +232,65 @@ public class CounselorProfileService {
                                 request.regularPrice(), request.sessionMinutes(), request.timezone());
 
                 if (request.categories() != null && !request.categories().isEmpty()) {
-                        categoryRepository.deleteByCounselorId(profile.getId());
-                        saveCategories(profile, request.categories());
+                        profile.getCategories().clear();
+                        entityManager.flush(); // orphan DELETE를 INSERT 전에 강제 실행
+                        List<CounselorCategory> newCategories = request.categories().stream()
+                                        .map(name -> {
+                                                try {
+                                                        return Category.valueOf(name);
+                                                } catch (IllegalArgumentException e) {
+                                                        throw new IllegalArgumentException("유효하지 않은 카테고리: " + name);
+                                                }
+                                        })
+                                        .map(cat -> CounselorCategory.builder().counselor(profile).category(cat).build())
+                                        .toList();
+                        profile.getCategories().addAll(newCategories);
                 }
 
-                if (photos != null && !photos.isEmpty()) {
-                        photoRepository.deleteByCounselorId(profile.getId());
-                        savePhotos(profile, photos);
+                if (request.existingPhotoUrls() != null) {
+                        List<String> newUrls = new java.util.ArrayList<>();
+                        if (photos != null && !photos.isEmpty()) {
+                                for (MultipartFile photo : photos) {
+                                        newUrls.add(s3Service.saveFileWithUUID(photo, "counselor/photos").s3ImageUrl());
+                                }
+                        }
+                        List<String> finalUrls = new java.util.ArrayList<>(request.existingPhotoUrls());
+                        finalUrls.addAll(newUrls);
+
+                        profile.getPhotos().clear();
+                        entityManager.flush();
+                        for (int i = 0; i < finalUrls.size(); i++) {
+                                profile.getPhotos().add(CounselorPhoto.builder()
+                                                .counselor(profile).photoUrl(finalUrls.get(i)).sortOrder(i).build());
+                        }
                 }
 
                 if (request.promotionalPrice() != null) {
-                        promotionRepository.deleteByCounselorId(profile.getId());
-                        savePromotion(profile, request.promotionalPrice(),
-                                        request.promotionSessionMinutes(), request.promotionStartDate(), request.promotionEndDate());
+                        if (profile.getPromotion() != null) {
+                                profile.getPromotion().update(
+                                                request.promotionalPrice(),
+                                                request.promotionSessionMinutes(),
+                                                request.promotionStartDate(),
+                                                request.promotionEndDate());
+                        } else {
+                                savePromotion(profile, request.promotionalPrice(),
+                                                request.promotionSessionMinutes(), request.promotionStartDate(), request.promotionEndDate());
+                        }
                 }
+
+                if (request.slots() != null) {
+                        availabilityRepository.deleteByCounselorIdAndStatus(profile.getId(), SlotStatus.AVAILABLE);
+                        if (!request.slots().isEmpty()) {
+                                saveSlots(profile, request.slots());
+                        }
+                }
+        }
+
+        @Transactional
+        public void deleteCounselor(User user) {
+                CounselorProfile profile = counselorProfileRepository.findByUserId(user.getId())
+                                .orElseThrow(() -> new IllegalArgumentException("상담사로 등록되지 않은 사용자입니다"));
+                profile.markDeleted();
         }
 
         private String uploadFile(MultipartFile file, String folder) {
@@ -234,8 +323,8 @@ public class CounselorProfileService {
         }
 
         private void savePromotion(CounselorProfile profile, Integer promotionalPrice,
-                                    Integer promotionSessionMinutes,
-                                    LocalDate startDate, LocalDate endDate) {
+                                   Integer promotionSessionMinutes,
+                                   LocalDate startDate, LocalDate endDate) {
                 CounselorPromotion promotion = CounselorPromotion.builder()
                                 .counselor(profile)
                                 .promotionalPrice(promotionalPrice)
@@ -246,14 +335,35 @@ public class CounselorProfileService {
                 promotionRepository.save(promotion);
         }
 
+        private void saveSlots(CounselorProfile profile, List<SlotRequest> slotRequests) {
+                for (SlotRequest req : slotRequests) {
+                        for (LocalTime time : req.times()) {
+                                LocalDateTime slotStartUtc = toUtc(req.date(), time, profile.getTimezone());
+                                if (!availabilityRepository.existsByCounselorAndSlotStartUtc(profile, slotStartUtc)) {
+                                        availabilityRepository.save(CounselorAvailability.builder()
+                                                        .counselor(profile)
+                                                        .slotStartUtc(slotStartUtc)
+                                                        .build());
+                                }
+                        }
+                }
+        }
+
+        private LocalDateTime toUtc(LocalDate date, LocalTime time, String timezone) {
+                ZoneId zone = ZoneId.of(timezone != null ? timezone : "Asia/Seoul");
+                return ZonedDateTime.of(date, time, zone)
+                                .withZoneSameInstant(ZoneOffset.UTC)
+                                .toLocalDateTime();
+        }
+
         private CounselorListResponse.CounselorSummary toSummary(CounselorProfile profile) {
                 List<String> categories = profile.getCategories().stream()
                                 .map(c -> c.getCategory().getDisplayName())
                                 .toList();
 
                 return new CounselorListResponse.CounselorSummary(
-                                profile.getId().toString(),
-                                profile.getUser().getFirstName() + " " + profile.getUser().getLastName(),
+                                profile.getUuid().toString(),
+                                UserNameUtils.fullName(profile.getUser()),
                                 profile.getTitle(),
                                 categories,
                                 profile.getRatingAvg(),

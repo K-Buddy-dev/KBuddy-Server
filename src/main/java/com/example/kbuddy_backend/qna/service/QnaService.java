@@ -269,7 +269,7 @@ public class QnaService {
         for (QnaImage image : images) {
             s3Service.deleteFile(image.getFilePath());
         }
-        qnaRepository.delete(qna);
+        qna.markDeleted();
     }
 
     private QnaResponse createQnaResponseDto(Qna qna, User currentUser) {

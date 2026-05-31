@@ -24,6 +24,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -54,10 +55,18 @@ public class CounselorController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/me")
+    @Operation(summary = "내 상담사 프로필 조회", description = "로그인한 상담사 본인의 프로필을 조회합니다.")
+    public ResponseEntity<CounselorDetailResponse> getMyProfile(
+            @Parameter(hidden = true) @CurrentUser User user) {
+        CounselorDetailResponse response = counselorProfileService.getMyProfile(user);
+        return ResponseEntity.ok(response);
+    }
+
     @GetMapping("/{counselorId}")
     @Operation(summary = "상담사 상세 조회", description = "상담사 프로필 상세 정보와 최근 리뷰를 조회합니다.")
     public ResponseEntity<CounselorDetailResponse> getCounselor(
-            @PathVariable Long counselorId,
+            @PathVariable String counselorId,
             @Parameter(hidden = true) @CurrentUser User user) {
         CounselorDetailResponse response = counselorProfileService.getCounselor(counselorId);
         return ResponseEntity.ok(response);
@@ -66,7 +75,7 @@ public class CounselorController {
     @GetMapping("/{counselorId}/availability")
     @Operation(summary = "상담 가능 시간 조회", description = "특정 월의 상담 가능 시간 슬롯을 조회합니다.")
     public ResponseEntity<CounselorAvailabilityResponse> getAvailability(
-            @PathVariable Long counselorId,
+            @PathVariable String counselorId,
             @RequestParam int year,
             @RequestParam int month,
             @Parameter(hidden = true) @CurrentUser User user) {
@@ -84,6 +93,14 @@ public class CounselorController {
             @Parameter(hidden = true) @CurrentUser User user) {
         counselorProfileService.registerCounselor(user, request, coverImage, proofFile, photos);
         return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
+
+    @DeleteMapping
+    @Operation(summary = "상담사 프로필 삭제", description = "로그인한 상담사 본인의 프로필을 삭제합니다.")
+    public ResponseEntity<Void> deleteCounselor(
+            @Parameter(hidden = true) @CurrentUser User user) {
+        counselorProfileService.deleteCounselor(user);
+        return ResponseEntity.noContent().build();
     }
 
     @PatchMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

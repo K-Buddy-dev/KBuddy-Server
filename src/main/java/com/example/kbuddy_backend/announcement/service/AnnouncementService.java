@@ -205,7 +205,7 @@ public class AnnouncementService {
         for(AnnouncementImage image : images) {
             s3Service.deleteFile(image.getFilePath());
         }
-        announcementRepository.delete(announcement);
+        announcement.markDeleted();
     }
 
     private AnnouncementResponse createAnnouncementResponseDto(Announcement announcement, User currentUser){

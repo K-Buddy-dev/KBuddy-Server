@@ -128,7 +128,7 @@ public class Payment extends BaseTimeEntity {
         this.status = PaymentStatus.DEPOSIT_REPORTED;
         this.depositorName = depositorName;
         this.customerMemo = customerMemo;
-        this.depositReportedAt = LocalDateTime.now();
+        this.depositReportedAt = LocalDateTime.now(java.time.ZoneOffset.UTC);
     }
 
     public void confirmDeposit(Integer confirmedAmount, String adminMemo) {
@@ -142,7 +142,7 @@ public class Payment extends BaseTimeEntity {
         this.status = PaymentStatus.PAID;
         this.confirmedAmount = amountToConfirm;
         this.adminMemo = adminMemo;
-        this.paidAt = LocalDateTime.now();
+        this.paidAt = LocalDateTime.now(java.time.ZoneOffset.UTC);
     }
 
     public void cancel(String reason) {
@@ -151,7 +151,7 @@ public class Payment extends BaseTimeEntity {
         }
         this.status = PaymentStatus.CANCELLED;
         this.cancelReason = reason;
-        this.cancelledAt = LocalDateTime.now();
+        this.cancelledAt = LocalDateTime.now(java.time.ZoneOffset.UTC);
     }
 
     public void expire() {
@@ -159,7 +159,7 @@ public class Payment extends BaseTimeEntity {
             throw new IllegalArgumentException("입금 대기 상태의 결제만 만료 처리할 수 있습니다");
         }
         this.status = PaymentStatus.EXPIRED;
-        this.cancelledAt = LocalDateTime.now();
+        this.cancelledAt = LocalDateTime.now(java.time.ZoneOffset.UTC);
     }
 
     private int calculatePlatformFee(Integer totalAmount, BigDecimal platformFeeRate) {

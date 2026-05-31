@@ -2,11 +2,15 @@ package com.example.kbuddy_backend.livechat.service;
 
 import com.example.kbuddy_backend.livechat.dto.request.CreateInquiryRequest;
 import com.example.kbuddy_backend.livechat.entity.CounselorInquiry;
+import com.example.kbuddy_backend.livechat.entity.CounselorProfile;
 import com.example.kbuddy_backend.livechat.entity.InquiryReply;
 import com.example.kbuddy_backend.livechat.repository.CounselorInquiryRepository;
+import com.example.kbuddy_backend.livechat.repository.CounselorProfileRepository;
 import com.example.kbuddy_backend.livechat.repository.InquiryReplyRepository;
 import com.example.kbuddy_backend.user.entity.User;
 import com.example.kbuddy_backend.user.repository.UserRepository;
+
+import java.util.UUID;
 
 import lombok.RequiredArgsConstructor;
 
@@ -25,14 +29,15 @@ public class CounselorInquiryService {
     private final CounselorInquiryRepository inquiryRepository;
     private final InquiryReplyRepository replyRepository;
     private final UserRepository userRepository;
+    private final CounselorProfileRepository counselorProfileRepository;
 
     @Transactional
-    public void createInquiry(User writer, Long counselorId, CreateInquiryRequest request) {
-        User counselor = userRepository.findById(counselorId)
+    public void createInquiry(User writer, String counselorUuid, CreateInquiryRequest request) {
+        CounselorProfile profile = counselorProfileRepository.findByUuid(UUID.fromString(counselorUuid))
                 .orElseThrow(() -> new IllegalArgumentException("상담사를 찾을 수 없습니다"));
 
         CounselorInquiry inquiry = CounselorInquiry.builder()
-                .counselor(counselor)
+                .counselor(profile.getUser())
                 .writer(writer)
                 .title(request.title())
                 .content(request.content())
@@ -42,8 +47,10 @@ public class CounselorInquiryService {
         inquiryRepository.save(inquiry);
     }
 
-    public Page<CounselorInquiry> getInquiries(User user, Long counselorId, Pageable pageable) {
-        return inquiryRepository.findVisibleInquiries(counselorId, user, pageable);
+    public Page<CounselorInquiry> getInquiries(User user, String counselorUuid, Pageable pageable) {
+        CounselorProfile profile = counselorProfileRepository.findByUuid(UUID.fromString(counselorUuid))
+                .orElseThrow(() -> new IllegalArgumentException("상담사를 찾을 수 없습니다"));
+        return inquiryRepository.findVisibleInquiries(profile.getUser().getId(), user, pageable);
     }
 
     public CounselorInquiry getInquiryDetail(User user, Long inquiryId) {

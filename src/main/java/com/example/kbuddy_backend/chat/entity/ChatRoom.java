@@ -22,10 +22,13 @@ public class ChatRoom {
     private String name; // 채팅방 이름
 
     @Column(nullable = false)
-    private String counselorId; // 상담자 ID
+    private Long counselorId; // 상담자 ID
 
     @Column(nullable = false)
-    private String clientId; // 내담자 ID
+    private Long clientId; // 내담자 ID
+
+    @Column(unique = true)
+    private Long bookingId; // 연결된 예약 ID
 
     @Column(nullable = false)
     private LocalDateTime createdAt; // 생성 시간
@@ -35,7 +38,7 @@ public class ChatRoom {
 
     @PrePersist
     protected void onCreate() {
-        createdAt = LocalDateTime.now();
+        createdAt = LocalDateTime.now(java.time.ZoneOffset.UTC);
     }
 
 }

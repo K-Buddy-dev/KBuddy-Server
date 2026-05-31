@@ -36,7 +36,7 @@ public class QnaImage {
     private ImageFileType fileType;
 
     private String filePath;
-    private final LocalDateTime createdAt = LocalDateTime.now();
+    private final LocalDateTime createdAt = LocalDateTime.now(java.time.ZoneOffset.UTC);
 
     @Builder
     public QnaImage(Qna qna, String imageUrl, ImageFileType fileType, String filePath) {

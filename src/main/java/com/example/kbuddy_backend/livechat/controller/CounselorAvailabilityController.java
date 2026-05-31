@@ -3,6 +3,8 @@ package com.example.kbuddy_backend.livechat.controller;
 import com.example.kbuddy_backend.common.config.CurrentUser;
 import com.example.kbuddy_backend.livechat.dto.request.CreateAvailabilityBulkRequest;
 import com.example.kbuddy_backend.livechat.dto.request.CreateAvailabilityRequest;
+
+import java.time.ZoneOffset;
 import com.example.kbuddy_backend.livechat.dto.response.CounselorAvailabilityResponse;
 import com.example.kbuddy_backend.livechat.entity.CounselorAvailability;
 import com.example.kbuddy_backend.livechat.service.CounselorAvailabilityService;
@@ -73,8 +75,7 @@ public class CounselorAvailabilityController {
     private CounselorAvailabilityResponse.AvailabilitySlot toResponse(CounselorAvailability availability) {
         return new CounselorAvailabilityResponse.AvailabilitySlot(
                 availability.getId(),
-                availability.getSlotDate(),
-                availability.getSlotStartTime(),
+                availability.getSlotStartUtc().toInstant(ZoneOffset.UTC),
                 availability.getStatus().name());
     }
 }

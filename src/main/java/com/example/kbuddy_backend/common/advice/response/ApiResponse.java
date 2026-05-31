@@ -20,7 +20,7 @@ public class ApiResponse<T> {
             .disable(com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
     @Schema(description = "응답 시간")
-    public LocalDateTime timestamp = LocalDateTime.now();
+    public LocalDateTime timestamp = LocalDateTime.now(java.time.ZoneOffset.UTC);
 
     @Schema(description = "HTTP 상태 코드", example = "200")
     public int status;

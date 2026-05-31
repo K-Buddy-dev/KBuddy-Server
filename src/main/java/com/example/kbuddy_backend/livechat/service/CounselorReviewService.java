@@ -2,6 +2,8 @@ package com.example.kbuddy_backend.livechat.service;
 
 import com.example.kbuddy_backend.livechat.constant.BookingStatus;
 import com.example.kbuddy_backend.livechat.dto.request.CreateReviewRequest;
+import com.example.kbuddy_backend.livechat.dto.response.ReviewListResponse;
+import com.example.kbuddy_backend.user.util.UserNameUtils;
 import com.example.kbuddy_backend.livechat.entity.Booking;
 import com.example.kbuddy_backend.livechat.entity.CounselorProfile;
 import com.example.kbuddy_backend.livechat.entity.CounselorReview;
@@ -12,10 +14,13 @@ import com.example.kbuddy_backend.user.entity.User;
 
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -25,6 +30,24 @@ public class CounselorReviewService {
     private final CounselorReviewRepository reviewRepository;
     private final BookingRepository bookingRepository;
     private final CounselorProfileRepository counselorProfileRepository;
+
+    public ReviewListResponse getReviews(String counselorUuid, Pageable pageable) {
+        CounselorProfile profile = counselorProfileRepository.findByUuid(UUID.fromString(counselorUuid))
+                .orElseThrow(() -> new IllegalArgumentException("상담사를 찾을 수 없습니다: " + counselorUuid));
+
+        Page<CounselorReview> page = reviewRepository.findByCounselorId(profile.getUser().getId(), pageable);
+
+        var items = page.getContent().stream()
+                .map(r -> new ReviewListResponse.ReviewItem(
+                        r.getId(),
+                        UserNameUtils.fullName(r.getCustomer()),
+                        r.getRating(),
+                        r.getComment(),
+                        r.getCreatedAt()))
+                .toList();
+
+        return new ReviewListResponse(items, page.getTotalElements());
+    }
 
     @Transactional
     public void createReview(User customer, CreateReviewRequest request) {

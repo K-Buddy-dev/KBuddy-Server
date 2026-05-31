@@ -60,7 +60,7 @@ public class SecurityConfig {
                                 .requestMatchers("/kbuddy/v1/admin/login", "/kbuddy/v1/admin/refresh").permitAll()
                                 .requestMatchers("/admin/**").hasRole("ADMIN")
                                 .requestMatchers("/kbuddy/v1/auth/password","/kbuddy/v1/auth/authentication","/kbuddy/v1/auth/account").authenticated()
-                                .requestMatchers("/kbuddy/v1/auth/**","/actuator/health").permitAll()
+                                .requestMatchers("/kbuddy/v1/auth/**","/actuator/health","/ws-stomp/**","/ws-stomp").permitAll()
                                 .anyRequest().authenticated());
 
         return http.build();

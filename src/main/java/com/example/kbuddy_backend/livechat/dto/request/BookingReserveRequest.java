@@ -11,10 +11,9 @@ import java.time.LocalDate;
 import java.util.List;
 
 public record BookingReserveRequest(
-        @NotNull Long counselorId,
+        @NotBlank String counselorId,
         @NotBlank @Size(max = 200) String topic,
-        @Size(max = 500) String memo,
-        @JsonFormat(pattern = "MM-dd-yyyy")
+        @JsonFormat(pattern = "yyyy-MM-dd")
         @NotNull LocalDate birthDate,
         @NotEmpty List<Long> slotIds) {
 }

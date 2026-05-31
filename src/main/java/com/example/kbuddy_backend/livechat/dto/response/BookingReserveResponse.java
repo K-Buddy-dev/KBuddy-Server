@@ -1,6 +1,5 @@
 package com.example.kbuddy_backend.livechat.dto.response;
 
-import java.time.Instant;
 import java.time.LocalDateTime;
 
 public record BookingReserveResponse(
@@ -10,5 +9,9 @@ public record BookingReserveResponse(
         int totalPrice,
         LocalDateTime bookingStartUtc,
         LocalDateTime bookingEndUtc,
-        Instant holdExpiresAt) {
+        Long paymentId,
+        String bankName,
+        String accountNumber,
+        String accountHolder,
+        LocalDateTime depositDueAt) {
 }

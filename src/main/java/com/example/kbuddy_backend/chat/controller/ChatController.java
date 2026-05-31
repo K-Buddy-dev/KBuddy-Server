@@ -8,8 +8,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+
+import java.security.Principal;
 
 @RequiredArgsConstructor
 @Controller
@@ -21,7 +21,11 @@ public class ChatController {
     private final ChatMessageService chatMessageService;
 
     @MessageMapping("/message")
-    public void sendMessage(@Payload ChatMessage message) {
+    public void sendMessage(@Payload ChatMessage message, Principal principal) {
+        if (principal != null) {
+            // principal.getName() = JWT subject = user Long ID 문자열
+            message.setSender(principal.getName());
+        }
         log.info("ChatController @MessageMapping hit: {}", message);
         chatMessageService.send(message);
     }

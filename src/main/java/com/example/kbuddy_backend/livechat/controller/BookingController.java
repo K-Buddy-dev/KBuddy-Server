@@ -4,6 +4,7 @@ import com.example.kbuddy_backend.common.config.CurrentUser;
 import com.example.kbuddy_backend.livechat.dto.request.BookingReserveRequest;
 import com.example.kbuddy_backend.livechat.dto.response.BookingListResponse;
 import com.example.kbuddy_backend.livechat.dto.response.BookingReserveResponse;
+import com.example.kbuddy_backend.livechat.dto.response.CounselorBookingListResponse;
 import com.example.kbuddy_backend.livechat.service.BookingService;
 import com.example.kbuddy_backend.user.entity.User;
 
@@ -69,12 +70,22 @@ public class BookingController {
     }
 
     @GetMapping("/my")
-    @Operation(summary = "내 예약 목록 조회", description = "로그인한 사용자의 예약 목록을 조회합니다.")
+    @Operation(summary = "내 예약 목록 조회", description = "로그인한 사용자(내담자)의 예약 목록을 조회합니다.")
     public ResponseEntity<BookingListResponse> getMyBookings(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @Parameter(hidden = true) @CurrentUser User user) {
         Pageable pageable = PageRequest.of(page, size);
         return ResponseEntity.ok(bookingService.getMyBookings(user, pageable));
+    }
+
+    @GetMapping("/counselor")
+    @Operation(summary = "상담사 주문 목록 조회", description = "로그인한 상담사에게 들어온 예약 목록을 조회합니다.")
+    public ResponseEntity<CounselorBookingListResponse> getCounselorBookings(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @Parameter(hidden = true) @CurrentUser User user) {
+        Pageable pageable = PageRequest.of(page, size);
+        return ResponseEntity.ok(bookingService.getCounselorBookings(user, pageable));
     }
 }

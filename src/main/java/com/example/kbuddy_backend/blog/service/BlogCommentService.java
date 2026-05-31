@@ -99,7 +99,7 @@ public class BlogCommentService {
 		if (!Objects.equals(comment.getWriter().getId(), user.getId())) {
 			throw new NotWriterException();
 		}
-		blogCommentRepository.delete(comment);
+		comment.markDeleted();
 	}
 
 	@Transactional

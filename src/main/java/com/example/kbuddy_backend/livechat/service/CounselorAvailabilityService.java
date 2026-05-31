@@ -14,7 +14,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,19 +36,16 @@ public class CounselorAvailabilityService {
     @Transactional
     public CounselorAvailability addAvailability(User counselor, LocalDate date, LocalTime startTime) {
         CounselorProfile profile = getCounselorProfile(counselor);
+        LocalDateTime slotStartUtc = toUtc(date, startTime, profile.getTimezone());
 
-        // 중복 체크
-        if (availabilityRepository.existsByCounselorAndSlotDateAndSlotStartTime(profile, date, startTime)) {
+        if (availabilityRepository.existsByCounselorAndSlotStartUtc(profile, slotStartUtc)) {
             throw new DuplicateException("해당 시간대에 이미 가용 시간이 존재합니다");
         }
 
-        CounselorAvailability availability = CounselorAvailability.builder()
+        return availabilityRepository.save(CounselorAvailability.builder()
                 .counselor(profile)
-                .slotDate(date)
-                .slotStartTime(startTime)
-                .build();
-
-        return availabilityRepository.save(availability);
+                .slotStartUtc(slotStartUtc)
+                .build());
     }
 
     /**
@@ -63,14 +64,12 @@ public class CounselorAvailabilityService {
         while (!currentDate.isAfter(endDate)) {
             LocalTime currentTime = startTime;
             while (currentTime.isBefore(endTime)) {
-                if (!availabilityRepository.existsByCounselorAndSlotDateAndSlotStartTime(
-                        profile, currentDate, currentTime)) {
-                    created.add(availabilityRepository.save(
-                            CounselorAvailability.builder()
-                                    .counselor(profile)
-                                    .slotDate(currentDate)
-                                    .slotStartTime(currentTime)
-                                    .build()));
+                LocalDateTime slotStartUtc = toUtc(currentDate, currentTime, profile.getTimezone());
+                if (!availabilityRepository.existsByCounselorAndSlotStartUtc(profile, slotStartUtc)) {
+                    created.add(availabilityRepository.save(CounselorAvailability.builder()
+                            .counselor(profile)
+                            .slotStartUtc(slotStartUtc)
+                            .build()));
                 }
                 currentTime = currentTime.plusMinutes(30);
             }
@@ -131,11 +130,15 @@ public class CounselorAvailabilityService {
         availability.unblock();
     }
 
-    /**
-     * 특정 날짜의 가용 슬롯 조회
-     */
-    public List<CounselorAvailability> getAvailableSlots(Long counselorId, LocalDate date) {
-        return availabilityRepository.findSlotsByStatus(counselorId, date, SlotStatus.AVAILABLE);
+    public List<CounselorAvailability> getAvailableSlots(Long counselorId, LocalDateTime startUtc, LocalDateTime endUtc) {
+        return availabilityRepository.findSlotsByStatus(counselorId, startUtc, endUtc, SlotStatus.AVAILABLE);
+    }
+
+    private LocalDateTime toUtc(LocalDate date, LocalTime time, String timezone) {
+        ZoneId zone = ZoneId.of(timezone != null ? timezone : "Asia/Seoul");
+        return ZonedDateTime.of(date, time, zone)
+                .withZoneSameInstant(ZoneOffset.UTC)
+                .toLocalDateTime();
     }
 
     private CounselorProfile getCounselorProfile(User counselor) {

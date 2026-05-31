@@ -7,6 +7,7 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.SQLRestriction;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,6 +16,7 @@ import java.util.List;
 @Getter
 @Table(name = "announcement")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@SQLRestriction("del_yn = false")
 public class Announcement extends BaseTimeEntity {
 
     @Id
