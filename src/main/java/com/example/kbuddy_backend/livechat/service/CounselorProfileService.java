@@ -178,7 +178,7 @@ public class CounselorProfileService {
         public void registerCounselor(User user, RegisterCounselorRequest request,
                                        MultipartFile coverImage, MultipartFile proofFile,
                                        List<MultipartFile> photos) {
-                if (counselorProfileRepository.existsByUserId(user.getId())) {
+                if (counselorProfileRepository.existsByUserIdIgnoreDeleted(user.getId())) {
                         throw new IllegalStateException("이미 상담사로 등록된 사용자입니다");
                 }
 
