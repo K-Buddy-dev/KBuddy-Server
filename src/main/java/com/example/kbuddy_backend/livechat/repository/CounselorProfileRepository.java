@@ -22,10 +22,6 @@ public interface CounselorProfileRepository extends JpaRepository<CounselorProfi
 
     boolean existsByUserId(Long userId);
 
-    // del_yn 필터 무시 — 소프트딜리트된 행도 포함해 중복 체크
-    @Query(value = "SELECT EXISTS(SELECT 1 FROM counselor_profile WHERE user_id = :userId)", nativeQuery = true)
-    boolean existsByUserIdIgnoreDeleted(@Param("userId") Long userId);
-
     @Query("SELECT cp FROM CounselorProfile cp ORDER BY cp.ratingAvg DESC")
     Page<CounselorProfile> findAllOrderByRatingDesc(Pageable pageable);
 }
