@@ -175,7 +175,7 @@ public class CounselorProfileService {
         }
 
         @Transactional
-        public void registerCounselor(User user, RegisterCounselorRequest request,
+        public String registerCounselor(User user, RegisterCounselorRequest request,
                                        MultipartFile coverImage, MultipartFile proofFile,
                                        List<MultipartFile> photos) {
                 if (counselorProfileRepository.existsByUserId(user.getId())) {
@@ -213,6 +213,8 @@ public class CounselorProfileService {
                 if (request.slots() != null && !request.slots().isEmpty()) {
                         saveSlots(profile, request.slots());
                 }
+
+                return profile.getUuid().toString();
         }
 
         @Transactional

@@ -16,6 +16,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
 import java.util.List;
+import java.util.Map;
 
 import lombok.RequiredArgsConstructor;
 
@@ -85,14 +86,14 @@ public class CounselorController {
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "상담사 프로필 등록", description = "상담사 프로필을 등록합니다. 커버 이미지, 자격증 파일, 추가 사진을 multipart로 함께 전송합니다.")
-    public ResponseEntity<Void> registerCounselor(
+    public ResponseEntity<Map<String, String>> registerCounselor(
             @Valid @RequestPart("data") RegisterCounselorRequest request,
             @RequestPart(value = "coverImage", required = false) MultipartFile coverImage,
             @RequestPart(value = "proofFile", required = false) MultipartFile proofFile,
             @RequestPart(value = "photos", required = false) List<MultipartFile> photos,
             @Parameter(hidden = true) @CurrentUser User user) {
-        counselorProfileService.registerCounselor(user, request, coverImage, proofFile, photos);
-        return ResponseEntity.status(HttpStatus.CREATED).build();
+        String counselorId = counselorProfileService.registerCounselor(user, request, coverImage, proofFile, photos);
+        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("counselorId", counselorId));
     }
 
     @DeleteMapping
