@@ -43,7 +43,7 @@ public class CounselorProfile extends BaseTimeEntity {
     private final UUID uuid = UUID.randomUUID();
 
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false, unique = true)
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
     @Column(length = 100, nullable = false)
