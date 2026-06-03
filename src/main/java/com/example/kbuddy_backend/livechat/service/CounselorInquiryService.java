@@ -7,8 +7,11 @@ import com.example.kbuddy_backend.livechat.entity.InquiryReply;
 import com.example.kbuddy_backend.livechat.repository.CounselorInquiryRepository;
 import com.example.kbuddy_backend.livechat.repository.CounselorProfileRepository;
 import com.example.kbuddy_backend.livechat.repository.InquiryReplyRepository;
+import com.example.kbuddy_backend.notification.entity.NotificationType;
+import com.example.kbuddy_backend.notification.service.NotificationService;
 import com.example.kbuddy_backend.user.entity.User;
 import com.example.kbuddy_backend.user.repository.UserRepository;
+import com.example.kbuddy_backend.user.util.UserNameUtils;
 
 import java.util.UUID;
 
@@ -20,6 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -30,6 +34,7 @@ public class CounselorInquiryService {
     private final InquiryReplyRepository replyRepository;
     private final UserRepository userRepository;
     private final CounselorProfileRepository counselorProfileRepository;
+    private final NotificationService notificationService;
 
     @Transactional
     public void createInquiry(User writer, String counselorUuid, CreateInquiryRequest request) {
@@ -45,6 +50,13 @@ public class CounselorInquiryService {
                 .build();
 
         inquiryRepository.save(inquiry);
+
+        notificationService.notify(
+                profile.getUser(),
+                "New Inquiry Received",
+                UserNameUtils.fullName(writer) + " has submitted an inquiry: " + request.title(),
+                NotificationType.INQUIRY_NOTIFICATION,
+                String.valueOf(inquiry.getId()));
     }
 
     public Page<CounselorInquiry> getInquiries(User user, String counselorUuid, Pageable pageable) {
@@ -69,6 +81,11 @@ public class CounselorInquiryService {
         return replyRepository.findByInquiryIdOrderByCreatedAtAsc(inquiryId);
     }
 
+    public Set<Long> getInquiryIdsWithReplies(List<Long> inquiryIds) {
+        if (inquiryIds.isEmpty()) return Set.of();
+        return replyRepository.findInquiryIdsWithReplies(inquiryIds);
+    }
+
     @Transactional
     public void createReply(User user, Long inquiryId, String content) {
         CounselorInquiry inquiry = inquiryRepository.findById(inquiryId)
@@ -82,5 +99,12 @@ public class CounselorInquiryService {
                 .build();
 
         replyRepository.save(reply);
+
+        notificationService.notify(
+                inquiry.getWriter(),
+                "Your Inquiry Has Been Answered",
+                UserNameUtils.fullName(user) + " replied to your inquiry: " + inquiry.getTitle(),
+                NotificationType.INQUIRY_REPLY_NOTIFICATION,
+                String.valueOf(inquiryId));
     }
 }

@@ -1,7 +1,7 @@
 package com.example.kbuddy_backend.notification.controller;
 
 import com.example.kbuddy_backend.common.config.CurrentUser;
-import com.example.kbuddy_backend.notification.entity.Notification;
+import com.example.kbuddy_backend.notification.dto.NotificationResponse;
 import com.example.kbuddy_backend.notification.service.NotificationService;
 import com.example.kbuddy_backend.user.entity.User;
 import lombok.RequiredArgsConstructor;
@@ -20,10 +20,11 @@ public class NotificationController {
     private final NotificationService notificationService;
 
     @GetMapping
-    public ResponseEntity<Page<Notification>> getNotifications(
+    public ResponseEntity<Page<NotificationResponse>> getNotifications(
             @CurrentUser User user,
             Pageable pageable) {
-        return ResponseEntity.ok(notificationService.getUserNotifications(user, pageable));
+        return ResponseEntity.ok(notificationService.getUserNotifications(user, pageable)
+                .map(NotificationResponse::from));
     }
 
     @GetMapping("/unread/count")
@@ -32,8 +33,10 @@ public class NotificationController {
     }
 
     @GetMapping("/unread")
-    public ResponseEntity<List<Notification>> getUnreadNotifications(@CurrentUser User user) {
-        return ResponseEntity.ok(notificationService.getUnreadNotifications(user));
+    public ResponseEntity<List<NotificationResponse>> getUnreadNotifications(@CurrentUser User user) {
+        return ResponseEntity.ok(notificationService.getUnreadNotifications(user).stream()
+                .map(NotificationResponse::from)
+                .toList());
     }
 
     @PatchMapping("/{notificationId}/read")

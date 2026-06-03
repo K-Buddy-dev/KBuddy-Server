@@ -81,12 +81,15 @@ public class CounselorReviewController {
             @RequestParam(defaultValue = "20") int size,
             @Parameter(hidden = true) @CurrentUser User user) {
         var inquiries = counselorInquiryService.getInquiries(user, counselorId, PageRequest.of(page, size));
+        List<Long> inquiryIds = inquiries.getContent().stream().map(i -> i.getId()).toList();
+        var repliedIds = counselorInquiryService.getInquiryIdsWithReplies(inquiryIds);
         List<InquiryListResponse.InquiryItem> items = inquiries.getContent().stream()
                 .map(i -> new InquiryListResponse.InquiryItem(
                         i.getId(),
                         i.getTitle(),
                         UserNameUtils.fullName(i.getWriter()),
                         i.isSecret(),
+                        repliedIds.contains(i.getId()),
                         i.getCreatedDate()))
                 .toList();
         return ResponseEntity.ok(new InquiryListResponse(items, inquiries.getTotalElements()));

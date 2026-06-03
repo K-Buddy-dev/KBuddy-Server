@@ -36,9 +36,14 @@ public class CurrentUserArgumentResolver implements HandlerMethodArgumentResolve
         String userId = SecurityContextHolder.getContextHolderStrategy().getContext()
                 .getAuthentication().getName();
 
-        System.out.println("Current User userId: " + userId);
-        //소셜로그인을 통해 발급받은 이메일 = 아이디/패스워드 기반으로 가입한 이메일과 겹칠 수 있음.
-        return userRepository.findById(Long.valueOf(userId))
+        long id;
+        try {
+            id = Long.parseLong(userId);
+        } catch (NumberFormatException e) {
+            return null;
+        }
+
+        return userRepository.findById(id)
                 .orElseThrow(UserNotFoundException::new);
     }
 }

@@ -12,6 +12,7 @@ public record InquiryListResponse(
             String title,
             String writerName,
             boolean isSecret,
+            boolean hasReply,
             LocalDateTime createdAt) {
     }
 }

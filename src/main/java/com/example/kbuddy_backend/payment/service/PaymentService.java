@@ -108,11 +108,15 @@ public class PaymentService {
             String roomName = counselorProfileRepository.findByUser(booking.getCounselor())
                     .map(profile -> profile.getTitle())
                     .orElseGet(() -> UserNameUtils.fullName(booking.getCounselor()) + " Counseling");
-            chatRoomService.createRoom(roomName, booking.getCounselor().getId(), booking.getCustomer().getId(), booking.getId());
+            String roomId = chatRoomService.createRoom(roomName, booking.getCounselor().getId(), booking.getCustomer().getId(), booking.getId());
 
-            notificationService.notify(booking.getCustomer(), "Booking Confirmed",
+            notificationService.notify(booking.getCustomer(), "Chat Room Ready",
                     "Your booking for '" + booking.getTopic() + "' has been confirmed. Your chat room is now open.",
-                    NotificationType.BOOKING_CONFIRMED_NOTIFICATION, String.valueOf(booking.getId()));
+                    NotificationType.CHAT_MESSAGE_NOTIFICATION, roomId);
+
+            notificationService.notify(booking.getCounselor(), "Chat Room Ready",
+                    "A booking from " + UserNameUtils.fullName(booking.getCustomer()) + " for '" + booking.getTopic() + "' has been confirmed. Your chat room is now open.",
+                    NotificationType.CHAT_MESSAGE_NOTIFICATION, roomId);
 
             return PaymentResponse.from(payment);
         }

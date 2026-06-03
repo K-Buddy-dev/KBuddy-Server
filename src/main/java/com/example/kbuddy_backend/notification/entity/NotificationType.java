@@ -13,5 +13,7 @@ public enum NotificationType {
     CHAT_MESSAGE_NOTIFICATION,       // 채팅 메시지 수신
     BOOKING_REQUEST_NOTIFICATION,    // 새 예약 요청 (상담사 수신)
     BOOKING_CONFIRMED_NOTIFICATION,  // 예약 확정
-    BOOKING_CANCELLED_NOTIFICATION   // 예약 취소
+    BOOKING_CANCELLED_NOTIFICATION,  // 예약 취소
+    INQUIRY_NOTIFICATION,            // 새 문의 (상담사 수신)
+    INQUIRY_REPLY_NOTIFICATION       // 문의 답변 (고객 수신)
 } 

@@ -41,7 +41,7 @@ public class ChatRoomService {
         createRoom(name, counselorId, clientId, null);
     }
 
-    public void createRoom(String name, Long counselorId, Long clientId, Long bookingId) {
+    public String createRoom(String name, Long counselorId, Long clientId, Long bookingId) {
         ChatRoom chatRoom = new ChatRoom();
         chatRoom.setRoomId(UUID.randomUUID().toString());
         chatRoom.setName(name);
@@ -49,6 +49,7 @@ public class ChatRoomService {
         chatRoom.setClientId(clientId);
         chatRoom.setBookingId(bookingId);
         chatRoomRepository.save(chatRoom);
+        return chatRoom.getRoomId();
     }
 
     public com.example.kbuddy_backend.chat.dto.ChatRoom findRoomByBookingId(Long bookingId) {

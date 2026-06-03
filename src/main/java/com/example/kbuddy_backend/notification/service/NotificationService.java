@@ -4,6 +4,7 @@ import com.example.kbuddy_backend.notification.entity.Notification;
 import com.example.kbuddy_backend.notification.entity.NotificationType;
 import com.example.kbuddy_backend.notification.repository.NotificationRepository;
 import com.example.kbuddy_backend.user.entity.User;
+import com.example.kbuddy_backend.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -19,6 +20,7 @@ public class NotificationService {
 
     private final NotificationRepository notificationRepository;
     private final FCMService fcmService;
+    private final UserRepository userRepository;
 
     /**
      * 새로운 알림 생성 및 FCM 푸시 알림 전송
@@ -63,5 +65,12 @@ public class NotificationService {
      */
     public List<Notification> getUnreadNotifications(User user) {
         return notificationRepository.findByReceiverAndIsReadFalseOrderByCreatedAtDesc(user);
+    }
+
+    @Transactional
+    public int notifyAll(String title, String message, String targetId) {
+        List<User> users = userRepository.findAll();
+        users.forEach(user -> notify(user, title, message, NotificationType.FREE_NOTIFICATION, targetId));
+        return users.size();
     }
 } 

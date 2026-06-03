@@ -18,7 +18,8 @@ public interface CounselorInquiryRepository extends JpaRepository<CounselorInqui
     List<CounselorInquiry> findTop5ByCounselorIdAndIsSecretFalseOrderByCreatedDateDesc(Long counselorId);
 
     @Query("SELECT i FROM CounselorInquiry i WHERE i.counselor.id = :counselorId " +
-            "AND (i.isSecret = false OR i.writer = :user OR i.counselor = :user)")
+            "AND (i.isSecret = false OR i.writer = :user OR i.counselor = :user) " +
+            "ORDER BY i.createdDate DESC")
     Page<CounselorInquiry> findVisibleInquiries(
             @Param("counselorId") Long counselorId,
             @Param("user") User user,
