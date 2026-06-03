@@ -45,14 +45,15 @@ public class CounselorController {
     private final CounselorProfileService counselorProfileService;
 
     @GetMapping
-    @Operation(summary = "상담사 목록 조회", description = "상담사 목록을 페이징하여 조회합니다.")
+    @Operation(summary = "상담사 목록 조회", description = "상담사 목록을 페이징하여 조회합니다. category: VISA_IMMIGRATION, KOREAN_LANGUAGE, HOUSING, BANKING_FINANCE, MOBILE_INTERNET, HEALTHCARE, EDUCATION, JOB_CAREER, DAILY_LIFE, TRANSPORTATION, SHOPPING_LOCAL, LEGAL_ADMIN, TRAVEL_LOCAL_GUIDE, RELATIONSHIP_CULTURE, EMERGENCY_HELP, OTHERS")
     public ResponseEntity<CounselorListResponse> getCounselors(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) String sort,
+            @RequestParam(required = false) String category,
             @Parameter(hidden = true) @CurrentUser User user) {
         Pageable pageable = PageRequest.of(page, size);
-        CounselorListResponse response = counselorProfileService.getCounselors(sort, pageable);
+        CounselorListResponse response = counselorProfileService.getCounselors(sort, category, pageable);
         return ResponseEntity.ok(response);
     }
 

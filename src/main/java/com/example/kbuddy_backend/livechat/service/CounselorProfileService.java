@@ -62,10 +62,23 @@ public class CounselorProfileService {
         @PersistenceContext
         private EntityManager entityManager;
 
-        public CounselorListResponse getCounselors(String sort, Pageable pageable) {
+        public CounselorListResponse getCounselors(String sort, String category, Pageable pageable) {
                 Page<CounselorProfile> profiles;
 
-                if ("rating".equals(sort)) {
+                Category categoryEnum = null;
+                if (category != null) {
+                        try {
+                                categoryEnum = Category.valueOf(category);
+                        } catch (IllegalArgumentException e) {
+                                throw new IllegalArgumentException("유효하지 않은 카테고리: " + category);
+                        }
+                }
+
+                if (categoryEnum != null) {
+                        profiles = "rating".equals(sort)
+                                ? counselorProfileRepository.findByCategoryOrderByRatingDesc(categoryEnum, pageable)
+                                : counselorProfileRepository.findByCategoryOrderByDefault(categoryEnum, pageable);
+                } else if ("rating".equals(sort)) {
                         profiles = counselorProfileRepository.findAllOrderByRatingDesc(pageable);
                 } else {
                         profiles = counselorProfileRepository.findAll(pageable);

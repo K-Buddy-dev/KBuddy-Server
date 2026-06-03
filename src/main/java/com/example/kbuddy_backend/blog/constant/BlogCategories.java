@@ -1,35 +1,36 @@
 package com.example.kbuddy_backend.blog.constant;
 
-// 블로그 카테고리 코드를 정의하는 상수 클래스
 public final class BlogCategories {
-    // 카테고리 코드 상수 정의
-    public static final int GENERAL = 1;    // 일반
-    public static final int TECHNICAL = 2;  // 기술
-    public static final int CAREER = 3;     // 경력/취업
-    public static final int LIFESTYLE = 4;  // 라이프스타일
-    public static final int STUDY = 5;      // 스터디
-    public static final int EVENTS = 6;     // 이벤트
-    public static final int OTHER = 99;     // 기타
+    public static final int RESTAURANT = 0;
+    public static final int CAFE_DESSERT = 1;
+    public static final int SHOPPING = 2;
+    public static final int ATTRACTION = 3;
+    public static final int LODGING = 4;
+    public static final int NATURE = 5;
+    public static final int ART = 6;
+    public static final int BEAUTY_SPA = 7;
+    public static final int TRANSPORTATION = 8;
+    public static final int HEALTH = 9;
+    public static final int DAILY_LIFE = 10;
+    public static final int OTHERS = 11;
 
-    private BlogCategories() {
-        // 인스턴스화 방지
-    }
+    private BlogCategories() {}
 
-    /**
-     * 카테고리 코드에 해당하는 카테고리명을 반환합니다.
-     * @param code 카테고리 코드
-     * @return 카테고리명
-     */
     public static String getCategoryName(int code) {
         return switch (code) {
-            case GENERAL -> "일반";
-            case TECHNICAL -> "기술";
-            case CAREER -> "경력/취업";
-            case LIFESTYLE -> "라이프스타일";
-            case STUDY -> "스터디";
-            case EVENTS -> "이벤트";
-            case OTHER -> "기타";
-            default -> "알 수 없음";
+            case RESTAURANT -> "Restaurant";
+            case CAFE_DESSERT -> "Cafe/Dessert";
+            case SHOPPING -> "Shopping";
+            case ATTRACTION -> "Attraction";
+            case LODGING -> "Lodging";
+            case NATURE -> "Nature";
+            case ART -> "Art";
+            case BEAUTY_SPA -> "Beauty/Spa";
+            case TRANSPORTATION -> "Transportation";
+            case HEALTH -> "Health";
+            case DAILY_LIFE -> "Daily Life";
+            case OTHERS -> "Others";
+            default -> "Unknown";
         };
     }
 }

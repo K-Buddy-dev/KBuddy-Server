@@ -1,5 +1,6 @@
 package com.example.kbuddy_backend.livechat.repository;
 
+import com.example.kbuddy_backend.livechat.constant.Category;
 import com.example.kbuddy_backend.livechat.entity.CounselorProfile;
 import com.example.kbuddy_backend.user.entity.User;
 
@@ -24,4 +25,10 @@ public interface CounselorProfileRepository extends JpaRepository<CounselorProfi
 
     @Query("SELECT cp FROM CounselorProfile cp ORDER BY cp.ratingAvg DESC")
     Page<CounselorProfile> findAllOrderByRatingDesc(Pageable pageable);
+
+    @Query("SELECT DISTINCT cp FROM CounselorProfile cp JOIN cp.categories c WHERE c.category = :category")
+    Page<CounselorProfile> findByCategoryOrderByDefault(@Param("category") Category category, Pageable pageable);
+
+    @Query("SELECT DISTINCT cp FROM CounselorProfile cp JOIN cp.categories c WHERE c.category = :category ORDER BY cp.ratingAvg DESC")
+    Page<CounselorProfile> findByCategoryOrderByRatingDesc(@Param("category") Category category, Pageable pageable);
 }
