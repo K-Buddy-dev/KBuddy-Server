@@ -1,6 +1,7 @@
 package com.example.kbuddy_backend.livechat.entity;
 
 import com.example.kbuddy_backend.livechat.constant.Category;
+import com.example.kbuddy_backend.livechat.constant.CategoryConverter;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -22,7 +23,7 @@ public class CounselorCategory {
     @JoinColumn(name = "counselor_id", nullable = false)
     private CounselorProfile counselor;
 
-    @Enumerated(EnumType.STRING)
+    @Convert(converter = CategoryConverter.class)
     @Column(nullable = false, length = 30)
     private Category category;
 
