@@ -6,6 +6,7 @@ import java.util.List;
 
 public record CounselorDetailResponse(
         String counselorId,
+        String counselorUserUuid,
         String name,
         String title,
         String detail,

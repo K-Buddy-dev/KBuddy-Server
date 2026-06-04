@@ -9,6 +9,7 @@ public record CounselorListResponse(
 
     public record CounselorSummary(
             String counselorId,
+            String counselorUserUuid,
             String name,
             String title,
             List<String> categories,

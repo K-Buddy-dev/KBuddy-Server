@@ -139,6 +139,7 @@ public class CounselorProfileService {
 
                 return new CounselorDetailResponse(
                                 profile.getUuid().toString(),
+                                profile.getUser().getUuid().toString(),
                                 profile.getUser().getUsername(),
                                 profile.getTitle(),
                                 profile.getDetail(),
@@ -378,6 +379,7 @@ public class CounselorProfileService {
 
                 return new CounselorListResponse.CounselorSummary(
                                 profile.getUuid().toString(),
+                                profile.getUser().getUuid().toString(),
                                 profile.getUser().getUsername(),
                                 profile.getTitle(),
                                 categories,
