@@ -1,7 +1,8 @@
 package com.example.kbuddy_backend.qna.service;
 
 import com.example.kbuddy_backend.common.exception.MaximumReplyDepthExceededException;
-import com.example.kbuddy_backend.notification.service.FCMService;
+import com.example.kbuddy_backend.notification.entity.NotificationType;
+import com.example.kbuddy_backend.notification.service.NotificationService;
 import com.example.kbuddy_backend.qna.dto.request.QnaCommentSaveRequest;
 import com.example.kbuddy_backend.qna.entity.Qna;
 import com.example.kbuddy_backend.qna.entity.QnaComment;
@@ -27,7 +28,7 @@ public class QnaCommentService {
 	private final QnaHeartRepository qnaHeartRepository;
 	private final QnaService qnaService;
 	private final UserBlockService userBlockService;
-    private final FCMService fcmService;
+    private final NotificationService notificationService;
 
 	@Transactional
 	public void saveQnaComment(Long qnaId, QnaCommentSaveRequest request, User user) {
@@ -63,9 +64,9 @@ public class QnaCommentService {
 			parent.addChild(qnaComment);
             //대댓글 알림
             if (!Objects.equals(parent.getWriter().getId(), user.getId())) {
-                String title = "New Reply to Your Comment";
-                String body = user.getUsername() + "has replied to your comment.";
-                fcmService.sendNotificationAllFcmTokens(parent.getWriter(), title, body, "qna", qna.getId().toString());
+                notificationService.notify(parent.getWriter(), "New Reply to Your Comment",
+                        user.getUsername() + " has replied to your comment.",
+                        NotificationType.QNA_COMMENT_NOTIFICATION, qna.getId().toString());
             }
 		}
 		
@@ -73,9 +74,9 @@ public class QnaCommentService {
 
         //알림 전송
         if (!Objects.equals(qna.getWriter().getId(), user.getId())) {
-            String title = "New Comment on Your Q&A Post";
-            String body = user.getUsername() + " has left a comment on your post.";
-            fcmService.sendNotificationAllFcmTokens(qna.getWriter(), title, body, "qna", qna.getId().toString());
+            notificationService.notify(qna.getWriter(), "New Comment on Your Q&A Post",
+                    user.getUsername() + " has left a comment on your post.",
+                    NotificationType.QNA_COMMENT_NOTIFICATION, qna.getId().toString());
         }
 	}
 
@@ -110,9 +111,9 @@ public class QnaCommentService {
 
         //알림 전송
         if (!Objects.equals(qnaComment.getWriter().getId(), user.getId())) {
-            String title = "Your Q&A Comment Got a New Like";
-            String body = user.getUsername() + " liked your comment.";
-            fcmService.sendNotificationAllFcmTokens(qnaComment.getWriter(), title, body, "qna", qnaComment.getQna().getId().toString());
+            notificationService.notify(qnaComment.getWriter(), "Your Q&A Comment Got a New Like",
+                    user.getUsername() + " liked your comment.",
+                    NotificationType.QNA_COMMENT_LIKE_NOTIFICATION, qnaComment.getQna().getId().toString());
         }
 	}
 

@@ -56,7 +56,7 @@ public class CounselorInquiryService {
                 "New Inquiry Received",
                 UserNameUtils.fullName(writer) + " has submitted an inquiry: " + request.title(),
                 NotificationType.INQUIRY_NOTIFICATION,
-                String.valueOf(inquiry.getId()));
+                profile.getUuid().toString());
     }
 
     public Page<CounselorInquiry> getInquiries(User user, String counselorUuid, Pageable pageable) {
@@ -100,11 +100,14 @@ public class CounselorInquiryService {
 
         replyRepository.save(reply);
 
+        CounselorProfile counselorProfile = counselorProfileRepository.findByUser(inquiry.getCounselor())
+                .orElseThrow(() -> new IllegalArgumentException("상담사 프로필을 찾을 수 없습니다"));
+
         notificationService.notify(
                 inquiry.getWriter(),
                 "Your Inquiry Has Been Answered",
                 UserNameUtils.fullName(user) + " replied to your inquiry: " + inquiry.getTitle(),
                 NotificationType.INQUIRY_REPLY_NOTIFICATION,
-                String.valueOf(inquiryId));
+                counselorProfile.getUuid().toString());
     }
 }

@@ -59,6 +59,12 @@ public class ChatParticipationService {
                 .collect(Collectors.toList());
     }
 
+    public ChatRoomSummary findRoomSummaryById(String roomId, Long userId) {
+        ChatRoom room = chatRoomRepository.findByRoomId(roomId)
+                .orElseThrow(() -> new IllegalArgumentException("채팅방을 찾을 수 없습니다: " + roomId));
+        return toSummary(room, userId);
+    }
+
     public List<ChatRoomSummary> findRoomSummariesByUser(Long userId) {
         return chatRoomRepository.findByCounselorIdOrClientId(userId, userId).stream()
                 .map(room -> toSummary(room, userId))

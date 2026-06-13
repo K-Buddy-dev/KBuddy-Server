@@ -35,8 +35,8 @@ public class ChatRoomController {
     }
 
     @GetMapping("/room/{roomId}")
-    public ChatRoom getRoom(@PathVariable String roomId) {
-        return chatRoomService.findRoomById(roomId);
+    public ResponseEntity<ChatRoomSummary> getRoom(@PathVariable String roomId, @CurrentUser User user) {
+        return ResponseEntity.ok(chatParticipationService.findRoomSummaryById(roomId, user.getId()));
     }
 
     // 방 입장(멤버십)

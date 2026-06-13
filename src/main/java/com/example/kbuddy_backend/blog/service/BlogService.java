@@ -19,7 +19,8 @@ import com.example.kbuddy_backend.common.constant.ImageFileType;
 import com.example.kbuddy_backend.common.dto.ImageFileDto;
 import com.example.kbuddy_backend.common.exception.BadRequestException;
 import com.example.kbuddy_backend.common.exception.DuplicateException;
-import com.example.kbuddy_backend.notification.service.FCMService;
+import com.example.kbuddy_backend.notification.entity.NotificationType;
+import com.example.kbuddy_backend.notification.service.NotificationService;
 import com.example.kbuddy_backend.qna.constant.QnaStatus;
 import com.example.kbuddy_backend.s3.dto.response.S3Response;
 import com.example.kbuddy_backend.s3.service.S3Service;
@@ -60,7 +61,7 @@ public class BlogService {
     private final BlogCommentRepository blogCommentRepository;
     private final S3Service s3Service;
     private final UserBlockService userBlockService;
-    private final FCMService fcmService;
+    private final NotificationService notificationService;
 
     // 새로운 블로그를 저장
     @Transactional
@@ -407,9 +408,9 @@ public class BlogService {
 
         //알림 전송
         if (!Objects.equals(blog.getWriter().getId(), user.getId())) {
-            String title = "Your Blog Post Got a New Like";
-            String body = user.getUsername() + " liked your blog post.";
-            fcmService.sendNotificationAllFcmTokens(blog.getWriter(), title, body, "blog", blogId.toString());
+            notificationService.notify(blog.getWriter(), "Your Blog Post Got a New Like",
+                    user.getUsername() + " liked your blog post.",
+                    NotificationType.BLOG_LIKE_NOTIFICATION, blogId.toString());
         }
 
     }

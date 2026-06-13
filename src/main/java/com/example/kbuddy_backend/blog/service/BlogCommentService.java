@@ -10,7 +10,8 @@ import com.example.kbuddy_backend.common.exception.MaximumReplyDepthExceededExce
 import com.example.kbuddy_backend.blog.exception.NotWriterException;
 import com.example.kbuddy_backend.blog.repository.BlogCommentRepository;
 import com.example.kbuddy_backend.blog.repository.BlogHeartRepository;
-import com.example.kbuddy_backend.notification.service.FCMService;
+import com.example.kbuddy_backend.notification.entity.NotificationType;
+import com.example.kbuddy_backend.notification.service.NotificationService;
 import com.example.kbuddy_backend.user.entity.User;
 import com.example.kbuddy_backend.user.service.UserBlockService;
 
@@ -30,7 +31,7 @@ public class BlogCommentService {
 	private final BlogHeartRepository blogHeartRepository;
 	private final BlogService blogService;
 	private final UserBlockService userBlockService;
-    private final FCMService fcmService;
+    private final NotificationService notificationService;
 
 	@Transactional
 	public void saveBlogComment(Long blogId, BlogCommentSaveRequest request, User user) {
@@ -67,9 +68,9 @@ public class BlogCommentService {
 			parent.addChild(blogComment);
             //대댓글 알림
             if (!Objects.equals(parent.getWriter().getId(), user.getId())) {
-                String title = "New Reply to Your Comment";
-                String body = user.getUsername() + "has replied to your comment.";
-                fcmService.sendNotificationAllFcmTokens(parent.getWriter(), title, body, "blog", blogId.toString());
+                notificationService.notify(parent.getWriter(), "New Reply to Your Comment",
+                        user.getUsername() + " has replied to your comment.",
+                        NotificationType.BLOG_COMMENT_NOTIFICATION, blogId.toString());
             }
 		}
 		
@@ -77,9 +78,9 @@ public class BlogCommentService {
 
         //알림 전송
         if (!Objects.equals(blog.getWriter().getId(), user.getId())) {
-            String title = "New Comment on Your Blog Post";
-            String body = user.getUsername() + " has left a comment on your post.";
-            fcmService.sendNotificationAllFcmTokens(blog.getWriter(), title, body, "blog", blogId.toString());
+            notificationService.notify(blog.getWriter(), "New Comment on Your Blog Post",
+                    user.getUsername() + " has left a comment on your post.",
+                    NotificationType.BLOG_COMMENT_NOTIFICATION, blogId.toString());
         }
 
 	}
@@ -115,9 +116,9 @@ public class BlogCommentService {
 
         //알림 전송
         if (!Objects.equals(blogComment.getWriter().getId(), user.getId())) {
-            String title = "Your  Comment Got a New Like";
-            String body = user.getUsername() + " liked your comment.";
-            fcmService.sendNotificationAllFcmTokens(blogComment.getWriter(), title, body, "blog", blogComment.getBlog().getId().toString());
+            notificationService.notify(blogComment.getWriter(), "Your Comment Got a New Like",
+                    user.getUsername() + " liked your comment.",
+                    NotificationType.BLOG_COMMENT_LIKE_NOTIFICATION, blogComment.getBlog().getId().toString());
         }
 	}
 
