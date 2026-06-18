@@ -1,6 +1,7 @@
 package com.example.kbuddy_backend.blog.dto.response;
 
 import com.example.kbuddy_backend.blog.constant.BlogStatus;
+import com.example.kbuddy_backend.blog.constant.BlogType;
 import com.example.kbuddy_backend.common.dto.ImageFileDto;
 
 import java.time.LocalDateTime;
@@ -8,6 +9,7 @@ import java.util.List;
 
 public record BlogResponse(
         Long id,
+        BlogType type,
         String writerUuid,
         String writerName,
         String writerProfileImageUrl,
@@ -27,6 +29,7 @@ public record BlogResponse(
 ) {
     public static BlogResponse of(
             Long id,
+            BlogType type,
             String writerUuid,
             String writerName,
             String writerProfileImageUrl,
@@ -46,6 +49,7 @@ public record BlogResponse(
     ) {
         return new BlogResponse(
                 id,
+                type,
                 writerUuid,
                 writerName,
                 writerProfileImageUrl,

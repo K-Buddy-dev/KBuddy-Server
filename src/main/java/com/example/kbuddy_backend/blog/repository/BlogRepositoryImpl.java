@@ -4,6 +4,7 @@ import static com.example.kbuddy_backend.blog.entity.QBlog.blog;
 import static com.example.kbuddy_backend.qna.entity.QQna.qna;
 
 import com.example.kbuddy_backend.blog.constant.BlogStatus;
+import com.example.kbuddy_backend.blog.constant.BlogType;
 import com.example.kbuddy_backend.blog.constant.SortBy;
 import com.example.kbuddy_backend.blog.entity.Blog;
 import com.example.kbuddy_backend.qna.constant.QnaStatus;
@@ -19,15 +20,16 @@ public class BlogRepositoryImpl implements BlogRepositoryCustom {
     private final JPAQueryFactory jpaQueryFactory;
 
     @Override
-    public List<Blog> paginationNoOffset(Long blogId, String title, int pageSize, SortBy sortBy, Integer categoryCode, BlogStatus status) {
+    public List<Blog> paginationNoOffset(Long blogId, String title, int pageSize, SortBy sortBy, Integer categoryCode, BlogStatus status, BlogType type) {
         return jpaQueryFactory.selectFrom(blog)
                 .where(
                         ltBlogId(blogId),
                         titleOrDescriptionContains(title),
                         eqCategoryCode(categoryCode),
-                        eqStatus(status) // <-- 수정된 부분
+                        eqStatus(status),
+                        eqType(type)
                 )
-                .orderBy(getOrderSpecifiers(sortBy)) // <-- 수정된 부분
+                .orderBy(getOrderSpecifiers(sortBy))
                 .limit(pageSize)
                 .fetch();
     }
@@ -59,6 +61,13 @@ public class BlogRepositoryImpl implements BlogRepositoryCustom {
             return null;
         }
         return blog.status.eq(status);
+    }
+
+    private BooleanExpression eqType(BlogType type) {
+        if (type == null) {
+            return null;
+        }
+        return blog.type.eq(type);
     }
 
 //    private BooleanExpression containsTitleOrDescription(String title) {

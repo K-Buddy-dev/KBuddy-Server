@@ -8,7 +8,6 @@ import static org.mockito.BDDMockito.given;
 
 import com.example.kbuddy_backend.auth.dto.response.AccessTokenAndRefreshTokenResponse;
 import com.example.kbuddy_backend.common.IntegrationTest;
-import com.example.kbuddy_backend.common.config.DataInitializer;
 import com.example.kbuddy_backend.fixtures.UserFixtures;
 import com.example.kbuddy_backend.user.constant.Country;
 import com.example.kbuddy_backend.user.constant.Gender;
@@ -33,9 +32,6 @@ class UserAuthServiceTest extends IntegrationTest {
 
     @Autowired
     private UserAuthService userAuthService;
-
-    @MockBean
-    private DataInitializer dataInitializer;
 
     @MockBean
     private UserRepository userRepository;

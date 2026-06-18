@@ -1,7 +1,6 @@
 package com.example.kbuddy_backend.qna.service;
 
 import com.example.kbuddy_backend.common.IntegrationTest;
-import com.example.kbuddy_backend.common.config.DataInitializer;
 import com.example.kbuddy_backend.fixtures.UserFixtures;
 import com.example.kbuddy_backend.qna.entity.Qna;
 import com.example.kbuddy_backend.qna.entity.QnaHeart;
@@ -33,9 +32,6 @@ public class QnaServiceTest extends IntegrationTest {
 
     @MockBean
     private UserRepository userRepository;
-
-    @MockBean
-    private DataInitializer dataInitializer;
 
     @MockBean
     private QnaHeartRepository qnaHeartRepository;

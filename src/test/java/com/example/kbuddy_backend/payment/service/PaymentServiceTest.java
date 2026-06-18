@@ -12,6 +12,9 @@ import com.example.kbuddy_backend.payment.dto.request.PaymentConfirmRequest;
 import com.example.kbuddy_backend.payment.dto.response.PaymentResponse;
 import com.example.kbuddy_backend.payment.entity.Payment;
 import com.example.kbuddy_backend.payment.repository.PaymentRepository;
+import com.example.kbuddy_backend.chat.service.ChatRoomService;
+import com.example.kbuddy_backend.livechat.repository.CounselorProfileRepository;
+import com.example.kbuddy_backend.notification.service.NotificationService;
 import com.example.kbuddy_backend.user.entity.User;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -45,6 +48,15 @@ class PaymentServiceTest {
     @Mock
     private BookingRepository bookingRepository;
 
+    @Mock
+    private ChatRoomService chatRoomService;
+
+    @Mock
+    private CounselorProfileRepository counselorProfileRepository;
+
+    @Mock
+    private NotificationService notificationService;
+
     private BankTransferPaymentProperties bankTransferPaymentProperties;
     private PaymentService paymentService;
 
@@ -61,7 +73,7 @@ class PaymentServiceTest {
         bankTransferPaymentProperties.setDepositTimeoutHours(24);
         bankTransferPaymentProperties.setPlatformFeeRate(new BigDecimal("15.00"));
 
-        paymentService = new PaymentService(paymentRepository, bookingRepository, bankTransferPaymentProperties);
+        paymentService = new PaymentService(paymentRepository, bookingRepository, bankTransferPaymentProperties, chatRoomService, counselorProfileRepository, notificationService);
 
         customer = User.builder()
                 .email("customer@kbuddy.com")

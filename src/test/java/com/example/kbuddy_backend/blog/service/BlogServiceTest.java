@@ -7,7 +7,6 @@ import com.example.kbuddy_backend.blog.exception.BlogNotFoundException;
 import com.example.kbuddy_backend.blog.repository.BlogRepository;
 import com.example.kbuddy_backend.blog.repository.BlogHeartRepository;
 import com.example.kbuddy_backend.common.IntegrationTest;
-import com.example.kbuddy_backend.common.config.DataInitializer;
 import com.example.kbuddy_backend.fixtures.UserFixtures;
 import com.example.kbuddy_backend.user.entity.User;
 import com.example.kbuddy_backend.user.repository.UserRepository;
@@ -34,9 +33,6 @@ public class BlogServiceTest extends IntegrationTest {
 
     @MockBean
     private UserRepository userRepository;
-
-    @MockBean
-    private DataInitializer dataInitializer;
 
     @MockBean
     private BlogHeartRepository blogHeartRepository;

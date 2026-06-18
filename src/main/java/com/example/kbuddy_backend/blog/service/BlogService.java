@@ -1,6 +1,8 @@
 package com.example.kbuddy_backend.blog.service;
 
+import com.example.kbuddy_backend.blog.constant.BlogCategories;
 import com.example.kbuddy_backend.blog.constant.BlogStatus;
+import com.example.kbuddy_backend.blog.constant.BlogType;
 import com.example.kbuddy_backend.blog.dto.request.BlogReportRequest;
 import com.example.kbuddy_backend.blog.dto.request.BlogSaveRequest;
 import com.example.kbuddy_backend.blog.dto.request.BlogUpdateRequest;
@@ -80,6 +82,9 @@ public class BlogService {
             }
         }
 
+        BlogType blogType = blogSaveRequest.resolvedType();
+        validateCategoryIds(blogSaveRequest.categoryId(), blogType);
+
         String hashTag = "";
         if (blogSaveRequest.hashtags() != null && !blogSaveRequest.hashtags().isEmpty()) {
             hashTag = String.join(",", blogSaveRequest.hashtags());
@@ -92,6 +97,7 @@ public class BlogService {
                 .hashtag(hashTag)
                 .writer(user)
                 .status(blogSaveRequest.status())
+                .type(blogType)
                 .build();
 
         // 이미지가 있으면 S3에 업로드하고 연결
@@ -133,8 +139,8 @@ public class BlogService {
         return uploadedImages;
     }
 
-    public AllBlogResponse getAllBlog(int pageSize, Long blogId, String title, SortBy sortBy, Integer categoryCode, User currentUser) {
-        List<Blog> allBlog = blogRepository.paginationNoOffset(blogId, title, pageSize, sortBy, categoryCode, BlogStatus.PUBLISHED);
+    public AllBlogResponse getAllBlog(int pageSize, Long blogId, String title, SortBy sortBy, Integer categoryCode, BlogType type, User currentUser) {
+        List<Blog> allBlog = blogRepository.paginationNoOffset(blogId, title, pageSize, sortBy, categoryCode, BlogStatus.PUBLISHED, type);
         
         // 차단된 사용자 필터링
         if (currentUser != null) {
@@ -153,6 +159,7 @@ public class BlogService {
                             : "";
                     return BlogPaginationResponse.of(
                             blog.getId(),
+                            blog.getType(),
                             blog.getWriter().getUuid().toString(),
                             blog.getWriter().getUsername(),
                             blog.getWriter().getProfileImageUrl() != null ? blog.getWriter().getProfileImageUrl() : "",
@@ -242,6 +249,11 @@ public class BlogService {
         if (newFiles != null && !newFiles.isEmpty()) {
             List<ImageFileDto> uploadedImages = uploadImages(newFiles);
             saveImageFiles(uploadedImages, blogById);
+        }
+
+        // categoryId 수정 시 타입에 맞는 범위 검증
+        if (blogUpdateRequest.categoryId() != null) {
+            validateCategoryIds(blogUpdateRequest.categoryId(), blogById.getType());
         }
 
         // Update Blog entity
@@ -363,6 +375,7 @@ public class BlogService {
 
         return BlogResponse.of(
                 blog.getId(),
+                blog.getType(),
                 blog.getWriter().getUuid().toString(),
                 blog.getWriter().getUsername(),
                 blog.getWriter().getProfileImageUrl() != null ? blog.getWriter().getProfileImageUrl() : "",
@@ -466,6 +479,17 @@ public class BlogService {
 
         blogReportRepository.save(report);
         blog.plusReportCount();
+    }
+
+    private void validateCategoryIds(List<Integer> categoryIds, BlogType type) {
+        if (categoryIds == null) return;
+        for (Integer categoryId : categoryIds) {
+            if (!BlogCategories.isValidCategoryCode(categoryId, type)) {
+                throw new BadRequestException(
+                        type + " 타입에서 허용되지 않는 categoryId입니다: " + categoryId
+                );
+            }
+        }
     }
 
     public Blog findBlogById(Long blogId) {

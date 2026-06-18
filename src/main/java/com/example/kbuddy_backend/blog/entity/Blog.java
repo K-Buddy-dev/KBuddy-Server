@@ -1,6 +1,7 @@
 package com.example.kbuddy_backend.blog.entity;
 
 import com.example.kbuddy_backend.blog.constant.BlogStatus;
+import com.example.kbuddy_backend.blog.constant.BlogType;
 import com.example.kbuddy_backend.common.entity.BaseTimeEntity;
 import com.example.kbuddy_backend.qna.constant.QnaStatus;
 import com.example.kbuddy_backend.user.entity.User;
@@ -53,6 +54,10 @@ public class Blog extends BaseTimeEntity {
     @Column(nullable = false)
     private BlogStatus status = BlogStatus.DRAFT;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, columnDefinition = "varchar(20) default 'GENERAL'")
+    private BlogType type = BlogType.GENERAL;
+
     private String title;
     @Column(columnDefinition = "TEXT")
     private String description;
@@ -62,13 +67,14 @@ public class Blog extends BaseTimeEntity {
     private int reportCount;
 
     @Builder
-    public Blog(User writer, String title, String description, String hashtag, List<Integer> category,BlogStatus status) {
+    public Blog(User writer, String title, String description, String hashtag, List<Integer> category, BlogStatus status, BlogType type) {
         this.writer = writer;
         this.title = title;
         this.description = description;
         this.hashtag = hashtag;
         this.categoryCode = category;
         this.status = (status != null) ? status : BlogStatus.DRAFT;
+        this.type = (type != null) ? type : BlogType.GENERAL;
     }
 
     public void update(String title, String description, String hashtag, List<Integer> category, BlogStatus status) {

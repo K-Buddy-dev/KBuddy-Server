@@ -1,5 +1,6 @@
 package com.example.kbuddy_backend.blog.controller;
 
+import com.example.kbuddy_backend.blog.constant.BlogType;
 import com.example.kbuddy_backend.blog.dto.request.BlogReportRequest;
 import com.example.kbuddy_backend.blog.dto.request.BlogSaveRequest;
 import com.example.kbuddy_backend.blog.dto.request.BlogUpdateRequest;
@@ -48,14 +49,15 @@ public class BlogController {
 	}
 
 	@GetMapping
-	@Operation(summary = "Blog 게시글 전체 조회", description = "블로그 게시글 전체 조회합니다. 카테고리 코드로 필터링 할 수 있습니다.")
+	@Operation(summary = "Blog 게시글 전체 조회", description = "블로그 게시글 전체 조회합니다. type(GENERAL|BUDDY)과 카테고리 코드로 필터링 할 수 있습니다.")
 	public ResponseEntity<AllBlogResponse> getAllBlog(@RequestParam(value = "size") int pageSize,
 		@RequestParam(value = "id", required = false) Long blogId,
 		@RequestParam(value = "keyword", defaultValue = "") String title,
 		@RequestParam(required = false, value = "sort") SortBy sortBy,
 		@RequestParam(required = false, value = "categoryCode") Integer categoryCode,
+		@RequestParam(required = false, value = "type") BlogType type,
 		@Parameter(hidden = true) @CurrentUser User user) {
-		AllBlogResponse allBlogResponse = blogService.getAllBlog(pageSize, blogId, title, sortBy, categoryCode, user);
+		AllBlogResponse allBlogResponse = blogService.getAllBlog(pageSize, blogId, title, sortBy, categoryCode, type, user);
 		return ResponseEntity.ok().body(allBlogResponse);
 	}
 

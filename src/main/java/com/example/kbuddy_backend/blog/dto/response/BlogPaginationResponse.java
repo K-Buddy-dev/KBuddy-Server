@@ -1,12 +1,14 @@
 package com.example.kbuddy_backend.blog.dto.response;
 
 import com.example.kbuddy_backend.blog.constant.BlogStatus;
+import com.example.kbuddy_backend.blog.constant.BlogType;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 public record BlogPaginationResponse(
         Long id,
+        BlogType type,
         String writerUuid,
         String writerName,
         String writerProfileImageUrl,
@@ -25,6 +27,7 @@ public record BlogPaginationResponse(
 ) {
     public static BlogPaginationResponse of(
             Long id,
+            BlogType type,
             String writerUuid,
             String writerName,
             String writerProfileImageUrl,
@@ -43,6 +46,7 @@ public record BlogPaginationResponse(
     ) {
         return new BlogPaginationResponse(
                 id,
+                type,
                 writerUuid,
                 writerName,
                 writerProfileImageUrl,

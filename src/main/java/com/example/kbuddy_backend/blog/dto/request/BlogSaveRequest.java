@@ -1,12 +1,16 @@
 package com.example.kbuddy_backend.blog.dto.request;
 
 import com.example.kbuddy_backend.blog.constant.BlogStatus;
+import com.example.kbuddy_backend.blog.constant.BlogType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import java.util.List;
 
 public record BlogSaveRequest(
+
+        @Schema(description = "블로그 타입 (GENERAL or BUDDY), 미입력 시 GENERAL", example = "GENERAL")
+        BlogType type,
 
         @Schema(description = "카테고리 ID", example = "[1, 2]", requiredMode = Schema.RequiredMode.REQUIRED)
         @NotNull(message = "카테고리 ID는 필수입니다.")
@@ -28,7 +32,7 @@ public record BlogSaveRequest(
         @NotNull
         BlogStatus status
 ) {
-    public static BlogSaveRequest of(String title, String description, List<String> hashtags, List<Integer> categoryId, BlogStatus status) {
-        return new BlogSaveRequest(categoryId, title, description, hashtags, status);
+    public BlogType resolvedType() {
+        return type != null ? type : BlogType.GENERAL;
     }
 }

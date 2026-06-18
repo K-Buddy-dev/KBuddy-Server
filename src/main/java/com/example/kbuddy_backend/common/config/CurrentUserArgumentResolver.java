@@ -40,7 +40,7 @@ public class CurrentUserArgumentResolver implements HandlerMethodArgumentResolve
         try {
             id = Long.parseLong(userId);
         } catch (NumberFormatException e) {
-            return null;
+            throw new org.springframework.security.access.AccessDeniedException("유효하지 않은 인증 정보입니다.");
         }
 
         return userRepository.findById(id)
