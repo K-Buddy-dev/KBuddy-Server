@@ -2,6 +2,8 @@ package com.example.kbuddy_backend.blog.repository;
 
 import static com.example.kbuddy_backend.blog.entity.QBlog.blog;
 import static com.example.kbuddy_backend.qna.entity.QQna.qna;
+import static com.example.kbuddy_backend.user.entity.QUser.user;
+import static com.example.kbuddy_backend.user.entity.QUserBlock.userBlock;
 
 import com.example.kbuddy_backend.blog.constant.BlogStatus;
 import com.example.kbuddy_backend.blog.constant.BlogType;
@@ -10,6 +12,7 @@ import com.example.kbuddy_backend.blog.entity.Blog;
 import com.example.kbuddy_backend.qna.constant.QnaStatus;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -20,18 +23,34 @@ public class BlogRepositoryImpl implements BlogRepositoryCustom {
     private final JPAQueryFactory jpaQueryFactory;
 
     @Override
-    public List<Blog> paginationNoOffset(Long blogId, String title, int pageSize, SortBy sortBy, Integer categoryCode, BlogStatus status, BlogType type) {
+    public List<Blog> paginationNoOffset(Long blogId, String title, int pageSize, SortBy sortBy, Integer categoryCode, BlogStatus status, BlogType type, Long currentUserId) {
         return jpaQueryFactory.selectFrom(blog)
+                .join(blog.writer, user).fetchJoin()
                 .where(
                         ltBlogId(blogId),
                         titleOrDescriptionContains(title),
                         eqCategoryCode(categoryCode),
                         eqStatus(status),
-                        eqType(type)
+                        eqType(type),
+                        notBlockedBy(currentUserId)
                 )
                 .orderBy(getOrderSpecifiers(sortBy))
                 .limit(pageSize)
                 .fetch();
+    }
+
+    private BooleanExpression notBlockedBy(Long currentUserId) {
+        if (currentUserId == null) {
+            return null;
+        }
+
+        return JPAExpressions.selectOne()
+                .from(userBlock)
+                .where(
+                        userBlock.blocker.id.eq(currentUserId),
+                        userBlock.blocked.id.eq(blog.writer.id)
+                )
+                .notExists();
     }
 
         private BooleanExpression ltBlogId(Long blogId) {

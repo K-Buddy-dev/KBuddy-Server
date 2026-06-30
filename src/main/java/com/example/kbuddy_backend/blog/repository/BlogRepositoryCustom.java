@@ -8,5 +8,5 @@ import java.util.List;
 
 public interface BlogRepositoryCustom {
 
-    List<Blog> paginationNoOffset(Long blogId, String title, int pageSize, SortBy sortBy, Integer categoryCode, BlogStatus status, BlogType type);
+    List<Blog> paginationNoOffset(Long blogId, String title, int pageSize, SortBy sortBy, Integer categoryCode, BlogStatus status, BlogType type, Long currentUserId);
 }

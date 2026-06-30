@@ -140,20 +140,23 @@ public class BlogService {
     }
 
     public AllBlogResponse getAllBlog(int pageSize, Long blogId, String title, SortBy sortBy, Integer categoryCode, BlogType type, User currentUser) {
-        List<Blog> allBlog = blogRepository.paginationNoOffset(blogId, title, pageSize, sortBy, categoryCode, BlogStatus.PUBLISHED, type);
+        Long currentUserId = currentUser != null ? currentUser.getId() : null;
+        List<Blog> allBlog = blogRepository.paginationNoOffset(blogId, title, pageSize, sortBy, categoryCode, BlogStatus.PUBLISHED, type ,currentUserId);
         
-        // 차단된 사용자 필터링
-        if (currentUser != null) {
-            List<Long> blockedUserIds = userBlockService.getBlockedUserIds(currentUser);
-            allBlog = allBlog.stream()
-                    .filter(blog -> !blockedUserIds.contains(blog.getWriter().getId()))
-                    .toList();
-        }
-        
+        List<Long> blogIds = allBlog.stream()
+                .map(Blog::getId)
+                .toList();
+        Set<Long> bookmarkedBlogIds = currentUserId == null || blogIds.isEmpty()
+                ? Set.of()
+                : blogBookmarkRepository.findBookmarkedBlogIds(currentUserId, blogIds);
+        Set<Long> heartedBlogIds = currentUserId == null || blogIds.isEmpty()
+                ? Set.of()
+                : blogHeartRepository.findHeartedBlogIds(currentUserId, blogIds);
+
         List<BlogPaginationResponse> blogPaginationResponseList = allBlog.stream()
                 .map(blog -> {
-                    boolean isBookmarked = currentUser != null && blogBookmarkRepository.existsByBlogIdAndUserId(blog.getId(), currentUser.getId());
-                    boolean isHearted = currentUser != null && blogHeartRepository.existsByBlogIdAndUserId(blog.getId(), currentUser.getId());
+                    boolean isBookmarked = bookmarkedBlogIds.contains(blog.getId());
+                    boolean isHearted = heartedBlogIds.contains(blog.getId());
                     String thumbnailImageUrl = blog.getImageUrls() != null && !blog.getImageUrls().isEmpty()
                             ? blog.getImageUrls().get(0).getImageUrl()
                             : "";
