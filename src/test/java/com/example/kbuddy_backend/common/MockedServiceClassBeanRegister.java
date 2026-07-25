@@ -3,6 +3,7 @@ package com.example.kbuddy_backend.common;
 import static org.mockito.Mockito.mock;
 import static org.springframework.beans.factory.support.BeanDefinitionBuilder.rootBeanDefinition;
 
+import com.example.kbuddy_backend.livechat.service.CounselorProfileService;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.springframework.beans.BeansException;
@@ -39,6 +40,17 @@ public class MockedServiceClassBeanRegister implements BeanDefinitionRegistryPos
         provider.addIncludeFilter(new AnnotationTypeFilter(Service.class));
         return provider.findCandidateComponents("com.example.kbuddy_backend")
                 .stream()
+                /*
+                 * CounselorProfileService에는 @PersistenceContext EntityManager가 있습니다.
+                 *
+                 * @WebMvcTest는 JPA의 EntityManagerFactory를 생성하지 않으므로,
+                 * 기존 방식으로 이 Service를 Bean 등록하면 테스트 Context가 실패합니다.
+                 *
+                 * 프로덕션 Service는 변경하지 않고,
+                 * 공통 MVC 테스트의 자동 Service 등록 대상에서만 제외합니다.
+                 */
+                .filter(beanDefinition ->
+                        !CounselorProfileService.class.getName().equals(beanDefinition.getBeanClassName()))
                 .map(BeanDefinition::getBeanClassName)
                 .collect(Collectors.toSet());
     }
