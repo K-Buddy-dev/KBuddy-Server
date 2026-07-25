@@ -3,6 +3,7 @@ package com.example.kbuddy_backend.common;
 import com.example.kbuddy_backend.auth.token.JwtTokenProvider;
 import com.example.kbuddy_backend.auth.token.TokenProvider;
 import com.example.kbuddy_backend.common.config.SecurityConfig;
+import com.example.kbuddy_backend.livechat.service.CounselorProfileService;
 import com.example.kbuddy_backend.user.repository.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +23,16 @@ import org.springframework.web.bind.annotation.RestController;
                 @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = SecurityConfig.class) })
 @Import({ JwtTokenProvider.class, MockedServiceClassBeanRegister.class })
 public abstract class WebMVCTest {
+
+    /*
+     * CounselorController가 CounselorProfileService를 요구하므로
+     * Service를 완전히 제거하면 의존성 주입 오류가 발생합니다.
+     *
+     * Spring Boot의 @MockBean으로 대체하면 Controller가 요구하는 Bean은 존재하지만,
+     * 실제 Service의 @PersistenceContext EntityManager는 주입하지 않습니다.
+     */
+    @MockBean
+    protected CounselorProfileService counselorProfileService;
 
     @Autowired
     protected MockMvc mockMvc;

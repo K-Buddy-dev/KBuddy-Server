@@ -20,6 +20,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Service;
 
+import static com.example.kbuddy_backend.admin.config.AdminAuthCookie.ADMIN_TOKEN_NAME;
+
 @Service
 @RequiredArgsConstructor
 public class AdminAuthService {
@@ -62,10 +64,16 @@ public class AdminAuthService {
         if (request.getCookies() == null) {
             throw new TokenNotFoundException();
         }
-        Optional<String> refreshToken = Arrays.stream(request.getCookies())
-                .filter(cookie -> "refreshToken".equals(cookie.getName()))
+        /*
+         * 기존에는 "refreshToken"을 찾았기 때문에
+         * 일반 사용자 토큰도 선택될 수 있었습니다.
+         *
+         * 변경 후에는 "adminRefreshToken"만 찾습니다.
+         */
+        return Arrays.stream(request.getCookies())
+                .filter(cookie -> ADMIN_TOKEN_NAME.equals(cookie.getName()))
                 .map(Cookie::getValue)
-                .findFirst();
-        return refreshToken.orElseThrow(TokenNotFoundException::new);
+                .findFirst()
+                .orElseThrow(TokenNotFoundException::new);
     }
 }
