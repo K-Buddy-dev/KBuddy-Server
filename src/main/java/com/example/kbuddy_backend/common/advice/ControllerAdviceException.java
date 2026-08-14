@@ -22,6 +22,7 @@ import com.example.kbuddy_backend.user.exception.AccountDeactivatedException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -50,6 +51,16 @@ public class ControllerAdviceException {
     public ResponseEntity<ErrorResponse> handleDuplicate(final Exception e) {
         log.error(e.getMessage());
         return ResponseEntity.status(CONFLICT).body(new ErrorResponse(e.getMessage(), CustomCode.HTTP_409));
+    }
+
+    @ExceptionHandler(ObjectOptimisticLockingFailureException.class)
+    public ResponseEntity<ErrorResponse> handleOptimisticLock(
+            final ObjectOptimisticLockingFailureException e) {
+        log.warn("Optimistic lock conflict: {}", e.getMessage());
+        return ResponseEntity.status(CONFLICT)
+                .body(new ErrorResponse(
+                        "다른 요청이 먼저 처리되었습니다. 최신 상태를 확인해주세요.",
+                        CustomCode.HTTP_409));
     }
 
     //탈퇴한 계정처리
