@@ -8,6 +8,11 @@ import com.example.kbuddy_backend.qna.exception.DuplicatedQnaHeartException;
 import com.example.kbuddy_backend.qna.exception.QnaHeartNotFoundException;
 import com.example.kbuddy_backend.qna.repository.QnaHeartRepository;
 import com.example.kbuddy_backend.qna.repository.QnaRepository;
+import com.example.kbuddy_backend.qna.repository.QnaBookmarkRepository;
+import com.example.kbuddy_backend.qna.repository.QnaCommentRepository;
+import com.example.kbuddy_backend.qna.constant.QnaStatus;
+import com.example.kbuddy_backend.qna.dto.response.QnaResponse;
+import org.springframework.security.access.AccessDeniedException;
 import com.example.kbuddy_backend.user.entity.User;
 import com.example.kbuddy_backend.user.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -36,6 +41,12 @@ public class QnaServiceTest extends IntegrationTest {
     @MockBean
     private QnaHeartRepository qnaHeartRepository;
 
+    @MockBean
+    private QnaBookmarkRepository qnaBookmarkRepository;
+
+    @MockBean
+    private QnaCommentRepository qnaCommentRepository;
+
     private static final long userId = 1L;
 
     private User user;
@@ -47,6 +58,43 @@ public class QnaServiceTest extends IntegrationTest {
         user = UserFixtures.createUser();
         qnaId = 1L;
         qna = Qna.builder().build();
+    }
+
+    @DisplayName("게시된 Q&A는 비로그인 사용자도 조회할 수 있고, 북마크/좋아요는 false로 내려간다.")
+    @Test
+    public void testGetQna_PublishedIsVisibleToGuest() {
+        // given
+        Qna published = Qna.builder()
+                .writer(user)
+                .status(QnaStatus.PUBLISHED)
+                .build();
+
+        given(qnaRepository.findById(qnaId)).willReturn(Optional.of(published));
+
+        // when
+        QnaResponse response = qnaService.getQna(qnaId, null);
+
+        // then
+        assertNotNull(response);
+        assertFalse(response.isBookmarked());
+        assertFalse(response.isHearted());
+        verify(qnaBookmarkRepository, never()).existsByQnaIdAndUserId(any(), any());
+        verify(qnaHeartRepository, never()).existsByQnaIdAndUserId(any(), any());
+    }
+
+    @DisplayName("임시저장 Q&A는 비로그인 사용자가 조회할 수 없다.")
+    @Test
+    public void testGetQna_DraftIsNotVisibleToGuest() {
+        // given
+        Qna draft = Qna.builder()
+                .writer(user)
+                .status(QnaStatus.DRAFT)
+                .build();
+
+        given(qnaRepository.findById(qnaId)).willReturn(Optional.of(draft));
+
+        // when & then
+        assertThrows(AccessDeniedException.class, () -> qnaService.getQna(qnaId, null));
     }
 
     @DisplayName("좋아요 추가 테스트 - 이미 좋아요를 눌렀으면 예외 발생")

@@ -7,6 +7,7 @@ import com.example.kbuddy_backend.auth.token.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
@@ -46,7 +47,7 @@ public class SecurityConfig {
                 .sessionManagement(sessionManagement -> sessionManagement
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .headers(header -> header.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin))
-                .addFilterBefore(new JwtFilter(tokenProvider), UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(new JwtFilter(tokenProvider, jwtAuthenticationEntryPoint), UsernamePasswordAuthenticationFilter.class)
                 .exceptionHandling(exceptionHandling -> {
                     exceptionHandling
                             .authenticationEntryPoint(jwtAuthenticationEntryPoint)
@@ -58,6 +59,20 @@ public class SecurityConfig {
                                 .requestMatchers("/kbuddy/v1/admin/**").hasRole("ADMIN")
                                 .requestMatchers("/kbuddy/v1/auth/password","/kbuddy/v1/auth/authentication","/kbuddy/v1/auth/account").authenticated()
                                 .requestMatchers("/kbuddy/v1/auth/**","/actuator/health","/ws-stomp/**","/ws-stomp").permitAll()
+                                //본인 전용 조회는 아래 게스트 허용 매처보다 먼저 선언해야 한다.
+                                .requestMatchers(HttpMethod.GET, "/kbuddy/v1/counselor/me").authenticated()
+                                //비로그인 사용자도 둘러볼 수 있는 조회 API (GET 한정)
+                                .requestMatchers(HttpMethod.GET,
+                                        "/kbuddy/v1/blog",
+                                        "/kbuddy/v1/blog/*",
+                                        "/kbuddy/v1/qna",
+                                        "/kbuddy/v1/qna/*",
+                                        "/kbuddy/v1/counselor",
+                                        "/kbuddy/v1/counselor/*",
+                                        "/kbuddy/v1/counselor/*/availability",
+                                        "/kbuddy/v1/counselor/*/review",
+                                        "/kbuddy/v1/counselor/*/inquiry",
+                                        "/kbuddy/v1/counselor/*/inquiry/*").permitAll()
                                 .anyRequest().authenticated());
 
         return http.build();

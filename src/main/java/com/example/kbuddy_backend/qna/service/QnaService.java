@@ -280,8 +280,8 @@ public class QnaService {
                         qnaImage.getImageUrl()))
                 .toList();
 
-        boolean isBookmarked = qnaBookmarkRepository.existsByQnaIdAndUserId(qna.getId(), currentUser.getId());
-        boolean isHearted = qnaHeartRepository.existsByQnaIdAndUserId(qna.getId(), currentUser.getId());
+        boolean isBookmarked = currentUser != null && qnaBookmarkRepository.existsByQnaIdAndUserId(qna.getId(), currentUser.getId());
+        boolean isHearted = currentUser != null && qnaHeartRepository.existsByQnaIdAndUserId(qna.getId(), currentUser.getId());
 
         List<QnaComment> comments = qnaCommentRepository.findCommentsWithWriterAndChildren(qna.getId());
         
@@ -301,7 +301,9 @@ public class QnaService {
         Map<Long, Long> heartCounts = qnaCommentRepository.findCommentHeartCounts(allCommentIds);
         
         // 사용자가 좋아요한 댓글 ID 조회
-        Set<Long> heartedCommentIds = qnaCommentRepository.findHeartedCommentIds(allCommentIds, currentUser.getId());
+        Set<Long> heartedCommentIds = currentUser == null
+                ? Set.of()
+                : qnaCommentRepository.findHeartedCommentIds(allCommentIds, currentUser.getId());
 
         List<QnaCommentResponse> commentResponses = comments.stream()
                 .filter(comment -> currentUser == null || !userBlockService.isBlocked(currentUser, comment.getWriter()))
