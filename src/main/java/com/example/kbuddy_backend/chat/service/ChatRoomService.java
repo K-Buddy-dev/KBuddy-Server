@@ -42,6 +42,21 @@ public class ChatRoomService {
     }
 
     public String createRoom(String name, Long counselorId, Long clientId, Long bookingId) {
+        // 예약 기반 방은 결제 승인 재시도에서 중복 생성되지 않도록 조회 후 생성 흐름을 사용한다.
+        if (bookingId != null) {
+            return findOrCreateRoom(name, counselorId, clientId, bookingId);
+        }
+        return createNewRoom(name, counselorId, clientId, null);
+    }
+
+    public String findOrCreateRoom(String name, Long counselorId, Long clientId, Long bookingId) {
+        // 같은 예약의 방이 있으면 기존 식별자를 반환하고, 없을 때만 새 방을 만든다.
+        return chatRoomRepository.findByBookingId(bookingId)
+                .map(ChatRoom::getRoomId)
+                .orElseGet(() -> createNewRoom(name, counselorId, clientId, bookingId));
+    }
+
+    private String createNewRoom(String name, Long counselorId, Long clientId, Long bookingId) {
         ChatRoom chatRoom = new ChatRoom();
         chatRoom.setRoomId(UUID.randomUUID().toString());
         chatRoom.setName(name);

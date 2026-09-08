@@ -51,6 +51,10 @@ public class Notification {
     @Column
     private String targetId;
 
+    // 같은 업무 이벤트의 알림을 한 건으로 제한한다. 일반 알림은 null을 사용해 기존 동작을 유지한다.
+    @Column(name = "event_key", unique = true, length = 100)
+    private String eventKey;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -61,7 +65,18 @@ public class Notification {
     private NotificationType type;
 
     public static Notification createNotification(User receiver, String title, String message, NotificationType type, String targetId) {
+        return createNotification(null, receiver, title, message, type, targetId);
+    }
+
+    public static Notification createNotification(
+            String eventKey,
+            User receiver,
+            String title,
+            String message,
+            NotificationType type,
+            String targetId) {
         Notification notification = new Notification();
+        notification.setEventKey(eventKey);
         notification.setReceiver(receiver);
         notification.setTitle(title);
         notification.setMessage(message);
@@ -74,4 +89,4 @@ public class Notification {
     public void markAsRead() {
         this.isRead = true;
     }
-} 
+}

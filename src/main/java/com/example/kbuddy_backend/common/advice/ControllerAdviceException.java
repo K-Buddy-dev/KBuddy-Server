@@ -12,6 +12,7 @@ import com.example.kbuddy_backend.common.advice.response.CustomCode;
 import com.example.kbuddy_backend.common.advice.response.ErrorResponse;
 import com.example.kbuddy_backend.common.exception.BadRequestException;
 import com.example.kbuddy_backend.common.exception.DuplicateException;
+import com.example.kbuddy_backend.common.exception.IdempotencyConflictException;
 import com.example.kbuddy_backend.common.exception.NotFoundException;
 import com.example.kbuddy_backend.common.exception.UnauthorizedException;
 
@@ -51,6 +52,15 @@ public class ControllerAdviceException {
     public ResponseEntity<ErrorResponse> handleDuplicate(final Exception e) {
         log.error(e.getMessage());
         return ResponseEntity.status(CONFLICT).body(new ErrorResponse(e.getMessage(), CustomCode.HTTP_409));
+    }
+
+    @ExceptionHandler(IdempotencyConflictException.class)
+    public ResponseEntity<ErrorResponse> handleIdempotencyConflict(
+            final IdempotencyConflictException e) {
+        // 처리 중인 키나 잘못 재사용된 키를 클라이언트가 구분할 수 있도록 409로 응답한다.
+        log.warn("Idempotency conflict: {}", e.getMessage());
+        return ResponseEntity.status(CONFLICT)
+                .body(new ErrorResponse(e.getMessage(), CustomCode.HTTP_409));
     }
 
     @ExceptionHandler(ObjectOptimisticLockingFailureException.class)
