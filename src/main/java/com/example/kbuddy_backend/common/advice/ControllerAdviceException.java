@@ -16,7 +16,6 @@ import com.example.kbuddy_backend.common.exception.DuplicateException;
 import com.example.kbuddy_backend.common.exception.NotFoundException;
 import com.example.kbuddy_backend.common.exception.UnauthorizedException;
 
-import java.util.Arrays;
 import java.util.List;
 
 import com.example.kbuddy_backend.user.exception.AccountDeactivatedException;
@@ -32,6 +31,7 @@ import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.NoHandlerFoundException;
 
 @Slf4j
@@ -112,19 +112,36 @@ public class ControllerAdviceException {
         return ResponseEntity.badRequest().body(new ErrorResponse(e.getMessage(), CustomCode.HTTP_400));
     }
 
+    /**
+     * 경로 변수/파라미터의 타입이 맞지 않는 요청.
+     *
+     * 예: GET /blog/category 처럼 숫자 자리에 문자열이 오는 경우. catch-all 로 떨어지면
+     * 잘못된 요청이 500으로 보고되므로 여기서 400으로 처리한다.
+     */
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ErrorResponse> handleTypeMismatch(final MethodArgumentTypeMismatchException e) {
+        log.warn("Type mismatch for parameter '{}'", e.getName());
+        return ResponseEntity.badRequest()
+                .body(new ErrorResponse("요청 값의 형식이 올바르지 않습니다.", CustomCode.HTTP_400));
+    }
+
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
     public ResponseEntity<ErrorResponse> handleMethodNotAllowed(final Exception e) {
         log.error(e.getMessage());
         return ResponseEntity.status(METHOD_NOT_ALLOWED).body(new ErrorResponse(e.getMessage(), CustomCode.HTTP_405));
     }
 
-    //500에러 처리
+    /**
+     * 500 처리.
+     *
+     * 예외 메시지와 스택 트레이스는 로그에만 남긴다. 응답에 넣으면 프레임워크 구성과 내부 클래스
+     * 경로가 그대로 드러나는데, 게스트 조회 API가 열리면서 비로그인 사용자도 이 응답에 닿는다.
+     */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleInternalServerError(final Exception e) {
         log.error("Internal Server Error: ", e);
         return ResponseEntity.status(INTERNAL_SERVER_ERROR)
-                .body(new ErrorResponse("서버에서 예기치 못한 오류가 발생했습니다.", CustomCode.HTTP_500, List.of(e.getMessage(),
-					Arrays.toString(e.getStackTrace()))));
+                .body(new ErrorResponse("서버에서 예기치 못한 오류가 발생했습니다.", CustomCode.HTTP_500));
     }
 
 }

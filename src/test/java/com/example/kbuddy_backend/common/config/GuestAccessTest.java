@@ -295,4 +295,35 @@ class GuestAccessTest extends WebMVCTest {
             return org.hamcrest.Matchers.not(org.hamcrest.Matchers.is(status));
         }
     }
+
+    /**
+     * 게스트 조회가 열리면서 비로그인 사용자도 오류 응답 본문에 닿는다.
+     * 내부 구조가 응답으로 새어나가지 않아야 한다.
+     */
+    @Nested
+    @DisplayName("게스트가 받는 오류 응답")
+    class GuestErrorResponse {
+
+        @DisplayName("숫자가 아닌 게시글 ID는 500이 아니라 400으로 응답한다.")
+        @Test
+        void nonNumericBlogIdIsBadRequest() throws Exception {
+            mockMvc.perform(get("/kbuddy/v1/blog/category"))
+                    .andExpect(status().isBadRequest());
+        }
+
+        @DisplayName("500 응답 본문에 스택 트레이스를 담지 않는다.")
+        @Test
+        void internalErrorDoesNotExposeStackTrace() throws Exception {
+            given(blogService.getBlog(anyLong(), isNull())).willThrow(new RuntimeException("boom"));
+
+            String body = mockMvc.perform(get("/kbuddy/v1/blog/1"))
+                    .andExpect(status().isInternalServerError())
+                    .andReturn().getResponse().getContentAsString();
+
+            org.assertj.core.api.Assertions.assertThat(body)
+                    .doesNotContain("org.springframework")
+                    .doesNotContain("com.example.kbuddy_backend")
+                    .doesNotContain("boom");
+        }
+    }
 }
