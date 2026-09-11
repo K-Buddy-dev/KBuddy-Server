@@ -311,8 +311,8 @@ public class BlogService {
                 ))
                 .toList();
 
-        boolean isBookmarked = blogBookmarkRepository.existsByBlogIdAndUserId(blog.getId(), currentUser.getId());
-        boolean isHearted = blogHeartRepository.existsByBlogIdAndUserId(blog.getId(), currentUser.getId());
+        boolean isBookmarked = currentUser != null && blogBookmarkRepository.existsByBlogIdAndUserId(blog.getId(), currentUser.getId());
+        boolean isHearted = currentUser != null && blogHeartRepository.existsByBlogIdAndUserId(blog.getId(), currentUser.getId());
 
         List<BlogComment> comments = blogCommentRepository.findCommentsWithWriterAndChildren(blog.getId());
         
@@ -332,7 +332,9 @@ public class BlogService {
         Map<Long, Long> heartCounts = blogCommentRepository.findCommentHeartCounts(allCommentIds);
         
         // 사용자가 좋아요한 댓글 ID 조회
-        Set<Long> heartedCommentIds = blogCommentRepository.findHeartedCommentIds(allCommentIds, currentUser.getId());
+        Set<Long> heartedCommentIds = currentUser == null
+                ? Set.of()
+                : blogCommentRepository.findHeartedCommentIds(allCommentIds, currentUser.getId());
 
         List<BlogCommentResponse> commentResponses = comments.stream()
                 .filter(comment -> currentUser == null || !userBlockService.isBlocked(currentUser, comment.getWriter()))

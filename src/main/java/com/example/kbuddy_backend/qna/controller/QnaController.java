@@ -60,7 +60,7 @@ public class QnaController {
                                                     @RequestParam(value = "keyword", defaultValue = "") String title,
                                                     @RequestParam(required = false, value = "sort") SortBy sortBy,
                                                     @RequestParam(required = false, value = "categoryCode") Integer categoryCode,
-                                                    @Parameter(hidden = true) @CurrentUser User user) {
+                                                    @Parameter(hidden = true) @CurrentUser(required = false) User user) {
         AllQnaResponse allQnaResponse = qnaService.getAllQna(pageSize, qnaId, title, sortBy, categoryCode, user);
         return ResponseEntity.ok().body(allQnaResponse);
     }
@@ -69,7 +69,7 @@ public class QnaController {
     @Operation(summary = "특정 Q&A 게시글 조회", description = "Q&A 게시글 id를 통해 조회 합니다. 임시저장 글은 작성자만 조회 가능합니다.")
     public ResponseEntity<QnaResponse> getQna(
             @PathVariable Long qnaId,
-            @Parameter(hidden = true) @CurrentUser User user) {
+            @Parameter(hidden = true) @CurrentUser(required = false) User user) {
         QnaResponse qna = qnaService.getQna(qnaId, user);
         return ResponseEntity.ok().body(qna);
     }

@@ -58,6 +58,10 @@ public class CounselorInquiry extends BaseTimeEntity {
         if (!this.isSecret) {
             return true;
         }
+        //비로그인 사용자는 비밀글을 볼 수 없다.
+        if (user == null) {
+            return false;
+        }
         return user.getId().equals(this.writer.getId()) ||
                 user.getId().equals(this.counselor.getId());
     }

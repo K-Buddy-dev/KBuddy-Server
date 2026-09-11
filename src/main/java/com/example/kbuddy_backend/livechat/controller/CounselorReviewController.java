@@ -58,7 +58,7 @@ public class CounselorReviewController {
             @PathVariable String counselorId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
-            @Parameter(hidden = true) @CurrentUser User user) {
+            @Parameter(hidden = true) @CurrentUser(required = false) User user) {
         ReviewListResponse response = counselorReviewService.getReviews(counselorId, PageRequest.of(page, size));
         return ResponseEntity.ok(response);
     }
@@ -79,7 +79,7 @@ public class CounselorReviewController {
             @PathVariable String counselorId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
-            @Parameter(hidden = true) @CurrentUser User user) {
+            @Parameter(hidden = true) @CurrentUser(required = false) User user) {
         var inquiries = counselorInquiryService.getInquiries(user, counselorId, PageRequest.of(page, size));
         List<Long> inquiryIds = inquiries.getContent().stream().map(i -> i.getId()).toList();
         var repliedIds = counselorInquiryService.getInquiryIdsWithReplies(inquiryIds);
@@ -100,7 +100,7 @@ public class CounselorReviewController {
     public ResponseEntity<InquiryDetailResponse> getInquiryDetail(
             @PathVariable String counselorId,
             @PathVariable Long inquiryId,
-            @Parameter(hidden = true) @CurrentUser User user) {
+            @Parameter(hidden = true) @CurrentUser(required = false) User user) {
         CounselorInquiry inquiry = counselorInquiryService.getInquiryDetail(user, inquiryId);
         List<InquiryReply> replies = counselorInquiryService.getReplies(inquiryId);
 

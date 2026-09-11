@@ -51,7 +51,7 @@ public class CounselorController {
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) String sort,
             @RequestParam(required = false) String category,
-            @Parameter(hidden = true) @CurrentUser User user) {
+            @Parameter(hidden = true) @CurrentUser(required = false) User user) {
         Pageable pageable = PageRequest.of(page, size);
         CounselorListResponse response = counselorProfileService.getCounselors(sort, category, pageable);
         return ResponseEntity.ok(response);
@@ -69,7 +69,7 @@ public class CounselorController {
     @Operation(summary = "상담사 상세 조회", description = "상담사 프로필 상세 정보와 최근 리뷰를 조회합니다.")
     public ResponseEntity<CounselorDetailResponse> getCounselor(
             @PathVariable String counselorId,
-            @Parameter(hidden = true) @CurrentUser User user) {
+            @Parameter(hidden = true) @CurrentUser(required = false) User user) {
         CounselorDetailResponse response = counselorProfileService.getCounselor(counselorId);
         return ResponseEntity.ok(response);
     }
@@ -80,7 +80,7 @@ public class CounselorController {
             @PathVariable String counselorId,
             @RequestParam int year,
             @RequestParam int month,
-            @Parameter(hidden = true) @CurrentUser User user) {
+            @Parameter(hidden = true) @CurrentUser(required = false) User user) {
         CounselorAvailabilityResponse response = counselorProfileService.getAvailability(counselorId, year, month);
         return ResponseEntity.ok(response);
     }
