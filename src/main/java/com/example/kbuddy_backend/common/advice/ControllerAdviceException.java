@@ -29,6 +29,7 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
@@ -123,6 +124,17 @@ public class ControllerAdviceException {
         log.warn("Type mismatch for parameter '{}'", e.getName());
         return ResponseEntity.badRequest()
                 .body(new ErrorResponse("요청 값의 형식이 올바르지 않습니다.", CustomCode.HTTP_400));
+    }
+
+    /**
+     * 필수 요청 파라미터 누락. 예: GET /counselor/{id}/availability 에 year 가 없는 경우.
+     * catch-all 로 떨어지면 잘못된 요청이 500으로 보고된다.
+     */
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity<ErrorResponse> handleMissingParameter(final MissingServletRequestParameterException e) {
+        log.warn("Missing request parameter '{}'", e.getParameterName());
+        return ResponseEntity.badRequest()
+                .body(new ErrorResponse("필수 요청 값이 빠졌습니다: " + e.getParameterName(), CustomCode.HTTP_400));
     }
 
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
