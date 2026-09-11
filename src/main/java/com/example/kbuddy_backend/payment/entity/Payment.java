@@ -18,6 +18,8 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
+import jakarta.persistence.Version;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -29,7 +31,11 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "payment")
+@Table(
+        name = "payment",
+        uniqueConstraints = @UniqueConstraint(
+                name = "uk_payment_booking",
+                columnNames = "booking_id"))
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Payment extends BaseTimeEntity {
@@ -38,8 +44,13 @@ public class Payment extends BaseTimeEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Version
+    @Column(nullable = false)
+    private Long version;
+
+    // 애플리케이션 조회가 동시에 통과해도 DB 유니크 제약조건이 예약당 결제를 한 건으로 제한한다.
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "booking_id", nullable = false, unique = true)
+    @JoinColumn(name = "booking_id", nullable = false)
     private Booking booking;
 
     @ManyToOne(fetch = FetchType.LAZY)

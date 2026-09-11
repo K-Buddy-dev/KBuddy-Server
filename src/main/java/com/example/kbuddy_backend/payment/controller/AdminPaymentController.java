@@ -1,6 +1,7 @@
 package com.example.kbuddy_backend.payment.controller;
 
 import com.example.kbuddy_backend.common.exception.UnauthorizedException;
+import com.example.kbuddy_backend.common.exception.BadRequestException;
 import com.example.kbuddy_backend.payment.constant.PaymentStatus;
 import com.example.kbuddy_backend.payment.dto.request.PaymentCancelRequest;
 import com.example.kbuddy_backend.payment.dto.request.PaymentConfirmRequest;
@@ -24,6 +25,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -58,9 +60,11 @@ public class AdminPaymentController {
     @Operation(summary = "입금 확인", description = "관리자가 무통장 입금을 확인하고 예약을 결제 완료 상태로 전환합니다.")
     public ResponseEntity<PaymentResponse> confirmDeposit(
             @PathVariable Long paymentId,
+            @RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey,
             @RequestBody(required = false) PaymentConfirmRequest request) {
         validateAdmin();
-        return ResponseEntity.ok(paymentService.confirmDeposit(paymentId, request));
+        return ResponseEntity.ok(paymentService.confirmDeposit(
+                paymentId, request, parseIdempotencyKey(idempotencyKey)));
     }
 
     @PatchMapping("/{paymentId}/cancel")
@@ -81,6 +85,19 @@ public class AdminPaymentController {
 
         if (!hasAdminRole) {
             throw new UnauthorizedException("관리자 권한이 없습니다");
+        }
+    }
+
+    private java.util.UUID parseIdempotencyKey(String idempotencyKey) {
+        // 재시도 요청을 최초 요청과 동일하게 식별하려면 모든 승인 요청에 멱등키가 필요하다.
+        if (idempotencyKey == null || idempotencyKey.isBlank()) {
+            throw new BadRequestException("Idempotency-Key 헤더가 필요합니다.");
+        }
+        try {
+            // 저장 컬럼의 길이와 키 형식을 일정하게 유지하기 위해 UUID 형식만 허용한다.
+            return java.util.UUID.fromString(idempotencyKey);
+        } catch (IllegalArgumentException exception) {
+            throw new BadRequestException("Idempotency-Key는 UUID 형식이어야 합니다.");
         }
     }
 }

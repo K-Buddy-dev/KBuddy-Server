@@ -33,6 +33,26 @@ public class NotificationService {
     }
 
     @Transactional
+    public void notifyOnce(
+            String eventKey,
+            User receiver,
+            String title,
+            String body,
+            NotificationType type,
+            String targetId) {
+        // 저장된 이벤트 키라면 같은 승인에서 발생한 알림이므로 저장과 FCM 발송을 모두 생략한다.
+        if (notificationRepository.existsByEventKey(eventKey)) {
+            return;
+        }
+
+        Notification notification = Notification.createNotification(
+                eventKey, receiver, title, body, type, targetId);
+        // 알림을 먼저 저장해 이후 같은 이벤트 키가 중복 발송 여부를 판단할 수 있게 한다.
+        notificationRepository.save(notification);
+        fcmService.sendNotificationAllFcmTokens(receiver, title, body, type.name(), targetId);
+    }
+
+    @Transactional
     public void markAsRead(Long notificationId, User user) {
         notificationRepository.findByIdAndReceiver(notificationId, user)
                 .ifPresent(Notification::markAsRead);

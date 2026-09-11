@@ -36,4 +36,7 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     List<Notification> findByReceiverAndIsReadFalseOrderByCreatedAtDesc(User receiver);
 
     java.util.Optional<Notification> findByIdAndReceiver(Long id, User receiver);
-} 
+
+    // 결제 승인 이벤트의 알림이 이미 생성됐는지 이벤트 키로 확인한다.
+    boolean existsByEventKey(String eventKey);
+}
