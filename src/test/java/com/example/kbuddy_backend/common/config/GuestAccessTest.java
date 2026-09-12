@@ -311,6 +311,13 @@ class GuestAccessTest extends WebMVCTest {
                     .andExpect(status().isBadRequest());
         }
 
+        @DisplayName("필수 요청 파라미터가 빠지면 500이 아니라 400으로 응답한다.")
+        @Test
+        void missingRequiredParameterIsBadRequest() throws Exception {
+            mockMvc.perform(get("/kbuddy/v1/counselor/" + COUNSELOR_ID + "/availability"))
+                    .andExpect(status().isBadRequest());
+        }
+
         @DisplayName("500 응답 본문에 스택 트레이스를 담지 않는다.")
         @Test
         void internalErrorDoesNotExposeStackTrace() throws Exception {
